@@ -18,9 +18,8 @@
 #define DEFAULT_WIFI_PASS       ""
 #define WIFI_CONNECT_TIMEOUT_MS 3000   // Fast timeout (3s) so demo boots instantly if offline
 
-// Remote Endpoint
-// Replace with your Vercel deployment URL or local dev server IP
-#define JOURNEY_API_URL         "https://santa-demo.vercel.app/api/journey"
+// Remote Endpoint (Live Vercel Production Deployment)
+#define JOURNEY_API_URL         "https://santa-tracker-five.vercel.app/api/journey"
 #define HTTP_TIMEOUT_MS         4000
 
 // Target Frame Rate
