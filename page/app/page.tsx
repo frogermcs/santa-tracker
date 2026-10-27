@@ -2,373 +2,355 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
+import { ArrowLeft, Compass, Radio, Wifi, Volume2, VolumeX, FastForward, Play, RefreshCw, Cpu, HardDrive } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
-import { KidControls } from "@/components/KidControls";
-import { ArduinoCodeModal } from "@/components/ArduinoCodeModal";
-import { JourneyEngine, JOURNEY_CITIES } from "@/lib/canvas/journey-engine";
-import { ActionToyEngine } from "@/lib/canvas/action-toy-engine";
+import { renderSharedRadar, RadarWaypoint } from "@/lib/canvas/shared-radar";
 import { buzzer } from "@/lib/audio/buzzer";
-import { Code, Sparkles, Compass, Radio } from "lucide-react";
 
-type TrackerMode = "journey" | "action";
+interface JourneyApiResponse {
+  version: number;
+  updatedAt: string;
+  secPerCity: number;
+  speedMultiplier: number;
+  route: RadarWaypoint[];
+}
 
-export default function Home() {
-  const [mode, setMode] = useState<TrackerMode>("action");
-  const [currentScreen, setCurrentScreen] = useState<number>(0);
-  const [santaAction, setSantaAction] = useState<number>(0);
-  const [currentCityName, setCurrentCityName] = useState<string>("AUCKLAND");
-  const [customCity, setCustomCity] = useState<string>("KRAKOW, PL");
-  const [speed, setSpeed] = useState<number>(3);
+const FALLBACK_ROUTE: RadarWaypoint[] = [
+  { name: "AUCKLAND",    lon: 174.8,  lat: -36.8 },
+  { name: "SYDNEY",      lon: 151.2,  lat: -33.9 },
+  { name: "TOKYO",       lon: 139.7,  lat: 35.7 },
+  { name: "BEIJING",     lon: 116.4,  lat: 39.9 },
+  { name: "DELHI",        lon: 77.2,   lat: 28.6 },
+  { name: "DUBAI",        lon: 55.3,   lat: 25.2 },
+  { name: "NAIROBI",      lon: 36.8,   lat: -1.3 },
+  { name: "CAIRO",        lon: 31.2,   lat: 30.0 },
+  { name: "KRAKOW",       lon: 19.9,   lat: 50.1 },
+  { name: "LONDON",       lon: -0.1,   lat: 51.5 },
+  { name: "RIO",         lon: -43.2,  lat: -22.9 },
+  { name: "NEW YORK",    lon: -74.0,  lat: 40.7 },
+  { name: "MEXICO CITY", lon: -99.1,  lat: 19.4 },
+  { name: "LOS ANGELES", lon: -118.2, lat: 34.0 },
+  { name: "HONOLULU",    lon: -157.8, lat: 21.3 }
+];
+
+export default function RadarPage() {
+  const [route, setRoute] = useState<RadarWaypoint[]>(FALLBACK_ROUTE);
+  const [secPerCity, setSecPerCity] = useState<number>(16);
+  const [speedMultiplier, setSpeedMultiplier] = useState<number>(1);
+  const [isLiveApi, setIsLiveApi] = useState<boolean>(false);
+  const [apiTimestamp, setApiTimestamp] = useState<string>("");
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [scanlines, setScanlines] = useState<boolean>(true);
-  const [isTilted, setIsTilted] = useState<boolean>(false);
-  const [autoCycle, setAutoCycle] = useState<boolean>(true);
-  const [isCodeModalOpen, setIsCodeModalOpen] = useState<boolean>(false);
 
-  // Button pressed visual animation states
+  // Active telemetry states
+  const [currentCityName, setCurrentCityName] = useState<string>("AUCKLAND");
+  const [nextCityName, setNextCityName] = useState<string>("SYDNEY");
+  const [eta, setEta] = useState<number>(16);
+  const [coords, setCoords] = useState<{ lat: string; lon: string }>({ lat: "0.0", lon: "0.0" });
+
+  // Button visual states
   const [isBtnAPressed, setIsBtnAPressed] = useState<boolean>(false);
   const [isBtnBPressed, setIsBtnBPressed] = useState<boolean>(false);
 
-  // Canvas refs
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const journeyEngineRef = useRef<JourneyEngine | null>(null);
-  const actionEngineRef = useRef<ActionToyEngine | null>(null);
+  const animFrameRef = useRef<number | null>(null);
+  const simTimeRef = useRef<number>(0);
+  const lastTimeRef = useRef<number>(0);
 
-  // Initialize or reconfigure engine when mode or canvas changes
+  // 1. Fetch live journey from API endpoint
+  const fetchJourney = useCallback(async () => {
+    try {
+      const res = await fetch("/api/journey");
+      if (res.ok) {
+        const data: JourneyApiResponse = await res.json();
+        if (data.route && data.route.length > 0) {
+          setRoute(data.route);
+          setSecPerCity(data.secPerCity || 16);
+          setIsLiveApi(true);
+          setApiTimestamp(data.updatedAt || new Date().toISOString());
+        }
+      }
+    } catch {
+      setIsLiveApi(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchJourney();
+  }, [fetchJourney]);
+
+  // 2. Interactive Handlers
+  const handleBtnA = useCallback(() => {
+    setIsBtnAPressed(true);
+    setTimeout(() => setIsBtnAPressed(false), 200);
+    if (!isMuted) buzzer.playTone(1600, 40);
+
+    // Jump to next city
+    const curIdx = Math.floor(simTimeRef.current / secPerCity);
+    simTimeRef.current = (curIdx + 1) * secPerCity;
+  }, [secPerCity, isMuted]);
+
+  const handleBtnB = useCallback(() => {
+    setIsBtnBPressed(true);
+    setTimeout(() => setIsBtnBPressed(false), 200);
+
+    setSpeedMultiplier((prev) => {
+      const next = prev === 1 ? 2 : prev === 2 ? 4 : prev === 4 ? 8 : 1;
+      if (!isMuted) buzzer.playTone(1200 + next * 100, 30);
+      return next;
+    });
+  }, [isMuted]);
+
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.code === "Space" || e.key === "a" || e.key === "A") {
+        e.preventDefault();
+        handleBtnA();
+      } else if (e.key === "b" || e.key === "B") {
+        e.preventDefault();
+        handleBtnB();
+      } else if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        setIsMuted((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleBtnA, handleBtnB]);
+
+  // 3. Render Loop matching firmware exactly
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    // Cleanup previous engines
-    if (journeyEngineRef.current) {
-      journeyEngineRef.current.destroy();
-      journeyEngineRef.current = null;
-    }
-    if (actionEngineRef.current) {
-      actionEngineRef.current.destroy();
-      actionEngineRef.current = null;
-    }
+    lastTimeRef.current = performance.now();
 
-    if (mode === "journey") {
-      const engine = new JourneyEngine(canvas, {
-        onCityChange: (cityName) => setCurrentCityName(cityName),
-        onScreenChange: (screenIdx) => setCurrentScreen(screenIdx),
-      });
-      engine.currentScreen = (currentScreen % 3) as 0 | 1 | 2;
-      engine.speed = speed;
-      engine.autoCycle = autoCycle;
-      engine.customCityOverride = customCity;
-      engine.start();
-      journeyEngineRef.current = engine;
-    } else {
-      const engine = new ActionToyEngine(canvas, {
-        onActionChange: (action) => setSantaAction(action),
-        onScreenChange: (screenIdx) => setCurrentScreen(screenIdx),
-      });
-      engine.currentScreen = (currentScreen % 3) as 0 | 1 | 2;
-      engine.santaAction = (santaAction % 4) as 0 | 1 | 2 | 3;
-      engine.speedMultiplier = speed;
-      engine.autoCycle = autoCycle;
-      engine.customNextStop = customCity;
-      engine.start();
-      actionEngineRef.current = engine;
-    }
+    const render = (now: number) => {
+      const dt = (now - lastTimeRef.current) / 1000;
+      lastTimeRef.current = now;
+      const clampedDt = Math.min(dt, 0.1);
 
+      simTimeRef.current += clampedDt * speedMultiplier;
+      const totalSimTime = route.length * secPerCity;
+      if (simTimeRef.current >= totalSimTime) {
+        simTimeRef.current -= totalSimTime;
+      }
+
+      const totalTime = simTimeRef.current;
+      const cityIdx = Math.floor(totalTime / secPerCity);
+      const u = totalTime - cityIdx * secPerCity;
+      const safeIdx = cityIdx % route.length;
+      const prevIdx = safeIdx > 0 ? safeIdx - 1 : 0;
+
+      const isFlight = u < 6;
+      const p = isFlight ? (u / 6 < 0.5 ? 2 * (u / 6) ** 2 : 1 - (-2 * (u / 6) + 2) ** 2 / 2) : 1;
+
+      const prev = route[prevIdx];
+      const curr = route[safeIdx];
+
+      const sLon = prev.lon + (curr.lon - prev.lon) * p;
+      const sLat = prev.lat + (curr.lat - prev.lat) * p;
+
+      const nextName = u < 6 ? curr.name : safeIdx < route.length - 1 ? route[safeIdx + 1].name : "NORTH POLE";
+      const etaSec = Math.ceil(u < 6 ? 6 - u : secPerCity - u + 6);
+
+      setCurrentCityName(curr.name);
+      setNextCityName(nextName);
+      setEta(etaSec);
+      setCoords({ lat: sLat.toFixed(1), lon: sLon.toFixed(1) });
+
+      // Draw the exact shared radar
+      renderSharedRadar(
+        ctx,
+        now / 1000,
+        route,
+        safeIdx,
+        sLon,
+        sLat,
+        nextName,
+        etaSec,
+        isFlight
+      );
+
+      animFrameRef.current = requestAnimationFrame(render);
+    };
+
+    animFrameRef.current = requestAnimationFrame(render);
     return () => {
-      journeyEngineRef.current?.destroy();
-      actionEngineRef.current?.destroy();
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [mode]);
-
-  // Sync settings with active engine
-  useEffect(() => {
-    if (mode === "journey" && journeyEngineRef.current) {
-      journeyEngineRef.current.speed = speed;
-      journeyEngineRef.current.autoCycle = autoCycle;
-      journeyEngineRef.current.customCityOverride = customCity;
-    } else if (mode === "action" && actionEngineRef.current) {
-      actionEngineRef.current.speedMultiplier = speed;
-      actionEngineRef.current.autoCycle = autoCycle;
-      actionEngineRef.current.setCustomCity(customCity);
-    }
-  }, [speed, autoCycle, customCity, mode]);
-
-  // Handle Screen Switch (Button A / Front M5 Button)
-  const handleButtonAPress = useCallback(() => {
-    setIsBtnAPressed(true);
-    setTimeout(() => setIsBtnAPressed(false), 120);
-    buzzer.screenSwitch();
-
-    setCurrentScreen((prev) => {
-      const next = (prev + 1) % 3;
-      if (mode === "journey" && journeyEngineRef.current) {
-        journeyEngineRef.current.setScreen(next as 0 | 1 | 2);
-      } else if (mode === "action" && actionEngineRef.current) {
-        actionEngineRef.current.setScreen(next as 0 | 1 | 2);
-      }
-      return next;
-    });
-  }, [mode]);
-
-  // Handle Action Trigger (Button B / Top Side Button)
-  const handleButtonBPress = useCallback(() => {
-    setIsBtnBPressed(true);
-    setTimeout(() => setIsBtnBPressed(false), 120);
-
-    if (mode === "action") {
-      if (currentScreen === 0) {
-        // Cycle Santa Cam action
-        buzzer.actionTrigger();
-        setSantaAction((prev) => {
-          const next = ((prev + 1) % 4) as 0 | 1 | 2 | 3;
-          actionEngineRef.current?.setSantaAction(next);
-          if (next === 2) buzzer.cookieMunch();
-          if (next === 3) buzzer.warpSpeed();
-          return next;
-        });
-      } else if (currentScreen === 1) {
-        // Boost gifts
-        buzzer.giftBoost();
-        actionEngineRef.current?.boostGifts(25000);
-      } else {
-        // Advance radar waypoint
-        buzzer.actionTrigger();
-        actionEngineRef.current?.advanceWaypoint();
-      }
-    } else {
-      // In journey mode: Button B skips to next city
-      buzzer.actionTrigger();
-      journeyEngineRef.current?.skipToNextCity();
-    }
-  }, [mode, currentScreen]);
-
-  // Screen selection via tabs
-  const handleScreenSelect = (idx: number) => {
-    setCurrentScreen(idx);
-    buzzer.screenSwitch();
-    if (mode === "journey") {
-      journeyEngineRef.current?.setScreen(idx as 0 | 1 | 2);
-    } else {
-      actionEngineRef.current?.setScreen(idx as 0 | 1 | 2);
-    }
-  };
-
-  // Action selection in action mode
-  const handleActionSelect = (act: 0 | 1 | 2 | 3) => {
-    setSantaAction(act);
-    buzzer.actionTrigger();
-    if (act === 2) buzzer.cookieMunch();
-    if (act === 3) buzzer.warpSpeed();
-    actionEngineRef.current?.setSantaAction(act);
-  };
-
-  const handleBoostGifts = () => {
-    buzzer.giftBoost();
-    actionEngineRef.current?.boostGifts(25000);
-  };
-
-  const handleSkipCity = () => {
-    buzzer.actionTrigger();
-    journeyEngineRef.current?.skipToNextCity();
-  };
-
-  const handleToggleMute = () => {
-    const nextMuted = buzzer.toggleMute();
-    setIsMuted(nextMuted);
-  };
-
-  // Keyboard shortcut listener
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        document.activeElement?.tagName === "INPUT" ||
-        document.activeElement?.tagName === "TEXTAREA"
-      ) {
-        return;
-      }
-
-      if (e.code === "Space" || e.code === "KeyA") {
-        e.preventDefault();
-        handleButtonAPress();
-      } else if (e.code === "KeyB") {
-        e.preventDefault();
-        handleButtonBPress();
-      } else if (e.code === "ArrowRight") {
-        e.preventDefault();
-        handleButtonAPress();
-      } else if (e.code === "ArrowLeft") {
-        e.preventDefault();
-        setCurrentScreen((prev) => {
-          const next = (prev + 2) % 3;
-          handleScreenSelect(next);
-          return next;
-        });
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleButtonAPress, handleButtonBPress]);
+  }, [route, secPerCity, speedMultiplier]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-      {/* Top Header & Navigation */}
-      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-neutral-800/80 pb-5">
+    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col selection:bg-emerald-800 selection:text-white">
+      {/* Navigation Top Header */}
+      <header className="border-b border-neutral-800/80 bg-neutral-900/60 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-3">
-          {/* M5 Translucent Orange Icon */}
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-neutral-950 font-black text-xl shadow-lg shadow-orange-600/30 border border-amber-300/60 shrink-0">
+          {/* M5 Translucent Orange Icon Badge */}
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-neutral-950 font-black text-sm shadow-md shadow-orange-600/30 border border-amber-300/60 shrink-0">
             M5
           </div>
-          <div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white font-mono flex items-center gap-2">
-              Lokalizator Mikołaja · M5StickC-Plus SE
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+            <h1 className="text-sm font-bold font-mono tracking-tight text-white">
+              SANTA-OS <span className="text-emerald-400">// GLOBAL RADAR</span>
             </h1>
           </div>
         </div>
 
-        {/* Prototype Mode Switcher & Maker Button */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Mode Tabs */}
-          <div className="bg-neutral-900 p-1 rounded-2xl border border-neutral-800 flex items-center gap-1 shadow-inner">
-            <button
-              onClick={() => {
-                setMode("action");
-                buzzer.actionTrigger();
-              }}
-              className={`py-1.5 px-3 rounded-xl text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                mode === "action"
-                  ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md shadow-orange-600/30"
-                  : "text-neutral-400 hover:text-white"
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Zabawka + Dźwięki</span>
-            </button>
-            <button
-              onClick={() => {
-                setMode("journey");
-                buzzer.actionTrigger();
-              }}
-              className={`py-1.5 px-3 rounded-xl text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                mode === "journey"
-                  ? "bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md shadow-red-600/30"
-                  : "text-neutral-400 hover:text-white"
-              }`}
-            >
-              <Compass className="w-3.5 h-3.5" />
-              <span>Podróż przez 15 Miast</span>
-            </button>
-          </div>
-
-          {/* Dedicated Radar Presentation Page */}
+        <div className="flex items-center gap-2.5 text-xs font-mono">
           <Link
-            href="/radar"
-            className="py-2 px-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+            href="/prototype"
+            className="px-2.5 py-1 rounded-md bg-neutral-800/80 hover:bg-neutral-700 border border-neutral-700/60 text-neutral-400 hover:text-neutral-200 transition text-xs font-mono flex items-center gap-1.5"
+            title="Open multi-mode prototype lab"
           >
-            <Radio className="w-4 h-4" />
-            <span>Radar MVP</span>
+            <span>🧪 Prototype Lab</span>
           </Link>
 
-          {/* Arduino Code Button */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-800/80 border border-neutral-700/60 text-neutral-300">
+            <Wifi className={`w-3.5 h-3.5 ${isLiveApi ? "text-emerald-400" : "text-amber-400"}`} />
+            <span className="hidden md:inline">{isLiveApi ? "Synced: /api/journey" : "Demo Mode"}</span>
+          </div>
+
           <button
-            onClick={() => setIsCodeModalOpen(true)}
-            className="py-2 px-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-mono font-bold flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition cursor-pointer"
+            onClick={() => setIsMuted((prev) => !prev)}
+            className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition"
+            title="Toggle Audio"
           >
-            <Code className="w-4 h-4" />
-            <span>Kod Arduino .ino</span>
+            {isMuted ? <VolumeX className="w-3.5 h-3.5 text-neutral-500" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
           </button>
         </div>
       </header>
 
-      {/* Main Interactive Stage */}
-      <main className="my-auto py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        {/* Left Column: Virtual M5StickC-Plus SE Hardware (7 Cols) */}
-        <div className="lg:col-span-7 flex flex-col items-center justify-center">
-          {/* Active Mode Banner */}
-          <div className="mb-4 text-center">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400 bg-neutral-900/90 px-3.5 py-1.5 rounded-full border border-neutral-800">
-              Aktywny tryb:{" "}
-              <strong className="text-orange-400">
-                {mode === "action"
-                  ? "Interaktywna zabawka 4 akcji + dźwięki retro"
-                  : "Świąteczna podróż przez 15 miast i telemetria"}
-              </strong>
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: M5StickC-Plus SE Hardware Emulator (7 cols) */}
+        <div className="lg:col-span-7 flex flex-col items-center justify-center gap-6">
+          <div className="w-full flex items-center justify-between text-xs font-mono text-neutral-400 px-2">
+            <span className="flex items-center gap-1.5 text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
+              LIVE RADAR SIMULATOR
+            </span>
+            <span>240 × 135 IPS DISPLAY</span>
+          </div>
+
+          {/* Interactive Hardware Shell */}
+          <M5StickDevice
+            canvasRef={canvasRef}
+            scanlines={scanlines}
+            isTilted={false}
+            onButtonAPress={handleBtnA}
+            onButtonBPress={handleBtnB}
+            isButtonAPressed={isBtnAPressed}
+            isButtonBPressed={isBtnBPressed}
+          />
+
+          {/* Keyboard Helper Legend */}
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-mono text-neutral-400">
+            <div className="flex items-center gap-1.5 bg-neutral-900 px-2.5 py-1 rounded border border-neutral-800">
+              <kbd className="px-1.5 py-0.5 bg-neutral-800 text-amber-400 rounded text-[10px]">Space</kbd>
+              <span>/</span>
+              <kbd className="px-1.5 py-0.5 bg-neutral-800 text-amber-400 rounded text-[10px]">A</kbd>
+              <span className="text-neutral-300">Jump City</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-neutral-900 px-2.5 py-1 rounded border border-neutral-800">
+              <kbd className="px-1.5 py-0.5 bg-neutral-800 text-amber-400 rounded text-[10px]">B</kbd>
+              <span className="text-neutral-300">Speed (1x/2x/4x/8x)</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-neutral-900 px-2.5 py-1 rounded border border-neutral-800">
+              <kbd className="px-1.5 py-0.5 bg-neutral-800 text-amber-400 rounded text-[10px]">M</kbd>
+              <span className="text-neutral-300">Mute</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Mission Control & Telemetry Panel (5 cols) */}
+        <div className="lg:col-span-5 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-6 flex flex-col gap-5 shadow-2xl backdrop-blur-sm">
+          <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+            <div>
+              <h2 className="text-base font-bold font-mono text-white flex items-center gap-2">
+                <Compass className="w-4 h-4 text-emerald-400" />
+                Live Sleigh Telemetry
+              </h2>
+              <p className="text-xs text-neutral-400 mt-0.5">Real-time GPS lock & tracking metrics</p>
+            </div>
+            <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
+              {speedMultiplier}x SPEED
             </span>
           </div>
 
-          {/* Physical Device Enclosure */}
-          <div className="overflow-x-auto max-w-full p-2 flex justify-center">
-            <M5StickDevice
-              canvasRef={canvasRef}
-              onButtonAPress={handleButtonAPress}
-              onButtonBPress={handleButtonBPress}
-              isButtonAPressed={isBtnAPressed}
-              isButtonBPressed={isBtnBPressed}
-              scanlines={scanlines}
-              isTilted={isTilted}
-            />
-          </div>
-
-          {/* Device Controls Hint */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs font-mono text-neutral-400">
-            <div className="flex items-center gap-2 bg-neutral-900/90 px-3 py-1.5 rounded-xl border border-neutral-800">
-              <kbd className="px-2 py-0.5 bg-neutral-800 text-amber-400 rounded font-bold border border-neutral-700">
-                PRZYCISK A (M5)
-              </kbd>
-              <span>Następny ekran (1 → 2 → 3)</span>
+          {/* Telemetry Cards */}
+          <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+            <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-xl">
+              <span className="text-neutral-500 text-[10px] block">CURRENT TARGET</span>
+              <span className="text-white font-bold text-sm block mt-0.5">{nextCityName}</span>
             </div>
-            <div className="flex items-center gap-2 bg-neutral-900/90 px-3 py-1.5 rounded-xl border border-neutral-800">
-              <kbd className="px-2 py-0.5 bg-neutral-800 text-amber-400 rounded font-bold border border-neutral-700">
-                PRZYCISK B
-              </kbd>
-              <span>{mode === "action" ? "Następna akcja / Doładowanie" : "Następne miasto"}</span>
+            <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-xl">
+              <span className="text-neutral-500 text-[10px] block">ETA COUNTDOWN</span>
+              <span className="text-amber-400 font-bold text-sm block mt-0.5">0:{String(eta).padStart(2, "0")}</span>
+            </div>
+            <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-xl">
+              <span className="text-neutral-500 text-[10px] block">LATITUDE</span>
+              <span className="text-emerald-400 font-bold text-sm block mt-0.5">{coords.lat}° N</span>
+            </div>
+            <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-xl">
+              <span className="text-neutral-500 text-[10px] block">LONGITUDE</span>
+              <span className="text-emerald-400 font-bold text-sm block mt-0.5">{coords.lon}° E</span>
             </div>
           </div>
-        </div>
 
-        {/* Right Column: Kid's Mission Control & Customizer (5 Cols) */}
-        <div className="lg:col-span-5">
-          <KidControls
-            mode={mode}
-            currentScreen={currentScreen}
-            onScreenSelect={handleScreenSelect}
-            santaAction={santaAction}
-            onActionSelect={handleActionSelect}
-            onBoostGifts={handleBoostGifts}
-            onSkipCity={handleSkipCity}
-            currentCityName={currentCityName}
-            isMuted={isMuted}
-            onToggleMute={handleToggleMute}
-            speed={speed}
-            onSpeedChange={setSpeed}
-            customCity={customCity}
-            onCustomCityChange={setCustomCity}
-            scanlines={scanlines}
-            onToggleScanlines={() => setScanlines((prev) => !prev)}
-            isTilted={isTilted}
-            onToggleTilt={() => setIsTilted((prev) => !prev)}
-            autoCycle={autoCycle}
-            onToggleAutoCycle={() => setAutoCycle((prev) => !prev)}
-          />
+          {/* Interactive Fast Controls */}
+          <div className="space-y-2.5">
+            <span className="text-xs font-mono text-neutral-400 font-bold uppercase tracking-wider block">
+              Device Controls
+            </span>
+            <div className="grid grid-cols-2 gap-2 font-mono text-xs">
+              <button
+                onClick={handleBtnA}
+                className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+              >
+                <FastForward className="w-3.5 h-3.5" />
+                <span>Next City</span>
+              </button>
+              <button
+                onClick={handleBtnB}
+                className="py-2.5 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold transition flex items-center justify-center gap-1.5 border border-neutral-700 cursor-pointer"
+              >
+                <Play className="w-3.5 h-3.5 text-amber-400" />
+                <span>Cycle Speed</span>
+              </button>
+            </div>
+          </div>
+
+          {/* JSON Endpoint Info Box */}
+          <div className="p-4 bg-neutral-950/90 border border-neutral-800/80 rounded-2xl flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-neutral-400 font-bold flex items-center gap-1.5">
+                <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+                Single Source of Truth
+              </span>
+              <button
+                onClick={fetchJourney}
+                className="text-neutral-500 hover:text-neutral-300 flex items-center gap-1 text-[11px] cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Reload
+              </button>
+            </div>
+            <div className="bg-neutral-900 px-3 py-2 rounded-lg font-mono text-[11px] text-emerald-300 border border-neutral-800 flex items-center justify-between">
+              <code>GET /api/journey</code>
+              <span className="text-neutral-500">{route.length} waypoints</span>
+            </div>
+            <p className="text-[11px] text-neutral-400 leading-relaxed font-mono">
+              Both this web simulator and the physical M5StickC-Plus SE fetch this exact JSON endpoint. If Wi-Fi is unreachable, both fall back to the embedded demo schedule.
+            </p>
+          </div>
         </div>
       </main>
-
-      {/* Funny Santa Footer */}
-      <footer className="border-t border-neutral-800/80 pt-4 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-neutral-400 gap-3">
-        <div className="flex items-center gap-2.5">
-          <img src="/santa-icon.svg" alt="Święty Mikołaj" className="w-5 h-5 shrink-0" />
-          <span>Renifery nakarmione marchewkami 🥕 · Żaden elf nie ucierpiał podczas testów radaru! 🎅</span>
-        </div>
-        <div className="flex items-center gap-2 text-neutral-500">
-          <span>Ho, ho, ho! Poziom zapasów ciastek: 100% 🥛🍪</span>
-        </div>
-      </footer>
-
-      {/* Maker Arduino Sketch Modal */}
-      <ArduinoCodeModal
-        isOpen={isCodeModalOpen}
-        onClose={() => setIsCodeModalOpen(false)}
-      />
     </div>
   );
 }
