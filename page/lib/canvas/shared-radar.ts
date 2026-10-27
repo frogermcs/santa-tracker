@@ -1,5 +1,5 @@
-// Shared Retro Aviation World Radar from Prototype 1
-// Uses pre-baked land dots buffer, rotating radar cone sweep, and expanding pulse rings
+// Shared Retro Aviation World Radar (Exact 1:1 Match with M5StickC-Plus SE Firmware)
+// Fixed Center Radar Sweep, 912 Land Dots, Traveling Santa Contact, and Dotted Breadcrumb Trail
 
 export interface RadarWaypoint {
   name: string;
@@ -10,21 +10,21 @@ export interface RadarWaypoint {
 export const SEC_PER_CITY = 16;
 
 export const JOURNEY_CITIES: RadarWaypoint[] = [
-  { name: "AUCKLAND", lon: 174.8, lat: -36.8 },
-  { name: "SYDNEY", lon: 151.2, lat: -33.9 },
-  { name: "TOKYO", lon: 139.7, lat: 35.7 },
-  { name: "BEIJING", lon: 116.4, lat: 39.9 },
-  { name: "DELHI", lon: 77.2, lat: 28.6 },
-  { name: "DUBAI", lon: 55.3, lat: 25.2 },
-  { name: "NAIROBI", lon: 36.8, lat: -1.3 },
-  { name: "CAIRO", lon: 31.2, lat: 30.0 },
-  { name: "KRAKOW", lon: 19.9, lat: 50.1 },
-  { name: "LONDON", lon: -0.1, lat: 51.5 },
-  { name: "RIO", lon: -43.2, lat: -22.9 },
-  { name: "NEW YORK", lon: -74.0, lat: 40.7 },
-  { name: "MEXICO CITY", lon: -99.1, lat: 19.4 },
+  { name: "AUCKLAND",    lon: 174.8,  lat: -36.8 },
+  { name: "SYDNEY",      lon: 151.2,  lat: -33.9 },
+  { name: "TOKYO",       lon: 139.7,  lat: 35.7 },
+  { name: "BEIJING",     lon: 116.4,  lat: 39.9 },
+  { name: "DELHI",        lon: 77.2,   lat: 28.6 },
+  { name: "DUBAI",        lon: 55.3,   lat: 25.2 },
+  { name: "NAIROBI",      lon: 36.8,   lat: -1.3 },
+  { name: "CAIRO",        lon: 31.2,   lat: 30.0 },
+  { name: "KRAKOW",       lon: 19.9,   lat: 50.1 },
+  { name: "LONDON",       lon: -0.1,   lat: 51.5 },
+  { name: "RIO",         lon: -43.2,  lat: -22.9 },
+  { name: "NEW YORK",    lon: -74.0,  lat: 40.7 },
+  { name: "MEXICO CITY", lon: -99.1,  lat: 19.4 },
   { name: "LOS ANGELES", lon: -118.2, lat: 34.0 },
-  { name: "HONOLULU", lon: -157.8, lat: 21.3 },
+  { name: "HONOLULU",    lon: -157.8, lat: 21.3 }
 ];
 
 function haversine(a: RadarWaypoint, b: RadarWaypoint) {
@@ -90,6 +90,8 @@ export function getJourneyTelemetry(simTime: number, customCityOverride?: string
 
 const W = 240;
 const H = 135;
+const RADAR_CX = 120;
+const RADAR_CY = 68;
 const FONT = "'Press Start 2P', monospace";
 
 const RAW_LAND: number[][] = [
@@ -197,27 +199,64 @@ export function renderSharedRadar(
   // 1. Deep CRT green background
   rect("#02110a", 0, 0, W, H);
 
-  // 2. Phosphor radar grid lines
-  for (let g = 0; g <= W; g += 40) rect("#073018", g, 12, 1, 108);
-  for (let g = 12; g <= 120; g += 27) rect("#073018", 0, g, W, 1);
+  // 2. Fixed Center Radar: Concentric Range Rings & Crosshairs
+  ctx.strokeStyle = "#073018";
+  ctx.lineWidth = 1;
+  [32, 64, 96].forEach((radius) => {
+    ctx.beginPath();
+    ctx.arc(RADAR_CX, RADAR_CY, radius, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+  ctx.beginPath();
+  ctx.moveTo(0, RADAR_CY);
+  ctx.lineTo(W, RADAR_CY);
+  ctx.moveTo(RADAR_CX, 12);
+  ctx.lineTo(RADAR_CX, 120);
+  ctx.stroke();
 
-  // 3. Realistic coastline dot matrix
+  // 3. Realistic coastline dot matrix (912 dots)
   const lb = getLandBuffer();
   if (lb) {
     ctx.drawImage(lb, 0, 0);
   }
 
-  // 4. Calculate Santa position on screen
-  const santaPt = projectCoordinates(santaLon, santaLat);
-  if (isFlightPhase) {
-    santaPt[1] -= Math.sin(Math.PI * 0.5) * 3;
-  }
+  // 4. Fixed Center Rotating Radar Sweep Beam (Sweeping Whole Screen)
+  const nowMs = timeSeconds * 1000;
+  const beamAngle = (nowMs % 3200) * (2 * Math.PI / 3200);
+  const beamLen = 110;
+  const beamEndX = RADAR_CX + Math.cos(beamAngle) * beamLen;
+  const beamEndY = RADAR_CY + Math.sin(beamAngle) * beamLen;
 
-  // 5. Breadcrumb line connecting visited cities
-  const drawLine = (p: [number, number], q: [number, number], col: string) => {
-    const n = Math.hypot(q[0] - p[0], q[1] - p[1]) / 3;
-    for (let k = 0; k <= n; k++) {
-      rect(col, p[0] + ((q[0] - p[0]) * k) / n, p[1] + ((q[1] - p[1]) * k) / n, 1, 1);
+  ctx.strokeStyle = "#5aff8c";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(RADAR_CX, RADAR_CY);
+  ctx.lineTo(beamEndX, beamEndY);
+  ctx.stroke();
+
+  // Faint secondary trailing ray
+  const trailAngle = beamAngle - 0.08;
+  const trailEndX = RADAR_CX + Math.cos(trailAngle) * (beamLen - 10);
+  const trailEndY = RADAR_CY + Math.sin(trailAngle) * (beamLen - 10);
+  ctx.strokeStyle = "#073018";
+  ctx.beginPath();
+  ctx.moveTo(RADAR_CX, RADAR_CY);
+  ctx.lineTo(trailEndX, trailEndY);
+  ctx.stroke();
+
+  // 5. Calculate Santa position on screen
+  const santaPt = projectCoordinates(santaLon, santaLat);
+
+  // 6. Dotted Breadcrumb Line connecting visited cities
+  const drawDottedLine = (p: [number, number], q: [number, number], col: string, spacing = 3) => {
+    const dx = q[0] - p[0];
+    const dy = q[1] - p[1];
+    const dist = Math.hypot(dx, dy);
+    if (dist < 1) return;
+    const ux = dx / dist;
+    const uy = dy / dist;
+    for (let d = 0; d <= dist; d += spacing) {
+      rect(col, Math.round(p[0] + ux * d), Math.round(p[1] + uy * d), 1, 1);
     }
   };
 
@@ -225,21 +264,22 @@ export function renderSharedRadar(
   for (let i = 1; i <= safeIdx; i++) {
     const A = waypoints[i - 1];
     const B = waypoints[i];
-    drawLine(
+    drawDottedLine(
       projectCoordinates(A.lon, A.lat),
       i < safeIdx || !isFlightPhase ? projectCoordinates(B.lon, B.lat) : santaPt,
-      "#ffd54a"
+      "#ffd54a",
+      3
     );
   }
 
-  // 6. City dots on map
+  // 7. City dots on map
   const nextIdx = isFlightPhase ? safeIdx : (safeIdx + 1) % waypoints.length;
-  const blink = Math.floor(timeSeconds * 3) % 2;
+  const blink = Math.floor(timeSeconds * 4.5) % 2 === 0;
 
   waypoints.forEach((wp, i) => {
     const p = projectCoordinates(wp.lon, wp.lat);
-    if (i === nextIdx && blink) {
-      rect("#fff", p[0] - 1, p[1] - 1, 3, 3);
+    if (i === nextIdx) {
+      rect(blink ? "#fff" : "#7dff9b", p[0] - 1, p[1] - 1, 3, 3);
     } else if (i < safeIdx || (i === safeIdx && !isFlightPhase)) {
       rect("#7dff9b", p[0] - 1, p[1] - 1, 3, 3);
     } else {
@@ -247,52 +287,36 @@ export function renderSharedRadar(
     }
   });
 
-  // 7. Rotating radar sweep fan around Santa
-  for (let k = 0; k < 8; k++) {
-    const an = timeSeconds * 2.4 - k * 0.07;
-    ctx.fillStyle = `rgba(90,255,140,${0.6 - k * 0.07})`;
-    for (let r = 3; r < 46; r++) {
-      ctx.fillRect(
-        Math.round(santaPt[0] + Math.cos(an) * r),
-        Math.round(santaPt[1] + Math.sin(an) * r),
-        1,
-        1
-      );
-    }
+  // 8. Santa: Red Flashing Contact Dot Traveling Through World
+  // Expanding radar ping circle around Santa
+  const pulseRadius = Math.floor(nowMs / 40) % 20;
+  if (pulseRadius > 2) {
+    ctx.strokeStyle = "#ff5a5a";
+    ctx.beginPath();
+    ctx.arc(santaPt[0], santaPt[1], pulseRadius, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
-  // 8. Expanding red radar pulse circles
-  [0, 18].forEach((o) => {
-    const r = (timeSeconds * 14 + o) % 36;
-    ctx.fillStyle = `rgba(255,90,90,${1 - r / 36})`;
-    for (let an = 0; an < 6.28; an += 0.12) {
-      ctx.fillRect(
-        Math.round(santaPt[0] + Math.cos(an) * r),
-        Math.round(santaPt[1] + Math.sin(an) * r),
-        1,
-        1
-      );
-    }
-  });
-
-  // 9. Santa beacon dot
+  // Faint red aura box
   rect("rgba(255,59,59,.35)", santaPt[0] - 3, santaPt[1] - 3, 7, 7);
+
+  // Red/White flashing core dot
   rect(blink ? "#ff3b3b" : "#fff", santaPt[0] - 1, santaPt[1] - 1, 3, 3);
 
-  // 10. Top Radar Bar & Screen 3 dot indicator
+  // 9. Top Radar HUD Bar
   rect("rgba(2,17,10,.85)", 0, 0, W, 12);
+  rect("#073018", 0, 12, W, 1);
   text("RADAR MIKOLAJA", 4, 2, "#7dff9b");
-  for (let i = 0; i < 3; i++) {
-    rect(i === 2 ? "#fff" : "#5a6aa0", W - 28 + i * 8, 3, 5, 5);
-  }
+  text("USB 5V", W - 4, 2, "#7dff9b", 8, "right");
 
-  // 11. Bottom HUD bar: Next stop & ETA
+  // 10. Bottom HUD bar: Next stop & ETA
   rect("rgba(2,17,10,.85)", 0, 121, W, 14);
-  text("CEL: " + nextCityName, 4, 125, "#7dff9b");
+  rect("#073018", 0, 120, W, 1);
+  text("CEL: " + nextCityName, 4, 124, "#7dff9b");
   text(
-    "CZAS: 0:" + String(Math.max(0, etaSeconds)).padStart(2, "0"),
+    "CZAS 0:" + String(Math.max(0, etaSeconds)).padStart(2, "0"),
     W - 4,
-    125,
+    124,
     "#ffd54a",
     8,
     "right"
