@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import Link from "next/link";
 import { M5StickDevice } from "@/components/M5StickDevice";
 import { KidControls } from "@/components/KidControls";
 import { ArduinoCodeModal } from "@/components/ArduinoCodeModal";
 import { JourneyEngine, JOURNEY_CITIES } from "@/lib/canvas/journey-engine";
 import { ActionToyEngine } from "@/lib/canvas/action-toy-engine";
 import { buzzer } from "@/lib/audio/buzzer";
-import { Code, Sparkles, Compass } from "lucide-react";
+import { Code, Sparkles, Compass, Radio } from "lucide-react";
 
 type TrackerMode = "journey" | "action";
 
@@ -258,6 +259,15 @@ export default function Home() {
               <span>Podróż przez 15 Miast</span>
             </button>
           </div>
+
+          {/* Dedicated Radar Presentation Page */}
+          <Link
+            href="/radar"
+            className="py-2 px-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+          >
+            <Radio className="w-4 h-4" />
+            <span>Radar MVP</span>
+          </Link>
 
           {/* Arduino Code Button */}
           <button

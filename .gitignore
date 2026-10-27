@@ -34,3 +34,11 @@ build
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# PlatformIO
+.pio/
+**/.pio/
+.vscode/
+**/.vscode/
+
+
