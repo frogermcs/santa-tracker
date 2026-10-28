@@ -51,7 +51,28 @@ stateDiagram-v2
 
 ---
 
-## Phase 2: The 24-Day Master Itinerary & Live Clock Engine
+## Milestone 1: Fully Operational Radar End-to-End (ACTIVE 🎯)
+
+* **Goal:** Deliver an end-to-end operational radar experience across Web and M5StickC hardware driven by the user's multi-day city dataset.
+* **Requirements & Deliverables:**
+  - [ ] **1. User City List Ingestion:**
+    * Ingest user's curated list of global cities spanning all continents across the Dec 1–24 calendar.
+    * Structure schema with: `name`, `lat`, `lon`, `day` (1–24), `arrivalHour` (~1h flight + ~1h stay).
+  - [ ] **2. Web Presentation & Testing Suite (`page/`):**
+    * **Day Selector:** Interactive UI (dropdown / slider) to select any day from **Dec 01 to Dec 24**, dynamically updating the radar route.
+    * **10x Speed Testing Mode:** Dedicated test toggle to accelerate journey progression by **10x**, enabling rapid verification of complete daily flight paths in minutes.
+  - [ ] **3. Production JSON Endpoint (`/api/journey`):**
+    * Expose the full multi-day city list via `/api/journey` with edge caching and CORS.
+    * Support day filtering / structured response consumed by both Web and M5StickC.
+  - [ ] **4. M5StickC-Plus SE Firmware (`firmware/`):**
+    * Fetch remote JSON from `/api/journey` via Wi-Fi on boot.
+    * **Hardcode "Today is Dec 24th"** for Milestone 1: The device defaults to December 24th's route and grand finale sequence.
+    * Fallback to embedded Dec 24th schedule if Wi-Fi is unconfigured or unreachable.
+    * Physical buttons: Button A jumps to next city; Button B cycles speed multipliers (including 10x test speed).
+
+---
+
+## Milestone 2: Live Real-Time Clock (NTP & RTC Progression)
 
 * **Objective:** Expand route to 288 cities (>200) spanning Dec 1 – Dec 24, with context-aware timing (1h flight + 1h city stay).
 * **Key Deliverables:**

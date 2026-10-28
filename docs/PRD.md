@@ -81,3 +81,18 @@ The app features 3 distinct views, where animations automatically reflect Santa'
 * **Flash Budget:** Within 3MB partition limit (`huge_app.csv`, ~1.6MB / 50.9% currently used).
 * **RAM Budget:** Under 25% total internal SRAM usage (9.2 KB for 288 cities).
 * **Testability:** Core simulation mathematics decoupled from LCD code; passes native unit tests on desktop macOS/Linux in under 1 second.
+
+---
+
+## 6. Milestone 1 Acceptance Criteria (Operational Radar End-to-End)
+
+1. **City List Ingestion:** Schema and parser support user-supplied multi-day cities schedule.
+2. **Web Simulation Enhancements (`/`):**
+   * **Day Selector:** Interactive selector allows picking any day between December 1st and December 24th to load that day's itinerary.
+   * **10x Speed Mode:** Dedicated toggle to run at 10x speed to easily test and inspect the full journey.
+3. **API Endpoint (`/api/journey`):** Serves complete multi-day schedule with CORS and edge caching.
+4. **M5StickC-Plus SE Firmware (`firmware/`):**
+   * Successfully connects to Wi-Fi on boot and downloads the JSON schedule.
+   * Hardcoded initial date: "Today is Dec 24th" to immediately test the Dec 24th finale route.
+   * Offline fallback: Uses preloaded Dec 24th itinerary if Wi-Fi is unavailable.
+
