@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Compass, Radio, Wifi, Volume2, VolumeX, FastForward, Play, RefreshCw, Cpu, HardDrive } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
 import { renderSharedRadar, RadarWaypoint } from "@/lib/canvas/shared-radar";
@@ -189,28 +189,17 @@ export default function RadarPage() {
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col selection:bg-emerald-800 selection:text-white">
       {/* Navigation Top Header */}
       <header className="border-b border-neutral-800/80 bg-neutral-900/60 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          {/* M5 Translucent Orange Icon Badge */}
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-neutral-950 font-black text-sm shadow-md shadow-orange-600/30 border border-amber-300/60 shrink-0">
-            M5
+        <div className="flex items-center gap-2.5">
+          {/* Santa Icon Badge */}
+          <div className="w-8 h-8 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center p-1 shadow-sm shrink-0">
+            <Image src="/santa-icon.svg" alt="Santa" width={24} height={24} className="w-6 h-6" priority />
           </div>
-          <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
-            <h1 className="text-sm font-bold font-mono tracking-tight text-white">
-              SANTA-OS <span className="text-emerald-400">// GLOBAL RADAR</span>
-            </h1>
-          </div>
+          <h1 className="text-sm font-bold font-mono tracking-tight text-white">
+            SANTA-OS
+          </h1>
         </div>
 
         <div className="flex items-center gap-2.5 text-xs font-mono">
-          <Link
-            href="/prototype"
-            className="px-2.5 py-1 rounded-md bg-neutral-800/80 hover:bg-neutral-700 border border-neutral-700/60 text-neutral-400 hover:text-neutral-200 transition text-xs font-mono flex items-center gap-1.5"
-            title="Open multi-mode prototype lab"
-          >
-            <span>🧪 Prototype Lab</span>
-          </Link>
-
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-800/80 border border-neutral-700/60 text-neutral-300">
             <Wifi className={`w-3.5 h-3.5 ${isLiveApi ? "text-emerald-400" : "text-amber-400"}`} />
             <span className="hidden md:inline">{isLiveApi ? "Synced: /api/journey" : "Demo Mode"}</span>
@@ -218,7 +207,7 @@ export default function RadarPage() {
 
           <button
             onClick={() => setIsMuted((prev) => !prev)}
-            className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition"
+            className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition cursor-pointer"
             title="Toggle Audio"
           >
             {isMuted ? <VolumeX className="w-3.5 h-3.5 text-neutral-500" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
