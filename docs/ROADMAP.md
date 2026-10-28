@@ -1,110 +1,114 @@
-# SANTA-OS Development Roadmap
+# SANTA-OS Master Development Roadmap
 
-This document outlines the phased milestone roadmap for **SANTA-OS**, guiding the project from its current MVP into a full multi-screen gadget with live Christmas Eve wall-clock synchronization and parent customizers.
-
----
-
-## Milestone Overview
-
-```
-Phase 1: Pure Radar MVP (COMPLETE ✅)
-   │
-   ▼
-Phase 2: Live Clock Sync & Christmas Eve Countdown
-   │
-   ▼
-Phase 3: Parent Configuration Portal & Storage
-   │
-   ▼
-Phase 4: Multi-Screen Expansion (Santa Cam & Dashboard)
-   │
-   ▼
-Phase 5: Production, 3D Prints & Gift Packaging
-```
+**Mission:** A 24-day Advent journey (Dec 1 – Dec 24) where Santa visits >200 cities across all continents, spending ~1 hour in transit and ~1 hour delivering gifts, synchronized across a custom M5StickC-Plus SE gadget and a companion web experience.
 
 ---
 
-## Phase 1: Pure Radar MVP (Complete ✅)
+## Master Architecture & Rhythm
 
-* [x] **Repository Reorganization:** Clean separation of web (`page/`) and embedded firmware (`firmware/`).
-* [x] **Hardware Architecture:** M5StickC-Plus SE support with 3MB `huge_app` partition table.
-* [x] **Retro Radar Display:**
+```
+December 01 ───────────────────────────────────────────────────► December 24 (Grand Finale)
+├── Cadence: ~1 hour FLIGHT  +  ~1 hour CITY STAY = 2 hours per waypoint
+├── Throughput: 12 cities / day across all continents
+└── Total Itinerary: 288 worldwide cities (>200 global waypoints)
+```
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> InTransit: Hour 1 (Flight)
+    InTransit --> InCity: Hour 2 (Stay)
+    InCity --> InTransit: Next Waypoint
+
+    state InTransit {
+        Radar1: World Radar (Sweeping Contact)
+        Cam1: Side Cam (Cruising / Hyper-Warp)
+        Dash1: Telemetry (Mach Speed Gauge)
+    }
+
+    state InCity {
+        Radar2: World Radar (Lock on Destination)
+        Cam2: Side Cam (Chimney Drop / Cookie Break)
+        Dash2: Telemetry (Gift Counter Surge)
+    }
+```
+
+---
+
+## Phase 1: Pure Radar MVP (COMPLETE ✅)
+
+* [x] **Subproject Segregation:** Isolated `firmware/` (PlatformIO, C++17) and `page/` (Next.js 15).
+* [x] **M5StickC-Plus SE Hardware Calibration:** 240×135 ST7789v2 IPS double-buffered rendering, 3MB `huge_app` flash partition.
+* [x] **Retro Radar Engine:**
   * 912 precomputed PROGMEM coastline dots.
-  * Fixed-center 360° rotating radar sweep line with secondary trailing beam.
-  * Red/white flashing Santa contact blip with radiating radar ping rings.
+  * Fixed-center 360° rotating radar sweep line with trailing ray.
+  * Red/white flashing Santa contact blip with expanding radar ping rings.
   * Golden dotted breadcrumb flight trail.
-  * Phosphor CRT green background and grid lines.
-* [x] **Single Source of Truth:**
-  * Shared JSON schema exposed at `/api/journey` and `public/journey.json`.
-* [x] **Offline Resilience:**
-  * Embedded PROGMEM fallback JSON guaranteeing instant boot with zero network delay.
-  * "Burst & Sleep" Wi-Fi mode that shuts off the radio immediately after sync to preserve the 120mAh battery.
-* [x] **Testing & CI:**
-  * PlatformIO native desktop unit test suite passing in under 1 second.
-  * GitHub Actions CI workflow running Next.js build, native tests, and firmware build on push.
-* [x] **Dedicated Presentation View:**
-  * Built [`/radar`](file:///Users/frogermcs/dev/workspace/ai-workflow/santa-demo/page/app/radar/page.tsx) with live telemetry and emulator controls.
+* [x] **Single Source of Truth:** Shared JSON schema exposed at `/api/journey` and `public/journey.json`.
+* [x] **Offline Resilience & Battery Conservation:** Instant boot with embedded PROGMEM demo data; "Burst & Sleep" Wi-Fi mode.
+* [x] **Native Desktop Testing:** PlatformIO native test suite passing in under 1 second without hardware flashing.
+* [x] **Clean Web Deployment:** Live on Vercel ([https://santa-tracker-five.vercel.app/](https://santa-tracker-five.vercel.app/)) with 1:1 hardware simulation.
 
 ---
 
-## Phase 2: Live Wall-Clock Synchronization (Christmas Eve Mode)
+## Phase 2: The 24-Day Master Itinerary & Live Clock Engine
 
-* **Objective:** Enable Santa to progress across the globe in real time on Christmas Eve (December 24th).
-* **Key Tasks:**
-  - [ ] **NTP Synchronization:** Brief Wi-Fi connection on boot to sync the onboard BM8563 Real-Time Clock (RTC) chip with UTC time.
-  - [ ] **Pre-Flight Staging Mode:**
-    - Before December 24th, 10:00 UTC: Santa is parked at the North Pole undergoing sleigh inspections.
-    - Display a live countdown timer until launch.
-  - [ ] **Live Flight Timeline:**
-    - Dec 24, 10:00 UTC (Auckland departure) to Dec 25, 06:00 UTC (Honolulu arrival).
-    - Map Santa's current waypoint and lat/lon automatically to real wall-clock minutes.
-  - [ ] **Demo Mode Override:**
-    - Preserve the current manual simulation mode (fast-forward, speed multipliers) when triggered via button hold.
-
----
-
-## Phase 3: Parent Configuration Portal & Persistent Storage
-
-* **Objective:** Allow parents to personalize the experience for their child without editing code or flashing firmware.
-* **Key Tasks:**
-  - [ ] **Kid's Hometown Destination:**
-    - Allow parents to configure their child's home city name, coordinates, and expected bedtime.
-    - Santa's route dynamically calculates an arrival time just before the child goes to sleep.
-  - [ ] **Captive Wi-Fi Setup Portal (ESP32 Access Point):**
-    - If the device cannot connect to a known network, it spawns an open Wi-Fi AP (`Santa-OS-Setup`).
-    - Parents connect with their smartphone to enter home Wi-Fi credentials via a local web form.
-  - [ ] **Non-Volatile Storage (Preferences / LittleFS):**
-    - Save child settings, Wi-Fi credentials, and mute preferences in ESP32 flash memory across power cycles.
+* **Objective:** Expand route to 288 cities (>200) spanning Dec 1 – Dec 24, with context-aware timing (1h flight + 1h city stay).
+* **Key Deliverables:**
+  - [ ] **288-City Master Route Generation:**
+    - Curate a geo-balanced itinerary spanning all 7 continents evenly across all 24 days.
+    - Expose via `/api/journey` and `journey.json` (~10–14 KB payload, ~9.2 KB ESP32 RAM).
+  - [ ] **Dual Clock Simulation Engine (`journey_engine`):**
+    - **Live Advent Mode:** Reads RTC time (BM8563 / NTP) and matches the exact city for the current date & hour (Dec 1–24).
+    - **Interactive Demo Mode:** Allows manual speed acceleration (`1x`, `2x`, `4x`, `8x`) and city jumping for testing outside December.
+  - [ ] **State Transitions:**
+    - Flag `isFlightPhase`: `true` for first 60 minutes, `false` for next 60 minutes.
+    - Scaled progress interpolation and dynamic ETA countdowns to arrival/departure.
 
 ---
 
-## Phase 4: Multi-Screen Feature Expansion
+## Phase 3: Context-Aware Multi-Screen Expansion
 
-* **Objective:** Port the remaining screens from the prototype into the modular architecture.
-* **Key Tasks:**
-  - [ ] **Screen 1 (Side-View Santa Cam):**
-    - Create `ui/screen_cam.cpp` rendering the 4-step pixel animations:
-      1. *Cruising Sky:* Sleigh bobbing through snowflakes and pine trees.
-      2. *Chimney Drop:* Parachuting gift boxes.
-      3. *Cookie Break:* Side profile of Santa eating cookies.
-      4. *Hyper-Warp:* Star streaks and glowing Rudolph nose.
-  - [ ] **Screen 2 (Santa's Telemetry Dashboard):**
-    - Create `ui/screen_dash.cpp` displaying:
-      - Live distance covered (`KM`).
-      - Sleigh speed (`MACH`).
-      - Gifts delivered counter.
-      - Highlighted destination banner.
-  - [ ] **Screen Navigation:**
-    - Short press Button A to cycle between: `Santa Cam` → `Dashboard` → `World Radar`.
-  - [ ] **Sound FX Expansion:**
-    - Polyphonic Christmas arrival jingle played through `M5.Speaker` upon reaching the child's hometown.
+* **Objective:** Port Side-View Santa Cam and Telemetry Dashboard, visually coupled to Santa's active state.
+* **Key Deliverables:**
+  - [ ] **Context-Aware Side-View Santa Cam (`ui/screen_cam.cpp`):**
+    * **During Transit (Flight Hour):**
+      - Mode A: *Cruising Sky* — Rudolph & sleigh bobbing through parallax snowfall and pine trees.
+      - Mode B: *Hyper-Warp* — Star streaks, sleigh shake, glowing red Rudolph aura.
+    * **During City Stay (Gift Drop Hour):**
+      - Mode C: *Chimney Drop* — Parachuting gift boxes onto scrolling rooftops.
+      - Mode D: *Cookie & Milk Break* — Santa eating cookies with animated munch counter.
+  - [ ] **Santa's Telemetry Dashboard (`ui/screen_dash.cpp`):**
+    - Live distance traveled (`KM`).
+    - Sleigh speed (`MACH` during flight, `0.0` during roof landing).
+    - Gifts delivered counter (ticks up during city stay).
+    - Next destination banner.
+  - [ ] **Hardware UI Cycling:**
+    - Button A short-press cycles: `World Radar` (Hero) → `Santa Cam` → `Telemetry Dashboard`.
 
 ---
 
-## Phase 5: Production, 3D Prints & Gift Packaging
+## Phase 4: Parent Customization & Wi-Fi Management
 
-* **Objective:** Polish the physical gadget into an unforgettable Christmas Eve gift.
-* **Key Tasks:**
-  - [ ] **3D-Printed Desktop Stand:** Snap-on display dock shaped like a chimney or sleigh stand with a USB-C charging slot.
-  - [ ] **Lanyard & Neck Strap:** Printable or branded festive lanyard for wearable tracking.
-  - [ ] **Kid's Mission Briefing Card:** Printable retro air-traffic control flight manual and gift box insert.
+* **Objective:** Enable parents to customize Santa's December 24th route (e.g. inject their hometown) and configure Wi-Fi.
+* **Key Deliverables:**
+  - [ ] **Hometown Override in Itinerary:**
+    - Cloud API allows custom hometown injection for Dec 24 bedtime window.
+    - Santa's radar and ETA lock on the child's home city as the grand finale before returning to the North Pole.
+  - [ ] **Smart Wi-Fi Sync:**
+    - Device periodically connects (e.g. once every 24h or on boot) to refresh the journey schedule via `/api/journey`.
+    - Shuts down Wi-Fi radio immediately after sync to preserve the 120mAh battery.
+  - [ ] **Fallback & Offline Safety:**
+    - Full 288-city schedule embedded in flash memory; works 100% offline if no Wi-Fi is configured.
+  - [ ] **Optional Captive Setup Portal:**
+    - If Wi-Fi fails, device can spawn a temporary AP (`Santa-Setup`) allowing parents to enter credentials via phone.
+
+---
+
+## Phase 5: Hardware Polish & Festive Packaging
+
+* **Objective:** Package the gadget into an heirloom Christmas Eve maker toy.
+* **Key Deliverables:**
+  - [ ] **3D-Printed Sleigh/Chimney Dock:** Snap-on display dock with USB-C power pass-through.
+  - [ ] **Audio Jingle Engine:** Polyphonic 8-bit Christmas chimes on city arrival using `M5.Speaker`.
+  - [ ] **Kid's Flight Manual:** Retro printable mission log card to track cities daily from Dec 1 to Dec 24.
