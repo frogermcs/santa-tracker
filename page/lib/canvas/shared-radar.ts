@@ -5,26 +5,31 @@ export interface RadarWaypoint {
   name: string;
   lon: number;
   lat: number;
+  localName?: string;
+  country?: string;
+  continent?: string;
+  arrivalWindow?: string;
+  transitWindow?: string;
+  activity?: string;
+  stopOfDay?: number;
+  stopTotal?: number;
 }
 
-export const SEC_PER_CITY = 16;
+export const SEC_PER_CITY = 12; // 6s flight + 6s stop (scaled 1:1 from 1hr flight + 1hr stop)
 
 export const JOURNEY_CITIES: RadarWaypoint[] = [
-  { name: "AUCKLAND",    lon: 174.8,  lat: -36.8 },
-  { name: "SYDNEY",      lon: 151.2,  lat: -33.9 },
-  { name: "TOKYO",       lon: 139.7,  lat: 35.7 },
-  { name: "BEIJING",     lon: 116.4,  lat: 39.9 },
-  { name: "DELHI",        lon: 77.2,   lat: 28.6 },
-  { name: "DUBAI",        lon: 55.3,   lat: 25.2 },
-  { name: "NAIROBI",      lon: 36.8,   lat: -1.3 },
-  { name: "CAIRO",        lon: 31.2,   lat: 30.0 },
-  { name: "KRAKOW",       lon: 19.9,   lat: 50.1 },
-  { name: "LONDON",       lon: -0.1,   lat: 51.5 },
-  { name: "RIO",         lon: -43.2,  lat: -22.9 },
-  { name: "NEW YORK",    lon: -74.0,  lat: 40.7 },
-  { name: "MEXICO CITY", lon: -99.1,  lat: 19.4 },
-  { name: "LOS ANGELES", lon: -118.2, lat: 34.0 },
-  { name: "HONOLULU",    lon: -157.8, lat: 21.3 }
+  { name: "GISBORNE",          lon: 178.0,  lat: -38.7, country: "Nowa Zelandia", continent: "Oceania" },
+  { name: "BETHLEHEM",         lon: 35.2,   lat: 31.7,  country: "Palestyna",     continent: "Azja" },
+  { name: "NICOSIA",           lon: 33.4,   lat: 35.2,  country: "Cypr",          continent: "Azja" },
+  { name: "KHARTOUM",          lon: 32.5,   lat: 15.5,  country: "Sudan",         continent: "Afryka" },
+  { name: "NOUAKCHOTT",        lon: -16.0,  lat: 18.1,  country: "Mauretania",    continent: "Afryka" },
+  { name: "CAYENNE",           lon: -52.3,  lat: 4.9,   country: "Gujana Fr.",    continent: "Ameryki" },
+  { name: "WYSPA WIELKANOCNA", lon: -109.3, lat: -27.1, country: "Chile",         continent: "Ameryki" },
+  { name: "KIRITIMATI",        lon: -157.4, lat: 1.9,   country: "Kiribati",      continent: "Pacyfik" },
+  { name: "HONOLULU",          lon: -157.8, lat: 21.3,  country: "USA",           continent: "Ameryki" },
+  { name: "NUUK",              lon: -51.7,  lat: 64.2,  country: "Grenlandia",    continent: "Ameryki" },
+  { name: "BIEGUN POLNOCNY",   lon: 0.0,    lat: 90.0,  country: "Arktyka",       continent: "Biegun" },
+  { name: "KRAKOW",            lon: 19.9,   lat: 50.1,  country: "Polska",        continent: "Europa" }
 ];
 
 function haversine(a: RadarWaypoint, b: RadarWaypoint) {
@@ -62,13 +67,19 @@ export function getJourneyTelemetry(simTime: number, customCityOverride?: string
   const p = u < 6 ? ease(u / 6) : 1;
   const k0 = safeIdx ? cumDistance[safeIdx - 1] : 0;
 
+  const isLastCity = safeIdx >= N - 1;
+  const isLandedAtFinal = isLastCity && u >= 6;
+
   let nextCityName =
-    u < 6
+    isLandedAtFinal
+      ? curr.name
+      : u < 6
       ? curr.name
       : safeIdx < N - 1
       ? JOURNEY_CITIES[safeIdx + 1].name
-      : "NORTH POLE";
-  if (customCityOverride && safeIdx === 8) {
+      : curr.name;
+
+  if (customCityOverride && isLastCity) {
     nextCityName = customCityOverride;
   }
 
@@ -172,7 +183,8 @@ export function renderSharedRadar(
   santaLat: number,
   nextCityName: string,
   etaSeconds: number,
-  isFlightPhase = true
+  isFlightPhase = true,
+  isGrandFinale = false
 ) {
   ctx.save();
 
@@ -312,9 +324,11 @@ export function renderSharedRadar(
   // 10. Bottom HUD bar: Next stop & ETA
   rect("rgba(2,17,10,.85)", 0, 121, W, 14);
   rect("#073018", 0, 120, W, 1);
-  text("CEL: " + nextCityName, 4, 124, "#7dff9b");
+  const isFinalArrival = isGrandFinale && currentWaypointIndex >= waypoints.length - 1 && !isFlightPhase;
+  const targetLabel = isFinalArrival ? "FINAŁ: " + nextCityName : "CEL: " + nextCityName;
+  text(targetLabel, 4, 124, isFinalArrival ? "#ffd54a" : "#7dff9b");
   text(
-    "CZAS 0:" + String(Math.max(0, etaSeconds)).padStart(2, "0"),
+    isFinalArrival ? "WIGILIA!" : "CZAS 0:" + String(Math.max(0, etaSeconds)).padStart(2, "0"),
     W - 4,
     124,
     "#ffd54a",

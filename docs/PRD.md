@@ -16,6 +16,12 @@ Rather than a simple one-night tracker, SANTA-OS operates as a **24-day Advent c
 * **~1 hour in the city** (landed on rooftops, dropping gifts and eating cookies).
 * Santa traverses the entire globe daily (~12 cities per day, 288 waypoints total), culminating on **December 24th** when Santa arrives at the child's configured hometown right before bedtime.
 
+### 1.1. Core Architectural Principle: Web App as the IoT Specification
+The companion web application (`page/`) serves as the definitive functional, visual, and mathematical specification for the physical M5StickC-Plus SE IoT application (`firmware/`):
+* **Web-First Delivery Sequence**: The web app must always be 100% development-complete, tested, and approved **prior** to porting features to the IoT firmware.
+* **1:1 Screen Parity**: Every single screen, mode, and state present on the IoT device must have an exact 1:1 corresponding screen on the web companion app (running the exact 240×135 ST7789v2 canvas emulation).
+* **Algorithm & Coordinate Parity**: Coordinate projections, interpolation easing curves (`ease()`), and transit/landed timings are perfected and verified on the web before being mirrored into C++.
+
 ---
 
 ## 2. Hardware Specifications & Budget
@@ -65,33 +71,59 @@ The app features 3 distinct views, where animations automatically reflect Santa'
 
 ---
 
-## 4. User Interaction Matrix
+## 4. User Interaction Matrix & Single-Screen Radar Controls
 
-| Input | Physical Device (M5StickC) | Web Emulator |
-| :--- | :--- | :--- |
-| **Button A (Short Press)** | Cycle Screens (`Radar` → `Santa Cam` → `Dashboard`) | Click M5 Button or press `Space` / `A` |
-| **Button B (Short Press)** | Cycle Speed Multiplier (`1x` → `2x` → `4x` → `8x`) | Click Side Button or press `B` |
-| **Button B (Long Press)** | Toggle Buzzer Sound Chirps (Mute / Unmute) | Audio Toggle Button or press `M` |
+### 4.1. Single-Screen Radar Control Layout
+For the current operational radar screen, the physical and emulated buttons are bound to fast multi-day review:
+
+| Input | Physical Device (M5StickC) | Web Emulator | Description |
+| :--- | :--- | :--- | :--- |
+| **Button A (Big Front M5)** | Front `M5` button | Click M5 Button or press `Space` / `A` | **Jump Between Days (1–24)**: Cycles through the 24 Advent days (`D01` → `D02` → ... → `D24` → `D01`), instantly loading that day's 12-stop itinerary. |
+| **Button B (Top Side Button)** | Small top edge button | Click Side Button or press `B` | **Jump Between Cities (1–12)**: Advances Santa to the next city on the active day, placing Santa landed at that city. |
+| **Audio Toggle** | Top Header / Key | Audio Icon or press `M` | **Mute / Unmute**: Toggles synthesized retro buzzer chirps and chimes. |
+
+### 4.2. Simulation Rhythm & Speed Ratio
+* **Real-World Itinerary**: 1 hour in transit (flight) + 1 hour in city (stop) = 2 hours per waypoint (12 stops = 24 hours).
+* **Hardcoded Web Simulation**: Scaled to **~6 seconds in transit + ~6 seconds landed in city** (**12 seconds total per waypoint**, `secPerCity = 12`).
+* **Day 24 Grand Finale Hold**: Once Santa lands in Kraków (#288), Santa remains landed in Kraków for an extended celebration hold (`FINAŁ: KRAKOW 🎁`).
 
 ---
 
-## 5. Non-Functional Requirements
+## 5. Non-Functional Requirements & Delivery Quality Gates
 
+### 5.1. Performance & Hardware Budgets
 * **Performance:** Constant 30+ FPS rendering on ESP32 LCD.
 * **Flash Budget:** Within 3MB partition limit (`huge_app.csv`, ~1.6MB / 50.9% currently used).
-* **RAM Budget:** Under 25% total internal SRAM usage (9.2 KB for 288 cities).
+* **RAM Budget:** Under 25% total internal SRAM usage (9.2 KB for 288 cities). No dynamic allocations in the render loop.
 * **Testability:** Core simulation mathematics decoupled from LCD code; passes native unit tests on desktop macOS/Linux in under 1 second.
+
+### 5.2. Mandatory Delivery Gates (Zero Tolerance for Errors)
+* **Web Companion App (`page/`):**
+  * `npm --prefix page run typecheck` (`tsc --noEmit`): **0 errors**.
+  * `npm --prefix page run lint`: **0 errors, 0 warnings**.
+  * `npm --prefix page run test:schedule`: **100% passing tests** validating 288 stops and Kraków finale.
+* **C++ Firmware (`firmware/`):**
+  * Zero compiler warnings/errors under `-Wall -Wextra`.
+  * Passes `pio test -e native` on desktop without requiring hardware.
+  * Clear code documentation and comments explaining memory layouts and pointer logic.
+* **Delivery Workflow:**
+  * Each new functionality or non-trivial change must be delivered via an isolated, reviewable Pull Request (`feat/...` or `fix/...`).
+  * All product changes and requirements modifications must be immediately documented in this PRD.
 
 ---
 
 ## 6. Milestone 1 Acceptance Criteria (Operational Radar End-to-End)
 
-1. **City List Ingestion:** Schema and parser support user-supplied multi-day cities schedule.
-2. **Web Simulation Enhancements (`/`):**
-   * **Day Selector:** Interactive selector allows picking any day between December 1st and December 24th to load that day's itinerary.
-   * **10x Speed Mode:** Dedicated toggle to run at 10x speed to easily test and inspect the full journey.
-3. **API Endpoint (`/api/journey`):** Serves complete multi-day schedule with CORS and edge caching.
-4. **M5StickC-Plus SE Firmware (`firmware/`):**
+1. **City List Ingestion:** Schema and parser support 288 stops across 24 Advent days from `Harmonogram Santa Tracker 2026 - Harmonogram_Lotow.csv`.
+2. **December 24th Grand Finale Route:**
+   * Sequence: `Oceania` $\rightarrow$ `Asia` $\rightarrow$ `Africa` $\rightarrow$ `Americas` $\rightarrow$ `Europe`.
+   * Final Stop (#288): **Kraków, Poland** (`22:00 - 23:00 UTC` / 23:00-midnight CET in Poland).
+   * Radar lock on Kraków: Santa lands and remains in Kraków with `FINAŁ: KRAKOW 🎁` celebration.
+3. **Web Simulation Enhancements (`/` and `/map-debugger`):**
+   * **Radar Preview (`/`):** Live M5StickC emulator with 12-stop interactive waypoints list, instant arrival jump, and grand finale hold.
+   * **Map Route Debugger (`/map-debugger`):** OpenStreetMap tiles, stop-by-stop inspector, stardust trajectory vectors, and sleigh flyby test simulator.
+4. **API Endpoint (`/api/journey`):** Serves complete multi-day schedule with CORS, edge caching, and active Day 24 payload.
+5. **M5StickC-Plus SE Firmware (`firmware/`):**
    * Successfully connects to Wi-Fi on boot and downloads the JSON schedule.
    * Hardcoded initial date: "Today is Dec 24th" to immediately test the Dec 24th finale route.
    * Offline fallback: Uses preloaded Dec 24th itinerary if Wi-Fi is unavailable.

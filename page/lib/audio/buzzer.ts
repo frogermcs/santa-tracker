@@ -65,6 +65,15 @@ class BuzzerSound {
     this.playTone(freq, durationMs, "square", 0.06);
   }
 
+  // Tactical Holiday Bell Chime
+  public playSleighChime() {
+    if (this.isMuted) return;
+    const notes = [1046.5, 1318.5, 1567.98, 2093.0]; // C6, E6, G6, C7
+    notes.forEach((freq, i) => {
+      setTimeout(() => this.playTone(freq, 70, "sine", 0.04), i * 75);
+    });
+  }
+
   public screenSwitch() {
     this.playTone(1100, 35, "square", 0.07);
   }

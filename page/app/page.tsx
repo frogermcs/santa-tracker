@@ -2,10 +2,13 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
-import { ArrowLeft, Compass, Radio, Wifi, Volume2, VolumeX, FastForward, Play, RefreshCw, Cpu, HardDrive } from "lucide-react";
+import Link from "next/link";
+import { Compass, Wifi, Volume2, VolumeX, RefreshCw, Map, Calendar } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
-import { renderSharedRadar, RadarWaypoint } from "@/lib/canvas/shared-radar";
+import { SnowEffect } from "@/components/SnowEffect";
+import { renderSharedRadar, RadarWaypoint, SEC_PER_CITY } from "@/lib/canvas/shared-radar";
 import { buzzer } from "@/lib/audio/buzzer";
+import { getDaySchedule, DEFAULT_ADVENT_DAY } from "@/lib/advent-schedule";
 
 interface JourneyApiResponse {
   version: number;
@@ -16,37 +19,39 @@ interface JourneyApiResponse {
 }
 
 const FALLBACK_ROUTE: RadarWaypoint[] = [
-  { name: "AUCKLAND",    lon: 174.8,  lat: -36.8 },
-  { name: "SYDNEY",      lon: 151.2,  lat: -33.9 },
-  { name: "TOKYO",       lon: 139.7,  lat: 35.7 },
-  { name: "BEIJING",     lon: 116.4,  lat: 39.9 },
-  { name: "DELHI",        lon: 77.2,   lat: 28.6 },
-  { name: "DUBAI",        lon: 55.3,   lat: 25.2 },
-  { name: "NAIROBI",      lon: 36.8,   lat: -1.3 },
-  { name: "CAIRO",        lon: 31.2,   lat: 30.0 },
-  { name: "KRAKOW",       lon: 19.9,   lat: 50.1 },
-  { name: "LONDON",       lon: -0.1,   lat: 51.5 },
-  { name: "RIO",         lon: -43.2,  lat: -22.9 },
-  { name: "NEW YORK",    lon: -74.0,  lat: 40.7 },
-  { name: "MEXICO CITY", lon: -99.1,  lat: 19.4 },
-  { name: "LOS ANGELES", lon: -118.2, lat: 34.0 },
-  { name: "HONOLULU",    lon: -157.8, lat: 21.3 }
+  { name: "GISBORNE",          lon: 178.0,  lat: -38.7, country: "Nowa Zelandia", continent: "Oceania" },
+  { name: "BETHLEHEM",         lon: 35.2,   lat: 31.7,  country: "Palestyna",     continent: "Azja" },
+  { name: "NICOSIA",           lon: 33.4,   lat: 35.2,  country: "Cypr",          continent: "Azja" },
+  { name: "KHARTOUM",          lon: 32.5,   lat: 15.5,  country: "Sudan",         continent: "Afryka" },
+  { name: "NOUAKCHOTT",        lon: -16.0,  lat: 18.1,  country: "Mauretania",    continent: "Afryka" },
+  { name: "CAYENNE",           lon: -52.3,  lat: 4.9,   country: "Gujana Fr.",    continent: "Ameryki" },
+  { name: "WYSPA WIELKANOCNA", lon: -109.3, lat: -27.1, country: "Chile",         continent: "Ameryki" },
+  { name: "KIRITIMATI",        lon: -157.4, lat: 1.9,   country: "Kiribati",      continent: "Pacyfik" },
+  { name: "HONOLULU",          lon: -157.8, lat: 21.3,  country: "USA",           continent: "Ameryki" },
+  { name: "NUUK",              lon: -51.7,  lat: 64.2,  country: "Grenlandia",    continent: "Ameryki" },
+  { name: "BIEGUN POLNOCNY",   lon: 0.0,    lat: 90.0,  country: "Arktyka",       continent: "Biegun" },
+  { name: "KRAKOW",            lon: 19.9,   lat: 50.1,  country: "Polska",        continent: "Europa" }
 ];
 
 export default function RadarPage() {
+  const [selectedDay, setSelectedDay] = useState<number>(DEFAULT_ADVENT_DAY);
   const [route, setRoute] = useState<RadarWaypoint[]>(FALLBACK_ROUTE);
-  const [secPerCity, setSecPerCity] = useState<number>(16);
-  const [speedMultiplier, setSpeedMultiplier] = useState<number>(1);
   const [isLiveApi, setIsLiveApi] = useState<boolean>(false);
   const [apiTimestamp, setApiTimestamp] = useState<string>("");
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [scanlines, setScanlines] = useState<boolean>(true);
 
+  // Timing: 6s journey + 6s stop = 12s per city (hardcoded 1x scale matching 1hr flight + 1hr stop)
+  const secPerCity = SEC_PER_CITY; // 12 seconds
+  const speedMultiplier = 1;
+
   // Active telemetry states
-  const [currentCityName, setCurrentCityName] = useState<string>("AUCKLAND");
-  const [nextCityName, setNextCityName] = useState<string>("SYDNEY");
-  const [eta, setEta] = useState<number>(16);
-  const [coords, setCoords] = useState<{ lat: string; lon: string }>({ lat: "0.0", lon: "0.0" });
+  const [currentCityName, setCurrentCityName] = useState<string>("GISBORNE");
+  const [nextCityName, setNextCityName] = useState<string>("BETHLEHEM");
+  const [activeStopIndex, setActiveStopIndex] = useState<number>(0);
+  const [eta, setEta] = useState<number>(12);
+  const [coords, setCoords] = useState<{ lat: string; lon: string }>({ lat: "-38.7", lon: "178.0" });
+  const [isFlightPhase, setIsFlightPhase] = useState<boolean>(false);
 
   // Button visual states
   const [isBtnAPressed, setIsBtnAPressed] = useState<boolean>(false);
@@ -54,18 +59,37 @@ export default function RadarPage() {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
-  const simTimeRef = useRef<number>(0);
+  const simTimeRef = useRef<number>(6); // Start landed at Stop 1
   const lastTimeRef = useRef<number>(0);
 
-  // 1. Fetch live journey from API endpoint
+  // Helper to load route for any day
+  const applyDayRoute = useCallback((dayNum: number) => {
+    const schedule = getDaySchedule(dayNum);
+    const newRoute: RadarWaypoint[] = schedule.stops.map((s) => ({
+      name: s.radarName,
+      localName: s.name,
+      lon: s.lon,
+      lat: s.lat,
+      country: s.country,
+      continent: s.continent,
+      arrivalWindow: s.arrivalWindow,
+      transitWindow: s.transitWindow,
+      activity: s.activity,
+      stopOfDay: s.stopOfDay,
+      stopTotal: s.stopTotal,
+    }));
+    setRoute(newRoute);
+    simTimeRef.current = 6; // Start landed at first city
+  }, []);
+
+  // 1. Fetch live journey from API endpoint on mount
   const fetchJourney = useCallback(async () => {
     try {
-      const res = await fetch("/api/journey");
+      const res = await fetch(`/api/journey?day=${selectedDay}`);
       if (res.ok) {
         const data: JourneyApiResponse = await res.json();
         if (data.route && data.route.length > 0) {
           setRoute(data.route);
-          setSecPerCity(data.secPerCity || 16);
           setIsLiveApi(true);
           setApiTimestamp(data.updatedAt || new Date().toISOString());
         }
@@ -73,33 +97,52 @@ export default function RadarPage() {
     } catch {
       setIsLiveApi(false);
     }
-  }, []);
+  }, [selectedDay]);
 
   useEffect(() => {
     fetchJourney();
   }, [fetchJourney]);
 
   // 2. Interactive Handlers
+  // Big Button A (Front M5 / Space / A): JUMPS BETWEEN DAYS (1 -> 24 -> 1)
   const handleBtnA = useCallback(() => {
     setIsBtnAPressed(true);
     setTimeout(() => setIsBtnAPressed(false), 200);
-    if (!isMuted) buzzer.playTone(1600, 40);
+    if (!isMuted) buzzer.playTone(1800, 50);
 
-    // Jump to next city
-    const curIdx = Math.floor(simTimeRef.current / secPerCity);
-    simTimeRef.current = (curIdx + 1) * secPerCity;
-  }, [secPerCity, isMuted]);
+    setSelectedDay((prevDay) => {
+      const nextDay = (prevDay % 24) + 1;
+      applyDayRoute(nextDay);
+      return nextDay;
+    });
+  }, [applyDayRoute, isMuted]);
 
+  // Top Button B (Side / B): JUMPS BETWEEN CITIES on the active day
   const handleBtnB = useCallback(() => {
     setIsBtnBPressed(true);
     setTimeout(() => setIsBtnBPressed(false), 200);
+    if (!isMuted) buzzer.playTone(1400, 35);
 
-    setSpeedMultiplier((prev) => {
-      const next = prev === 1 ? 2 : prev === 2 ? 4 : prev === 4 ? 8 : 1;
-      if (!isMuted) buzzer.playTone(1200 + next * 100, 30);
-      return next;
-    });
-  }, [isMuted]);
+    if (!route || route.length === 0) return;
+    const curIdx = Math.floor(simTimeRef.current / secPerCity);
+    const nextIdx = ((curIdx + 1) % route.length + route.length) % route.length;
+    // +6 seconds lands Santa directly at that city (6s stop begins)
+    simTimeRef.current = nextIdx * secPerCity + 6;
+  }, [route, secPerCity, isMuted]);
+
+  const handleSelectDay = useCallback((dayNum: number) => {
+    const validDay = Math.max(1, Math.min(24, dayNum));
+    setSelectedDay(validDay);
+    applyDayRoute(validDay);
+    if (!isMuted) buzzer.playTone(1700, 40);
+  }, [applyDayRoute, isMuted]);
+
+  const handleSelectCity = useCallback((targetIdx: number) => {
+    if (!route || route.length === 0) return;
+    const safeTarget = Math.max(0, Math.min(route.length - 1, targetIdx));
+    simTimeRef.current = safeTarget * secPerCity + 6;
+    if (!isMuted) buzzer.playTone(1300 + safeTarget * 50, 40);
+  }, [route, secPerCity, isMuted]);
 
   // Keyboard controls
   useEffect(() => {
@@ -127,39 +170,61 @@ export default function RadarPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    if (!route || route.length === 0 || secPerCity <= 0) return;
+
     lastTimeRef.current = performance.now();
 
     const render = (now: number) => {
-      const dt = (now - lastTimeRef.current) / 1000;
+      if (!route || route.length === 0) return;
+
+      const rawDt = (now - lastTimeRef.current) / 1000;
       lastTimeRef.current = now;
-      const clampedDt = Math.min(dt, 0.1);
+      const clampedDt = Math.max(0, Math.min(rawDt, 0.1));
 
       simTimeRef.current += clampedDt * speedMultiplier;
       const totalSimTime = route.length * secPerCity;
-      if (simTimeRef.current >= totalSimTime) {
-        simTimeRef.current -= totalSimTime;
+      if (totalSimTime <= 0) return;
+
+      // Give a celebration hold at the final city (Kraków on Day 24) before looping
+      const holdDuration = selectedDay === 24 ? 16 : 0;
+      const cycleTotal = totalSimTime + holdDuration;
+      if (simTimeRef.current >= cycleTotal || simTimeRef.current < 0) {
+        simTimeRef.current = 0;
       }
 
-      const totalTime = simTimeRef.current;
-      const cityIdx = Math.floor(totalTime / secPerCity);
-      const u = totalTime - cityIdx * secPerCity;
-      const safeIdx = cityIdx % route.length;
+      // Clamp simulation time during the grand finale hold
+      const effectiveSimTime = Math.min(simTimeRef.current, totalSimTime - 0.001);
+      const cityIdx = Math.floor(effectiveSimTime / secPerCity);
+      const u = Math.max(0, effectiveSimTime - cityIdx * secPerCity);
+      const safeIdx = ((cityIdx % route.length) + route.length) % route.length;
       const prevIdx = safeIdx > 0 ? safeIdx - 1 : 0;
 
-      const isFlight = u < 6;
+      const isLastCity = safeIdx === route.length - 1;
+      const isDay24Finale = selectedDay === 24 && isLastCity && (u >= 6 || simTimeRef.current >= totalSimTime);
+
+      const isFlight = !isDay24Finale && u < 6;
       const p = isFlight ? (u / 6 < 0.5 ? 2 * (u / 6) ** 2 : 1 - (-2 * (u / 6) + 2) ** 2 / 2) : 1;
 
-      const prev = route[prevIdx];
-      const curr = route[safeIdx];
+      const curr = route[safeIdx] ?? route[0];
+      const prev = route[prevIdx] ?? curr;
+      if (!curr || !prev) return;
 
       const sLon = prev.lon + (curr.lon - prev.lon) * p;
       const sLat = prev.lat + (curr.lat - prev.lat) * p;
 
-      const nextName = u < 6 ? curr.name : safeIdx < route.length - 1 ? route[safeIdx + 1].name : "NORTH POLE";
-      const etaSec = Math.ceil(u < 6 ? 6 - u : secPerCity - u + 6);
+      const nextIdx = (safeIdx + 1) % route.length;
+      const nextName = isDay24Finale
+        ? curr.name
+        : u < 6
+        ? curr.name
+        : (route[nextIdx]?.name || curr.name);
+
+      const etaSec = isDay24Finale ? 0 : Math.ceil(u < 6 ? 6 - u : secPerCity - u);
 
       setCurrentCityName(curr.name);
       setNextCityName(nextName);
+      setActiveStopIndex(safeIdx);
+      setIsFlightPhase(isFlight);
       setEta(etaSec);
       setCoords({ lat: sLat.toFixed(1), lon: sLon.toFixed(1) });
 
@@ -173,7 +238,8 @@ export default function RadarPage() {
         sLat,
         nextName,
         etaSec,
-        isFlight
+        isFlight,
+        selectedDay === 24
       );
 
       animFrameRef.current = requestAnimationFrame(render);
@@ -183,50 +249,104 @@ export default function RadarPage() {
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [route, secPerCity, speedMultiplier]);
+  }, [route, secPerCity, speedMultiplier, selectedDay]);
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col selection:bg-emerald-800 selection:text-white">
+    <div className="min-h-screen bg-[#060a16] text-slate-100 flex flex-col selection:bg-rose-900 selection:text-amber-100 relative overflow-x-hidden">
+      {/* Arctic Midnight Sky with Aurora & Starlight Depth */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(14,165,233,0.12),transparent_70%),radial-gradient(circle_at_50%_35%,#091326_0%,#060a16_55%,#03050d_100%)]"
+      />
+
+      {/* Gentle Falling Snow Particle Layer */}
+      <SnowEffect />
+
       {/* Navigation Top Header */}
-      <header className="border-b border-neutral-800/80 bg-neutral-900/60 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
+      <header className="border-b border-white/10 bg-[#070e1c]/75 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-2.5">
           {/* Santa Icon Badge */}
-          <div className="w-8 h-8 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center p-1 shadow-sm shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-rose-950/40 border border-rose-500/30 flex items-center justify-center p-1 shadow-sm shrink-0">
             <Image src="/santa-icon.svg" alt="Santa" width={24} height={24} className="w-6 h-6" priority />
           </div>
-          <h1 className="text-sm font-bold font-mono tracking-tight text-white">
-            SANTA-OS
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-sm font-bold font-mono tracking-tight text-white">
+              SANTA-OS
+            </h1>
+          </div>
         </div>
 
         <div className="flex items-center gap-2.5 text-xs font-mono">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-800/80 border border-neutral-700/60 text-neutral-300">
+          <Link
+            href="/map-debugger"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 transition font-bold cursor-pointer"
+          >
+            <Map className="w-3.5 h-3.5 text-sky-400" />
+            <span>Map Debugger</span>
+          </Link>
+
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900/80 border border-white/10 text-slate-300">
             <Wifi className={`w-3.5 h-3.5 ${isLiveApi ? "text-emerald-400" : "text-amber-400"}`} />
             <span className="hidden md:inline">{isLiveApi ? "Synced: /api/journey" : "Demo Mode"}</span>
+            {isLiveApi && (
+              <button
+                onClick={fetchJourney}
+                className="ml-1 p-0.5 rounded text-slate-400 hover:text-white transition cursor-pointer"
+                title="Przeładuj trasę"
+              >
+                <RefreshCw className="w-3 h-3 hover:rotate-180 transition-transform duration-300" />
+              </button>
+            )}
           </div>
 
           <button
             onClick={() => setIsMuted((prev) => !prev)}
-            className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition cursor-pointer"
+            className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-white/10 transition cursor-pointer"
             title="Toggle Audio"
           >
-            {isMuted ? <VolumeX className="w-3.5 h-3.5 text-neutral-500" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
+            {isMuted ? <VolumeX className="w-3.5 h-3.5 text-slate-500" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
           </button>
         </div>
       </header>
 
+      {/* Interactive Advent Day Selector Bar */}
+      <section className="border-b border-white/10 bg-[#060a16]/85 backdrop-blur-sm px-4 sm:px-8 py-2.5 overflow-x-auto scrollbar-thin relative z-10">
+        <div className="flex items-center gap-1.5 max-w-6xl mx-auto">
+          <span className="text-[11px] font-mono font-bold text-amber-300/90 uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1">
+            <Calendar className="w-3.5 h-3.5 text-amber-400" />
+            Dzień grudnia:
+          </span>
+          {Array.from({ length: 24 }, (_, i) => i + 1).map((d) => {
+            const isSelected = selectedDay === d;
+            const isFinale = d === 24;
+
+            return (
+              <button
+                key={d}
+                onClick={() => handleSelectDay(d)}
+                className={`px-2 py-0.5 rounded text-xs font-mono font-bold transition shrink-0 border cursor-pointer flex items-center gap-0.5 ${
+                  isSelected
+                    ? isFinale
+                      ? "bg-rose-600 text-white border-rose-300 shadow-md shadow-rose-950 font-bold ring-1 ring-amber-300/60"
+                      : "bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-950 font-bold"
+                    : isFinale
+                    ? "bg-rose-950/40 hover:bg-rose-900/50 text-rose-200 border-rose-500/40"
+                    : "bg-slate-900/60 hover:bg-slate-800/80 text-slate-300 border-white/10"
+                }`}
+              >
+                <span className="text-[10px] opacity-75">D</span>
+                <span>{String(d).padStart(2, "0")}</span>
+                {isFinale && <span className="text-[10px] text-amber-300">★</span>}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
         {/* Left Column: M5StickC-Plus SE Hardware Emulator (7 cols) */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center gap-6">
-          <div className="w-full flex items-center justify-between text-xs font-mono text-neutral-400 px-2">
-            <span className="flex items-center gap-1.5 text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
-              LIVE RADAR SIMULATOR
-            </span>
-            <span>240 × 135 IPS DISPLAY</span>
-          </div>
-
           {/* Interactive Hardware Shell */}
           <M5StickDevice
             canvasRef={canvasRef}
@@ -239,104 +359,122 @@ export default function RadarPage() {
           />
 
           {/* Keyboard Helper Legend */}
-          <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-mono text-neutral-400">
-            <div className="flex items-center gap-1.5 bg-neutral-900 px-2.5 py-1 rounded border border-neutral-800">
-              <kbd className="px-1.5 py-0.5 bg-neutral-800 text-amber-400 rounded text-[10px]">Space</kbd>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-mono text-slate-400">
+            <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2.5 py-1 rounded border border-white/10 shadow-sm">
+              <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">Space</kbd>
               <span>/</span>
-              <kbd className="px-1.5 py-0.5 bg-neutral-800 text-amber-400 rounded text-[10px]">A</kbd>
-              <span className="text-neutral-300">Jump City</span>
+              <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">A</kbd>
+              <span className="text-slate-200 font-bold">Następny Dzień (Przycisk M5)</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-neutral-900 px-2.5 py-1 rounded border border-neutral-800">
-              <kbd className="px-1.5 py-0.5 bg-neutral-800 text-amber-400 rounded text-[10px]">B</kbd>
-              <span className="text-neutral-300">Speed (1x/2x/4x/8x)</span>
+            <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2.5 py-1 rounded border border-white/10 shadow-sm">
+              <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">B</kbd>
+              <span className="text-slate-200 font-bold">Następne Miasto (Przycisk Górny)</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-neutral-900 px-2.5 py-1 rounded border border-neutral-800">
-              <kbd className="px-1.5 py-0.5 bg-neutral-800 text-amber-400 rounded text-[10px]">M</kbd>
-              <span className="text-neutral-300">Mute</span>
+            <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2.5 py-1 rounded border border-white/10 shadow-sm">
+              <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">M</kbd>
+              <span className="text-slate-300">Dźwięk</span>
             </div>
           </div>
         </div>
 
         {/* Right Column: Mission Control & Telemetry Panel (5 cols) */}
-        <div className="lg:col-span-5 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-6 flex flex-col gap-5 shadow-2xl backdrop-blur-sm">
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <div className="lg:col-span-5 bg-[#091122]/75 border border-white/10 rounded-3xl p-6 flex flex-col gap-5 shadow-2xl shadow-black/50 backdrop-blur-md">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
             <div>
               <h2 className="text-base font-bold font-mono text-white flex items-center gap-2">
-                <Compass className="w-4 h-4 text-emerald-400" />
+                <Compass className="w-4 h-4 text-amber-400" />
                 Live Sleigh Telemetry
               </h2>
-              <p className="text-xs text-neutral-400 mt-0.5">Real-time GPS lock & tracking metrics</p>
             </div>
-            <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
-              {speedMultiplier}x SPEED
+            <span className="px-2 py-0.5 rounded text-xs font-mono font-bold border bg-amber-500/10 border-amber-400/30 text-amber-300">
+              DZIEŃ {selectedDay}/24
             </span>
           </div>
 
           {/* Telemetry Cards */}
           <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-            <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-xl">
-              <span className="text-neutral-500 text-[10px] block">CURRENT TARGET</span>
-              <span className="text-white font-bold text-sm block mt-0.5">{nextCityName}</span>
-            </div>
-            <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-xl">
-              <span className="text-neutral-500 text-[10px] block">ETA COUNTDOWN</span>
-              <span className="text-amber-400 font-bold text-sm block mt-0.5">0:{String(eta).padStart(2, "0")}</span>
-            </div>
-            <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-xl">
-              <span className="text-neutral-500 text-[10px] block">LATITUDE</span>
-              <span className="text-emerald-400 font-bold text-sm block mt-0.5">{coords.lat}° N</span>
-            </div>
-            <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-xl">
-              <span className="text-neutral-500 text-[10px] block">LONGITUDE</span>
-              <span className="text-emerald-400 font-bold text-sm block mt-0.5">{coords.lon}° E</span>
-            </div>
-          </div>
-
-          {/* Interactive Fast Controls */}
-          <div className="space-y-2.5">
-            <span className="text-xs font-mono text-neutral-400 font-bold uppercase tracking-wider block">
-              Device Controls
-            </span>
-            <div className="grid grid-cols-2 gap-2 font-mono text-xs">
-              <button
-                onClick={handleBtnA}
-                className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
-              >
-                <FastForward className="w-3.5 h-3.5" />
-                <span>Next City</span>
-              </button>
-              <button
-                onClick={handleBtnB}
-                className="py-2.5 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold transition flex items-center justify-center gap-1.5 border border-neutral-700 cursor-pointer"
-              >
-                <Play className="w-3.5 h-3.5 text-amber-400" />
-                <span>Cycle Speed</span>
-              </button>
-            </div>
-          </div>
-
-          {/* JSON Endpoint Info Box */}
-          <div className="p-4 bg-neutral-950/90 border border-neutral-800/80 rounded-2xl flex flex-col gap-2">
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-neutral-400 font-bold flex items-center gap-1.5">
-                <Wifi className="w-3.5 h-3.5 text-emerald-400" />
-                Single Source of Truth
+            <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
+              <span className="text-slate-400 text-[10px] block">
+                {selectedDay === 24 && activeStopIndex === route.length - 1 ? "FINAŁ WIGILII 🎁" : "AKTUALNY CEL"}
               </span>
-              <button
-                onClick={fetchJourney}
-                className="text-neutral-500 hover:text-neutral-300 flex items-center gap-1 text-[11px] cursor-pointer"
-              >
-                <RefreshCw className="w-3 h-3" />
-                Reload
-              </button>
+              <span className="text-white font-bold text-sm block mt-0.5 truncate">
+                {selectedDay === 24 && activeStopIndex === route.length - 1 ? "KRAKÓW (PL)" : nextCityName}
+              </span>
             </div>
-            <div className="bg-neutral-900 px-3 py-2 rounded-lg font-mono text-[11px] text-emerald-300 border border-neutral-800 flex items-center justify-between">
-              <code>GET /api/journey</code>
-              <span className="text-neutral-500">{route.length} waypoints</span>
+            <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
+              <span className="text-slate-400 text-[10px] block">ETA COUNTDOWN</span>
+              <span className="text-amber-400 font-bold text-sm block mt-0.5">
+                {selectedDay === 24 && activeStopIndex === route.length - 1 && eta === 0
+                  ? "WIGILIA!"
+                  : `0:${String(eta).padStart(2, "0")}`}
+              </span>
             </div>
-            <p className="text-[11px] text-neutral-400 leading-relaxed font-mono">
-              Both this web simulator and the physical M5StickC-Plus SE fetch this exact JSON endpoint. If Wi-Fi is unreachable, both fall back to the embedded demo schedule.
-            </p>
+            <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
+              <span className="text-slate-400 text-[10px] block">STATUS RUCHU</span>
+              <span className="text-amber-300 font-bold text-sm block mt-0.5">
+                {isFlightPhase ? "Tranzyt" : "Miasto"}
+              </span>
+            </div>
+            <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
+              <span className="text-slate-400 text-[10px] block">POZYCJA GPS</span>
+              <span className="text-sky-300 font-bold text-sm block mt-0.5 truncate">
+                {coords.lat}° N, {coords.lon}° E
+              </span>
+            </div>
+          </div>
+
+          {/* Interactive Route Stop Sequence */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-slate-400 font-bold uppercase tracking-wider">
+                Trasa Dnia {selectedDay}
+              </span>
+              <span className="text-[11px] text-amber-300 font-bold">
+                {activeStopIndex + 1}/{route.length}
+              </span>
+            </div>
+            <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
+              {route.map((wp, idx) => {
+                const isActive = activeStopIndex === idx;
+                const isFinal = idx === route.length - 1 && selectedDay === 24;
+                const isFirst = idx === 0;
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelectCity(idx)}
+                    className={`w-full text-left p-2 rounded-xl text-xs font-mono transition flex items-center justify-between border cursor-pointer ${
+                      isActive
+                        ? isFinal
+                          ? "bg-rose-500/25 border-rose-400 text-amber-200 font-bold shadow-md shadow-rose-950/50 ring-1 ring-amber-400/40"
+                          : "bg-amber-500/15 border-amber-400/60 text-amber-100 font-bold shadow-md shadow-amber-950/40"
+                        : "bg-[#0c162b]/50 hover:bg-[#12203d]/70 border-white/5 text-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center shrink-0 border font-bold ${
+                          isActive
+                            ? isFinal
+                              ? "bg-amber-400 text-black border-amber-300"
+                              : "bg-amber-400 text-black border-amber-300"
+                            : "bg-[#060d1b] text-slate-400 border-white/10"
+                        }`}
+                      >
+                        {isFirst ? "⭐" : isFinal ? "🎁" : idx + 1}
+                      </span>
+                      <span className="truncate">
+                        {wp.localName || wp.name}
+                        {isFinal && " (FINAŁ)"}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 shrink-0">
+                      {wp.country || wp.continent}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </main>

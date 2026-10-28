@@ -1,0 +1,289 @@
+Nr przystanku (ogółem),Data,Dzień miesiąca,Nr przystanku w danym dniu,Przylot i postój (UTC),Kolejny lot tranzytowy (UTC),Kontynent,Kraj,Miasto / Lokalizacja,Szerokość geograficzna (Lat),Długość geograficzna (Lng),Ciekawostka / Zadanie Mikołaja
+1,2026-12-01,1,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nowa Zelandia,Auckland,-36.8485,174.7633,Lądowanie na dachu wieży Sky Tower
+2,2026-12-01,1,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Sydney,-33.8688,151.2093,Okrążenie Opery w Sydney
+3,2026-12-01,1,3,04:00 - 05:00,05:00 - 06:00,Azja,Japonia,Tokio,35.6762,139.6503,Przelot nad iglicą Tokyo Skytree
+4,2026-12-01,1,4,06:00 - 07:00,07:00 - 08:00,Azja,Korea Południowa,Seoul,37.5665,126.978,Podziwianie iluminacji mostów nad rzeką Han
+5,2026-12-01,1,5,08:00 - 09:00,09:00 - 10:00,Europa,Finlandia,Rovaniemi,66.5039,25.7294,Oficjalny start z Wioski Świętego Mikołaja w Rovaniemi
+6,2026-12-01,1,6,10:00 - 11:00,11:00 - 12:00,Europa,Szwecja,Stockholm,59.3293,18.0686,Niski przelot nad brukowanymi uliczkami Gamla Stan
+7,2026-12-01,1,7,12:00 - 13:00,13:00 - 14:00,Afryka,Egipt,Kair,30.0444,31.2357,Nocny przelot saniami nad piramidami w Gizie
+8,2026-12-01,1,8,14:00 - 15:00,15:00 - 16:00,Afryka,Kenia,Nairobi,-1.2921,36.8219,Krótki postój na sawannie z widokiem na wieżowce
+9,2026-12-01,1,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Anchorage (AK),61.2181,-149.9003,Lądowanie w śniegach pasma Chugach
+10,2026-12-01,1,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Kanada,Vancouver,49.2827,-123.1207,Ślizg wzdłuż Parku Stanleya i Coast Mountains
+11,2026-12-01,1,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Kolumbia,Bogotá,4.711,-74.0721,Podziwianie panoramy miasta ze wzgórza Monserrate
+12,2026-12-01,1,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Ekwador,Quito,-0.1807,-78.4678,Przekroczenie równika przy pomniku Mitad del Mundo
+13,2026-12-02,2,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nowa Zelandia,Wellington,-41.2865,174.7762,Wietrzny przelot nad malowniczą zatoką
+14,2026-12-02,2,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Melbourne,-37.8136,144.9631,Świąteczne iluminacje wzdłuż rzeki Yarra
+15,2026-12-02,2,3,04:00 - 05:00,05:00 - 06:00,Azja,Tajwan,Taipei,25.033,121.5654,Odpoczynek na iglicy wieżowca Taipei 101
+16,2026-12-02,2,4,06:00 - 07:00,07:00 - 08:00,Azja,Singapur,Singapur,1.3521,103.8198,Lot między świecącymi Superdrzewami w Gardens by the Bay
+17,2026-12-02,2,5,08:00 - 09:00,09:00 - 10:00,Europa,Norwegia,Oslo,59.9139,10.7522,Zimowe podejście do lądowania nad fiordem
+18,2026-12-02,2,6,10:00 - 11:00,11:00 - 12:00,Europa,Dania,Copenhagen,55.6761,12.5683,Magiczne światełka w ogrodach Tivoli
+19,2026-12-02,2,7,12:00 - 13:00,13:00 - 14:00,Afryka,Tanzania,Zanzibar,-6.1659,39.2026,Przelot nad koralowymi zaułkami Stone Town
+20,2026-12-02,2,8,14:00 - 15:00,15:00 - 16:00,Afryka,Etiopia,Addis Ababa,9.03,38.74,Wysokogórski postój na zboczach góry Entoto
+21,2026-12-02,2,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Seattle (WA),47.6062,-122.3321,Sprawdzenie gwiazdy na szczycie wieży Space Needle
+22,2026-12-02,2,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Kanada,Calgary,51.0447,-114.0719,Przelot nad przedgórzem Gór Skalistych
+23,2026-12-02,2,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Peru,Lima,-12.0464,-77.0428,Pacyficzna bryza na klifach Miraflores
+24,2026-12-02,2,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Peru,Cusco,-13.5319,-71.9675,Brama do Świętej Doliny Inków i Machu Picchu
+25,2026-12-03,3,1,00:00 - 01:00,01:00 - 02:00,Oceania,Fidżi,Suva,-18.1416,178.4419,Gorące świąteczne pozdrowienia z wysp południowego Pacyfiku
+26,2026-12-03,3,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Brisbane,-27.4698,153.0251,Letnie święta w 'River City'
+27,2026-12-03,3,3,04:00 - 05:00,05:00 - 06:00,Azja,Hongkong,Hong Kong,22.3193,114.1694,Laserowy pokaz świateł nad Portem Wiktorii
+28,2026-12-03,3,4,06:00 - 07:00,07:00 - 08:00,Azja,Chiny,Pekin,39.9042,116.4074,Przelot nad dachami Zakazanego Miasta
+29,2026-12-03,3,5,08:00 - 09:00,09:00 - 10:00,Europa,Niemcy,Berlin,52.52,13.405,Świąteczny przelot nad Bramą Brandenburską
+30,2026-12-03,3,6,10:00 - 11:00,11:00 - 12:00,Europa,Wielka Brytania,Belfast,54.5973,-5.9301,Jarmark świąteczny przed majestatycznym ratuszem w Belfaście
+31,2026-12-03,3,7,12:00 - 13:00,13:00 - 14:00,Afryka,Rwanda,Kigali,-1.9706,30.1044,Tysiące zielonych wzgórz rozświetlonych girlandami
+32,2026-12-03,3,8,14:00 - 15:00,15:00 - 16:00,Afryka,Zimbabwe,Victoria Falls,-17.9243,25.8572,Przelot nad mgłą i tęczą Wodospadów Wiktorii
+33,2026-12-03,3,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,San Francisco (CA),37.7749,-122.4194,Światła sań przebijające słynną mgłę nad Golden Gate
+34,2026-12-03,3,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Stany Zjednoczone,Salt Lake City (UT),40.7608,-111.891,Sprawdzanie świeżego puchu w paśmie Wasatch
+35,2026-12-03,3,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Boliwia,La Paz,-16.4897,-68.1193,Szybowanie wzdłuż najwyżej położonej sieci kolejek linowych
+36,2026-12-03,3,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Chile,Santiago,-33.4489,-70.6693,Przelot obok Gran Torre z ośnieżonymi Andami w tle
+37,2026-12-04,4,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nowa Zelandia,Christchurch,-43.5321,172.6362,Spektakularne zniżanie nad Alpami Południowymi
+38,2026-12-04,4,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Hobart,-42.8821,147.3272,Przelot nad dziewiczą przyrodą Tasmanii
+39,2026-12-04,4,3,04:00 - 05:00,05:00 - 06:00,Azja,Japonia,Kyoto,35.0116,135.7681,Dźwięk starożytnych dzwonów świątynnych witający zaprzęg
+40,2026-12-04,4,4,06:00 - 07:00,07:00 - 08:00,Azja,Tajlandia,Bangkok,13.7563,100.5018,Spokojny lot wzdłuż rzeki Menam obok Wielkiego Pałacu
+41,2026-12-04,4,5,08:00 - 09:00,09:00 - 10:00,Europa,Polska,Warszawa,52.2297,21.0122,Sprawdzenie wielkiej choinki na Placu Zamkowym
+42,2026-12-04,4,6,10:00 - 11:00,11:00 - 12:00,Europa,Czechy,Praga,50.0755,14.4378,Most Karola i zegar astronomiczny Orloj
+43,2026-12-04,4,7,12:00 - 13:00,13:00 - 14:00,Afryka,RPA,Kapsztad,-33.9249,18.4241,Szybki obrót nad płaskowyżem Góry Stołowej
+44,2026-12-04,4,8,14:00 - 15:00,15:00 - 16:00,Afryka,RPA,Johannesburg,-26.2041,28.0473,Złote Miasto nocą z wysokości przelotowej
+45,2026-12-04,4,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Denver (CO),39.7392,-104.9903,Panorama 'Mile High City' w zimowej szacie
+46,2026-12-04,4,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Meksyk,Guadalajara,20.6597,-103.3496,Świąteczne girlandy i mariachi na Plaza de Armas
+47,2026-12-04,4,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Argentyna,Bariloche,-41.1335,-71.3103,Przelot nad stolicą patagońskiej czekolady
+48,2026-12-04,4,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Argentyna,Ushuaia,-54.8019,-68.303,Zorza polarna i lądowanie na 'Końcu Świata'
+49,2026-12-05,5,1,00:00 - 01:00,01:00 - 02:00,Oceania,Australia,Perth,-31.9505,115.8605,Ślizg w blasku zachodzącego słońca nad Oceanem Indyjskim
+50,2026-12-05,5,2,02:00 - 03:00,03:00 - 04:00,Azja,Wietnam,Hanoi,21.0285,105.8542,Wieczorne okrążenie Jeziora Zwróconego Miecza
+51,2026-12-05,5,3,04:00 - 05:00,05:00 - 06:00,Azja,Malezja,Kuala Lumpur,3.139,101.6869,Zanurzenie pod mostem łączącym bliźniacze wieże Petronas
+52,2026-12-05,5,4,06:00 - 07:00,07:00 - 08:00,Europa,Austria,Wiedeń,48.2082,16.3738,Tradycyjny jarmark Christkindlmarkt przed ratuszem
+53,2026-12-05,5,5,08:00 - 09:00,09:00 - 10:00,Europa,Szwajcaria,Zurich,47.3769,8.5417,"Widok na Alpy, Jezioro Zuryskie i historyczne kamienice"
+54,2026-12-05,5,6,10:00 - 11:00,11:00 - 12:00,Afryka,Namibia,Windhoek,-22.5609,17.0658,Nawigacja pod rozgwieżdżonym niebem pustyni Kalahari
+55,2026-12-05,5,7,12:00 - 13:00,13:00 - 14:00,Afryka,Madagaskar,Antananarivo,-18.8792,47.5079,Wzgórze pałacowe Rova górujące nad stolicą
+56,2026-12-05,5,8,14:00 - 15:00,15:00 - 16:00,Ameryka Północna,Meksyk,Mexico City,19.4326,-99.1332,Wielka świąteczna piñata i światełka na Zócalo
+57,2026-12-05,5,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Austin (TX),30.2672,-97.7431,Świąteczne megadrzewko w Zilker Park
+58,2026-12-05,5,10,18:00 - 19:00,19:00 - 20:00,Ameryka Południowa,Argentyna,Buenos Aires,-34.6037,-58.3816,Przelot wzdłuż najszerszej alei świata obok Obelisku
+59,2026-12-05,5,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Urugwaj,Montevideo,-34.9011,-56.1645,Nadmorska bryza wzdłuż promenady Rambla
+60,2026-12-05,5,12,22:00 - 23:00,23:00 - 00:00,Oceania,Samoa,Apia,-13.8333,-171.7667,Przekroczenie międzynarodowej linii zmiany daty
+61,2026-12-06,6,1,00:00 - 01:00,01:00 - 02:00,Oceania,Australia,Adelaide,-34.9285,138.6007,Przelot nad malowniczymi winnicami Barossa Valley
+62,2026-12-06,6,2,02:00 - 03:00,03:00 - 04:00,Azja,Filipiny,Manila,14.5995,120.9842,Tradycyjne lampiony paról w murach Intramuros
+63,2026-12-06,6,3,04:00 - 05:00,05:00 - 06:00,Azja,Indonezja,Jakarta,-6.2088,106.8456,Narodowy pomnik Monas w świątecznej oprawie
+64,2026-12-06,6,4,06:00 - 07:00,07:00 - 08:00,Europa,Szwajcaria,Genewa,46.2044,6.1432,Fontanna Jet d'Eau z Mont Blanc w tle
+65,2026-12-06,6,5,08:00 - 09:00,09:00 - 10:00,Europa,Włochy,Rzym,41.9028,12.4964,Koloseum i Plac Świętego Piotra z lotu ptaka
+66,2026-12-06,6,6,10:00 - 11:00,11:00 - 12:00,Afryka,Mauritius,Port Louis,-20.1609,57.5012,Wulkaniczne szczyty pośrodku Oceanu Indyjskiego
+67,2026-12-06,6,7,12:00 - 13:00,13:00 - 14:00,Afryka,Angola,Luanda,-8.839,13.2894,Przelot wzdłuż atlantyckiej promenady Marginal
+68,2026-12-06,6,8,14:00 - 15:00,15:00 - 16:00,Ameryka Północna,Stany Zjednoczone,New Orleans (LA),29.9511,-90.0715,Dźwięki świątecznego jazzu z balkonów Dzielnicy Francuskiej
+69,2026-12-06,6,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Chicago (IL),41.8781,-87.6298,Odbicie sań w rzeźbie 'The Bean' i lodowisko w Millennium Park
+70,2026-12-06,6,10,18:00 - 19:00,19:00 - 20:00,Ameryka Południowa,Paragwaj,Asunción,-25.2637,-57.5759,Podświetlony pałac prezydencki nad rzeką Paragwaj
+71,2026-12-06,6,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Brazylia,Florianópolis,-27.5954,-48.548,Zabytkowy wiszący most Hercílio Luz rozświetlony nocą
+72,2026-12-06,6,12,22:00 - 23:00,23:00 - 00:00,Oceania,Tonga,Nukuʻalofa,-21.1393,-175.2018,Gwiaździsta noc nad wyspiarskim królestwem
+73,2026-12-07,7,1,00:00 - 01:00,01:00 - 02:00,Oceania,Vanuatu,Port Vila,-17.7333,168.3273,Koralowe rafy lśniące w świetle księżyca
+74,2026-12-07,7,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Cairns,-16.9186,145.7781,Patrol nad Wielką Rafą Koralową
+75,2026-12-07,7,3,04:00 - 05:00,05:00 - 06:00,Azja,Indie,New Delhi,28.6139,77.209,Majestatyczna Brama Indii i świąteczne bulwary
+76,2026-12-07,7,4,06:00 - 07:00,07:00 - 08:00,Azja,Indie,Mumbai,19.076,72.8777,Zatoka w Bombaju i historyczna brama Gateway of India
+77,2026-12-07,7,5,08:00 - 09:00,09:00 - 10:00,Europa,Włochy,Florence,43.7696,11.2558,Precyzyjny manewr wokół kopuły katedry Santa Maria del Fiore
+78,2026-12-07,7,6,10:00 - 11:00,11:00 - 12:00,Europa,Hiszpania,Barcelona,41.3851,2.1734,Precyzyjny zwrot wokół strzelistych wież Sagrada Família
+79,2026-12-07,7,7,12:00 - 13:00,13:00 - 14:00,Afryka,Nigeria,Lagos,6.5244,3.3792,Gra świateł na moście wiszącym Lekki-Ikoyi
+80,2026-12-07,7,8,14:00 - 15:00,15:00 - 16:00,Afryka,Ghana,Accra,5.6037,-0.187,Ciepła grudniowa noc na Placu Czarnej Gwiazdy
+81,2026-12-07,7,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Kanada,Toronto,43.6532,-79.3832,Błyskające światło ostrzegawcze na szczycie wieży CN Tower
+82,2026-12-07,7,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Kanada,Montreal,45.5017,-73.5673,Zimowa sceneria i brukowane uliczki Starego Portu
+83,2026-12-07,7,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Brazylia,São Paulo,-23.5505,-46.6333,Wielka choinka świetlna na pulsującej Avenida Paulista
+84,2026-12-07,7,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Brazylia,Rio de Janeiro,-22.9068,-43.1729,Majestatyczny przelot tuż obok figury Chrystusa Odkupiciela
+85,2026-12-08,8,1,00:00 - 01:00,01:00 - 02:00,Oceania,Papua-Nowa Gwinea,Port Moresby,-9.4438,147.1803,Przelot ponad szczytami pasma Gór Owena Stanleya
+86,2026-12-08,8,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Darwin,-12.4634,130.8456,Tropikalna rozgrzewka dla reniferów na północy Australii
+87,2026-12-08,8,3,04:00 - 05:00,05:00 - 06:00,Azja,Nepal,Kathmandu,27.7172,85.324,Wysokościowy wlot do doliny u podnóża Himalajów
+88,2026-12-08,8,4,06:00 - 07:00,07:00 - 08:00,Azja,Bhutan,Thimphu,27.4728,89.6393,Ślizg obok klasztoru Tygrysie Gniazdo zawieszonego na skale
+89,2026-12-08,8,5,08:00 - 09:00,09:00 - 10:00,Europa,Hiszpania,Madrid,40.4168,-3.7038,Zegar na Puerta del Sol odmierzający czas do świąt
+90,2026-12-08,8,6,10:00 - 11:00,11:00 - 12:00,Europa,Portugalia,Lizbona,38.7223,-9.1393,Wieża Belém u ujścia Tagu do oceanu
+91,2026-12-08,8,7,12:00 - 13:00,13:00 - 14:00,Afryka,Senegal,Dakar,14.7167,-17.4677,Przelot obok Monumentu Odrodzenia Afryki
+92,2026-12-08,8,8,14:00 - 15:00,15:00 - 16:00,Afryka,Maroko,Marrakech,31.6295,-7.9811,Gwar i tysiące lampionów na placu Dżami al-Fana
+93,2026-12-08,8,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Boston (MA),42.3601,-71.0589,Tradycyjne bożonarodzeniowe drzewko przed Faneuil Hall
+94,2026-12-08,8,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Stany Zjednoczone,New York City (NY),40.7128,-74.006,Podziwianie słynnej choinki pod Rockefeller Center
+95,2026-12-08,8,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Brazylia,Salvador da Bahia,-12.9777,-38.5016,Kolorowe kolonialne kamieniczki w rytmie samby
+96,2026-12-08,8,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Brazylia,Fortaleza,-3.7319,-38.5267,Ciepły wiatr znad Atlantyku na plaży Iracema
+97,2026-12-09,9,1,00:00 - 01:00,01:00 - 02:00,Oceania,Australia,Alice Springs,-23.698,133.8807,Czerwone Serce Australii i tajemnicze Uluru
+98,2026-12-09,9,2,02:00 - 03:00,03:00 - 04:00,Azja,Uzbekistan,Tashkent,41.2995,69.2401,Turkusowe kopuły dawnego Jedwabnego Szlaku
+99,2026-12-09,9,3,04:00 - 05:00,05:00 - 06:00,Azja,Kazachstan,Almaty,43.222,76.8512,Ośnieżone szczyty pasma Tienszan
+100,2026-12-09,9,4,06:00 - 07:00,07:00 - 08:00,Europa,Portugalia,Porto,41.1579,-8.6291,Przelot pod łukiem mostu Dom Luís I nad rzeką Douro
+101,2026-12-09,9,5,08:00 - 09:00,09:00 - 10:00,Europa,Francja,Paris,48.8566,2.3522,Migoczące tysiącami świateł piętra Wieży Eiffla
+102,2026-12-09,9,6,10:00 - 11:00,11:00 - 12:00,Afryka,Maroko,Casablanca,33.5731,-7.5898,Meczet Hasana II z minaretem sięgającym oceanu
+103,2026-12-09,9,7,12:00 - 13:00,13:00 - 14:00,Afryka,Algieria,Algier,36.7538,3.0588,Białe tarasy Kazby schodzące ku morzu
+104,2026-12-09,9,8,14:00 - 15:00,15:00 - 16:00,Ameryka Północna,Stany Zjednoczone,Philadelphia (PA),39.9526,-75.1652,Świąteczna wioska i jarmark przy ratuszu w Filadelfii
+105,2026-12-09,9,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,"Washington, D.C.",38.9072,-77.0369,Narodowa Choinka przed Białym Domem
+106,2026-12-09,9,10,18:00 - 19:00,19:00 - 20:00,Ameryka Południowa,Brazylia,Manaus,-3.119,-60.0217,Kolorowa kopuła opery Teatro Amazonas pośrodku dżungli
+107,2026-12-09,9,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Gujana,Georgetown,6.8013,-58.1551,Jedna z najwyższych drewnianych katedr na świecie
+108,2026-12-09,9,12,22:00 - 23:00,23:00 - 00:00,Oceania,Wyspy Cooka,Rarotonga,-21.2367,-159.7777,Błękitna laguna rozświetlona Krzyżem Południa
+109,2026-12-10,10,1,00:00 - 01:00,01:00 - 02:00,Oceania,Australia,Broome,-17.9614,122.2359,Spokojny lot nad słynną plażą Cable Beach
+110,2026-12-10,10,2,02:00 - 03:00,03:00 - 04:00,Azja,Gruzja,Tbilisi,41.7151,44.8271,Zejście w dolinę nad starożytną twierdzą Narikala
+111,2026-12-10,10,3,04:00 - 05:00,05:00 - 06:00,Azja,Azerbejdżan,Baku,40.4093,49.8671,Płonące wieże Flame Towers nad Morzem Kaspijskim
+112,2026-12-10,10,4,06:00 - 07:00,07:00 - 08:00,Europa,Francja,Lyon,45.764,4.8357,Festiwal Świateł nad brzegami Rodanu i Saony
+113,2026-12-10,10,5,08:00 - 09:00,09:00 - 10:00,Europa,Belgia,Bruksela,50.8503,4.3517,Złociste fasady Grand Place w świątecznym spektaklu
+114,2026-12-10,10,6,10:00 - 11:00,11:00 - 12:00,Afryka,Tunezja,Tunis,36.8065,10.1815,Biało-niebieskie domy na wzgórzu z widokiem na Zatokę Tuniską
+115,2026-12-10,10,7,12:00 - 13:00,13:00 - 14:00,Afryka,Egipt,Alexandria,31.2001,29.9187,Bryza śródziemnomorska przy Bibliotece Aleksandryjskiej
+116,2026-12-10,10,8,14:00 - 15:00,15:00 - 16:00,Ameryka Północna,Stany Zjednoczone,Atlanta (GA),33.749,-84.388,Świetlny ogród w Parku Olimpijskim w Atlancie
+117,2026-12-10,10,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Miami (FL),25.7617,-80.1918,Palmy owinięte neonami na słynnej Ocean Drive
+118,2026-12-10,10,10,18:00 - 19:00,19:00 - 20:00,Ameryka Południowa,Surinam,Paramaribo,5.852,-55.2038,Zabytkowe drewniane domy wzdłuż rzeki Surinam
+119,2026-12-10,10,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Wenezuela,Caracas,10.4806,-66.9036,Grzbiet góry Ávila oddzielający miasto od Morza Karaibskiego
+120,2026-12-10,10,12,22:00 - 23:00,23:00 - 00:00,Oceania,Polinezja Francuska,Papeete,-17.5516,-149.5585,Tropikalny nastrój i zapach gardenii na Tahiti
+121,2026-12-11,11,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nowa Kaledonia,Nouméa,-22.2758,166.458,Nawigacja nad największą laguną koralową świata
+122,2026-12-11,11,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Gold Coast,-28.0167,153.4,Świąteczny przelot wzdłuż wieżowców Surfers Paradise
+123,2026-12-11,11,3,04:00 - 05:00,05:00 - 06:00,Azja,Zjednoczone Emiraty Arabskie,Dubai,25.2048,55.2708,Dynamiczne pikowanie wzdłuż najwyższego budynku świata
+124,2026-12-11,11,4,06:00 - 07:00,07:00 - 08:00,Azja,Oman,Muscat,23.588,58.3829,Oświetlona marmurowa Wielka Katedra Sułtana Kabusa
+125,2026-12-11,11,5,08:00 - 09:00,09:00 - 10:00,Europa,Holandia,Amsterdam,52.3676,4.9041,Świąteczny Festiwal Świateł na kanałach Amsterdamu
+126,2026-12-11,11,6,10:00 - 11:00,11:00 - 12:00,Europa,Wielka Brytania,Londyn,51.5074,-0.1278,Synchronizacja zegarka Mikołaja z uderzeniem Big Bena
+127,2026-12-11,11,7,12:00 - 13:00,13:00 - 14:00,Afryka,Egipt,Luxor,25.6872,32.6396,Aleja sfinksów i monumentalne kolumny w Karnaku
+128,2026-12-11,11,8,14:00 - 15:00,15:00 - 16:00,Afryka,Uganda,Kampala,0.3476,32.5825,Lot wzdłuż brzegu największego jeziora Afryki
+129,2026-12-11,11,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Kuba,Havana,23.1136,-82.3666,Zabytkowe kabriolety i fale uderzające o mur Malecón
+130,2026-12-11,11,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Portoryko,San Juan,18.4655,-66.1057,Zabytkowa twierdza El Morro strzegąca wejścia do portu
+131,2026-12-11,11,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Kolumbia,Cartagena,10.391,-75.4794,Otoczone murami stare miasto nad Morzem Karaibskim
+132,2026-12-11,11,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Ekwador,Galapagos (Puerto Ayora),-0.7432,-90.3138,Cichy przelot nad rezerwatem żółwi olbrzymich
+133,2026-12-12,12,1,00:00 - 01:00,01:00 - 02:00,Oceania,Wyspy Salomona,Honiara,-9.4456,159.9729,Przystanek nawigacyjny pośród wysp Pacyfiku
+134,2026-12-12,12,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Canberra,-35.2809,149.13,Podświetlony trójkąt parlamentarny w stolicy Australii
+135,2026-12-12,12,3,04:00 - 05:00,05:00 - 06:00,Azja,Katar,Doha,25.2854,51.531,Futurystyczna promenada Corniche nad Zatoką Perską
+136,2026-12-12,12,4,06:00 - 07:00,07:00 - 08:00,Azja,Arabia Saudyjska,Riyadh,24.7136,46.6753,Charakterystyczny świetlny łuk drapacza chmur Kingdom Centre
+137,2026-12-12,12,5,08:00 - 09:00,09:00 - 10:00,Europa,Wielka Brytania,Edinburgh,55.9533,-3.1883,Zamek w Edynburgu dumnie stojący na wulkanicznej skale
+138,2026-12-12,12,6,10:00 - 11:00,11:00 - 12:00,Europa,Irlandia,Dublin,53.3498,-6.2603,Ciepłe świąteczne żyrandole nad Grafton Street
+139,2026-12-12,12,7,12:00 - 13:00,13:00 - 14:00,Afryka,Botswana,Gaborone,-24.6282,25.9231,Punkt widokowy na wzgórzu Kgale Hill
+140,2026-12-12,12,8,14:00 - 15:00,15:00 - 16:00,Afryka,Mozambik,Maputo,-25.9692,32.5732,Długi most wiszący łączący brzegi zatoki Maputo
+141,2026-12-12,12,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Kanada,Quebec City,46.8139,-71.208,Zimowa bajka wokół zamkowego hotelu Château Frontenac
+142,2026-12-12,12,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Stany Zjednoczone,Santa Claus (IN),38.1217,-86.9142,Odbiór worków z listami z oficjalnej poczty Santa Claus
+143,2026-12-12,12,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Kolumbia,Medellín,6.2442,-75.5812,Słynny na cały świat festiwal iluminacji bożonarodzeniowych
+144,2026-12-12,12,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Chile,Pole Lodowe Patagonii (Punta Arenas),-53.1638,-70.9171,Cieśnina Magellana i najdalej na południe wysunięte miasto kontynentu
+145,2026-12-13,13,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nowa Zelandia,Queenstown,-45.0312,168.6626,Górski odpoczynek nad krystalicznym jeziorem Wakatipu
+146,2026-12-13,13,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Newcastle,-32.9283,151.7817,Wybrzeże Hunter i latarnia morska Nobby's Head
+147,2026-12-13,13,3,04:00 - 05:00,05:00 - 06:00,Azja,Jordania,Amman,31.9454,35.9284,Wzgórza Ammanu i starożytny teatr rzymski
+148,2026-12-13,13,4,06:00 - 07:00,07:00 - 08:00,Azja,Jordania,Petra,30.3285,35.4444,Wąski wąwóz Siq prowadzący do Skarbca w Petrze
+149,2026-12-13,13,5,08:00 - 09:00,09:00 - 10:00,Europa,Islandia,Reykjavik,64.1466,-21.9426,Kościół Hallgrímskirkja w tańczących zielonych zorzach
+150,2026-12-13,13,6,10:00 - 11:00,11:00 - 12:00,Europa,Norwegia,Tromsø,69.6492,18.9553,Katedra Arktyczna rozświetlająca noc polarną
+151,2026-12-13,13,7,12:00 - 13:00,13:00 - 14:00,Afryka,Zambia,Lusaka,-15.3875,28.3228,Punkt nawigacyjny w dorzeczu potężnej rzeki Zambezi
+152,2026-12-13,13,8,14:00 - 15:00,15:00 - 16:00,Afryka,Seszele,Victoria,-4.6191,55.4513,Granitowe skały i rajskie plaże na Seszelach
+153,2026-12-13,13,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Kanada,Halifax (NS),44.6488,-63.5752,Zimowa twierdza Citadel Hill z widokiem na Atlantyk
+154,2026-12-13,13,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Kanada,St. John's (NL),47.5615,-52.7126,Najbardziej wysunięty na wschód punkt Ameryki Północnej
+155,2026-12-13,13,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Argentyna,Córdoba,-31.4201,-64.1888,Zabytkowy kwartał jezuicki i historyczny uniwersytet
+156,2026-12-13,13,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Argentyna,Mendoza,-32.8895,-68.8458,Winnice u podnóża ośnieżonego szczytu Aconcagua
+157,2026-12-14,14,1,00:00 - 01:00,01:00 - 02:00,Oceania,Mikronezja,Palikir,6.9248,158.1611,Prezenty dla dzieci na odległych koralowych atolach
+158,2026-12-14,14,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Sunshine Coast,-26.65,153.0667,Wulkaniczne wzgórza Glass House Mountains z lotu ptaka
+159,2026-12-14,14,3,04:00 - 05:00,05:00 - 06:00,Azja,Izrael,Jerusalem,31.7683,35.2137,Starożytne mury Starego Miasta w Jerozolimie
+160,2026-12-14,14,4,06:00 - 07:00,07:00 - 08:00,Azja,Liban,Beirut,33.8938,35.5018,Zachód słońca nad promenadą Corniche w Bejrucie
+161,2026-12-14,14,5,08:00 - 09:00,09:00 - 10:00,Europa,Estonia,Tallinn,59.437,24.7536,Tradycyjna choinka na średniowiecznym rynku w Tallinnie
+162,2026-12-14,14,6,10:00 - 11:00,11:00 - 12:00,Europa,Łotwa,Riga,56.9496,24.1052,Miejsce narodzin legendy o pierwszej ubranej choince
+163,2026-12-14,14,7,12:00 - 13:00,13:00 - 14:00,Afryka,Republika Zielonego Przylądka,Praia,14.933,-23.5133,Wulkaniczny archipelag na środku Atlantyku
+164,2026-12-14,14,8,14:00 - 15:00,15:00 - 16:00,Afryka,Wybrzeże Kości Słoniowej,Abidjan,5.36,-4.0083,Nowoczesna dzielnica Plateau rozświetlona nad laguną Ébrié
+165,2026-12-14,14,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Minneapolis (MN),44.9778,-93.265,Ślizg ponad zamarzniętym nurtem rzeki Missisipi
+166,2026-12-14,14,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Stany Zjednoczone,Detroit (MI),42.3314,-83.0458,Główne miejskie lodowisko w sercu Detroit
+167,2026-12-14,14,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Argentyna,Salta,-24.7821,-65.4232,Widok z kolejki linowej na oświetloną dolinę Lerma
+168,2026-12-14,14,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Chile,Valparaíso,-33.0472,-71.6127,Zabytkowe windy i kolorowe murale na wzgórzach Valparaíso
+169,2026-12-15,15,1,00:00 - 01:00,01:00 - 02:00,Oceania,Wyspy Marshalla,Majuro,7.1167,171.1833,Niski przeskok nad koralowym atolem
+170,2026-12-15,15,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Geelong,-38.1499,144.3617,Morska bryza nad malowniczą zatoką Corio
+171,2026-12-15,15,3,04:00 - 05:00,05:00 - 06:00,Azja,Turcja,Istanbul,41.0082,28.9784,Przelot nad mostem łączącym Europę z Azją
+172,2026-12-15,15,4,06:00 - 07:00,07:00 - 08:00,Azja,Armenia,Yerevan,40.1792,44.4991,Sylwetka biblijnej góry Ararat o zachodzie słońca
+173,2026-12-15,15,5,08:00 - 09:00,09:00 - 10:00,Europa,Litwa,Vilnius,54.6872,25.2797,"Bajkowa, słynąca z niezwykłego designu choinka na Placu Katedralnym"
+174,2026-12-15,15,6,10:00 - 11:00,11:00 - 12:00,Europa,Węgry,Budapest,47.4979,19.0402,Złote odbicie gmachu Parlamentu w falach Dunaju
+175,2026-12-15,15,7,12:00 - 13:00,13:00 - 14:00,Afryka,Kamerun,Yaoundé,3.848,11.5021,Siedem zielonych wzgórz stolicy Kamerunu
+176,2026-12-15,15,8,14:00 - 15:00,15:00 - 16:00,Afryka,Tanzania,Dar es Salaam,-6.7924,39.2083,Wielki most wiszący rozświetlający wejście do portu
+177,2026-12-15,15,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Nashville (TN),36.1627,-86.7816,Kowbojskie kapelusze i neony na świątecznym Broadwayu
+178,2026-12-15,15,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Stany Zjednoczone,Phoenix (AZ),33.4484,-112.074,Tysiące tradycyjnych świec luminarias w ogrodzie pustynnym
+179,2026-12-15,15,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Chile,San Pedro de Atacama,-22.9087,-68.1997,Niezwykle czyste niebo i obserwatoria na pustyni Atakama
+180,2026-12-15,15,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Boliwia,Uyuni,-20.4607,-66.8261,Lustrzane odbicie gwiazd w największym solnisku świata Salar de Uyuni
+181,2026-12-16,16,1,00:00 - 01:00,01:00 - 02:00,Oceania,Palau,Ngerulmud,7.5004,134.6242,Szmaragdowe grzybowate wysepki Rock Islands
+182,2026-12-16,16,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Townsville,-19.259,146.8169,Różowy granit wzgórza Castle Hill górujący nad miastem
+183,2026-12-16,16,3,04:00 - 05:00,05:00 - 06:00,Azja,Sri Lanka,Colombo,6.9271,79.8612,Wieża w kształcie kwiatu lotosu w świątecznej odsłonie
+184,2026-12-16,16,4,06:00 - 07:00,07:00 - 08:00,Azja,Malediwy,Malé,4.1755,73.5093,Ślizg tuż nad taflą wody wzdłuż atoli Malediwów
+185,2026-12-16,16,5,08:00 - 09:00,09:00 - 10:00,Europa,Słowacja,Bratislava,48.1486,17.1077,Zamek nad Dunajem i świąteczny jarmark na Hlavné námestie
+186,2026-12-16,16,6,10:00 - 11:00,11:00 - 12:00,Europa,Słowenia,Ljubljana,46.0569,14.5058,Most Smoczy rozświetlony szmaragdowymi girlandami
+187,2026-12-16,16,7,12:00 - 13:00,13:00 - 14:00,Afryka,RPA,Durban,-29.8587,31.0218,Świąteczni surferzy na plażach Golden Mile
+188,2026-12-16,16,8,14:00 - 15:00,15:00 - 16:00,Afryka,Namibia,Swakopmund,-22.6833,14.5333,Spotkanie gigantycznych wydm z falami Atlantyku
+189,2026-12-16,16,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Las Vegas (NV),36.1699,-115.1398,Taniec fontann w rytm świątecznych melodii
+190,2026-12-16,16,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Stany Zjednoczone,Los Angeles (CA),34.0522,-118.2437,Księżycowy przelot nad słynnym napisem Hollywood
+191,2026-12-16,16,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Boliwia,Sucre,-19.0196,-65.2619,Dachy kolonialnego 'Białego Miasta'
+192,2026-12-16,16,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Peru,Arequipa,-16.409,-71.5375,Zabytkowa starówka z białego kamienia wulkanicznego sillar
+193,2026-12-17,17,1,00:00 - 01:00,01:00 - 02:00,Oceania,Kiribati,South Tarawa,1.3291,172.979,Równikowy posterunek pośrodku Pacyfiku
+194,2026-12-17,17,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Toowoomba,-27.5598,151.9507,Wspinaczka nad Wielkie Góry Wododziałowe
+195,2026-12-17,17,3,04:00 - 05:00,05:00 - 06:00,Azja,Mongolia,Ulaanbaatar,47.9077,106.9057,Mroźny sprawdzian dla reniferów na bezkresnym mongolskim stepie
+196,2026-12-17,17,4,06:00 - 07:00,07:00 - 08:00,Azja,Korea Południowa,Busan,35.1796,129.0756,Świetlny spektakl na diamentowym moście Gwangan
+197,2026-12-17,17,5,08:00 - 09:00,09:00 - 10:00,Europa,Chorwacja,Zagreb,45.815,15.9819,Nagradzany adwentowy park świateł i lodowe alejki
+198,2026-12-17,17,6,10:00 - 11:00,11:00 - 12:00,Europa,Chorwacja,Dubrovnik,42.6507,18.0944,Średniowieczne mury miejskie nad lazurowym Adriatykiem
+199,2026-12-17,17,7,12:00 - 13:00,13:00 - 14:00,Afryka,Benin,Cotonou,6.3703,2.4183,Nocny lot wzdłuż wybrzeża Zatoki Beninu
+200,2026-12-17,17,8,14:00 - 15:00,15:00 - 16:00,Afryka,Togo,Lomé,6.1375,1.2125,Lot wzdłuż plaż i palm Zatoki Gwinejskiej
+201,2026-12-17,17,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,San Diego (CA),32.7157,-117.1611,Wielki wieniec bożonarodzeniowy w hotelu Coronado
+202,2026-12-17,17,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Kanada,Ottawa,45.4215,-75.6972,Iluminacje 'Lights on the Hill' na Wzgórzu Parlamentarnym
+203,2026-12-17,17,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Peru,Trujillo,-8.1091,-79.0215,Śladem prekolumbijskich piramid ze słońca i gliny
+204,2026-12-17,17,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Brazylia,Brasília,-15.7975,-47.8919,Niezwykła korona cierniowa modernistycznej katedry w Brasílii
+205,2026-12-18,18,1,00:00 - 01:00,01:00 - 02:00,Oceania,Tuvalu,Funafuti,-8.5211,179.1983,Lądowanie na wąskim pasie koralowego atolu
+206,2026-12-18,18,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Ballarat,-37.5622,143.8503,Zabytkowe miasteczko poszukiwaczy złota w wiktoriańskim stylu
+207,2026-12-18,18,3,04:00 - 05:00,05:00 - 06:00,Azja,Japonia,Osaka,34.6937,135.5023,Słynny neon biegacza Glico odbijający się w kanale Dotonbori
+208,2026-12-18,18,4,06:00 - 07:00,07:00 - 08:00,Azja,Japonia,Sapporo,43.0618,141.3545,Lądowanie w śnieżnej stolicy wyspy Hokkaido
+209,2026-12-18,18,5,08:00 - 09:00,09:00 - 10:00,Europa,Grecja,Ateny,37.9838,23.7275,Oświetlony Partenon spoglądający z Akropolu
+210,2026-12-18,18,6,10:00 - 11:00,11:00 - 12:00,Europa,Rumunia,Brasov,45.6579,25.6012,Średniowieczny rynek w otoczeniu ośnieżonych Karpat
+211,2026-12-18,18,7,12:00 - 13:00,13:00 - 14:00,Afryka,Gabon,Libreville,0.4162,9.4673,Równikowy las deszczowy schodzący wprost do oceanu
+212,2026-12-18,18,8,14:00 - 15:00,15:00 - 16:00,Afryka,Kongo,Brazzaville,-4.2634,15.2429,Rzeka Kongo dzieląca dwie najbliższe sobie stolice świata
+213,2026-12-18,18,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Kanada,Winnipeg,49.8951,-97.1384,Widok na zamarznięte widły rzek Red i Assiniboine
+214,2026-12-18,18,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Kanada,Edmonton,53.5461,-113.4938,Zielone wstęgi zorzy polarnej nad stolicą prowincji Alberta
+215,2026-12-18,18,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Brazylia,Curitiba,-25.4284,-49.2733,Szklana oranżeria w ogrodzie botanicznym w świątecznej iluminacji
+216,2026-12-18,18,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Brazylia,Belo Horizonte,-19.9167,-43.9345,Modernistyczny kościółek Niemeyera nad jeziorem Pampulha
+217,2026-12-19,19,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nauru,Yaren,-0.5477,166.9209,Błyskawiczny przelot nad małą wyspą
+218,2026-12-19,19,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Bendigo,-36.757,144.2794,Trasa lampionów w sercu stanu Wiktoria
+219,2026-12-19,19,3,04:00 - 05:00,05:00 - 06:00,Azja,Chiny,Shanghai,31.2304,121.4737,Kontrast kolonialnego Bundu i kosmicznych wieżowców Pudongu
+220,2026-12-19,19,4,06:00 - 07:00,07:00 - 08:00,Azja,Chiny,Xi'an,34.3416,108.9398,Tysiące lampionów wzdłuż starożytnych murów miejskich
+221,2026-12-19,19,5,08:00 - 09:00,09:00 - 10:00,Europa,Bułgaria,Sofia,42.6977,23.3219,Błyszczące w nocy złote kopuły soboru Aleksandra Newskiego
+222,2026-12-19,19,6,10:00 - 11:00,11:00 - 12:00,Europa,Serbia,Belgrade,44.7866,20.4489,Twierdza Kalemegdan u zbiegu Sawy i Dunaju
+223,2026-12-19,19,7,12:00 - 13:00,13:00 - 14:00,Afryka,Demokratyczna Republika Konga,Kinshasa,-4.4419,15.2663,Rozlewisko Malebo na rzece Kongo
+224,2026-12-19,19,8,14:00 - 15:00,15:00 - 16:00,Afryka,Malawi,Lilongwe,-13.9626,33.7741,Górskie zniżanie w stronę 'Jeziora Gwiazd' (Niasa)
+225,2026-12-19,19,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Kanada,Victoria (BC),48.4284,-123.3656,Świąteczne girlandy na neobarokowym parlamencie w Inner Harbour
+226,2026-12-19,19,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Meksyk,Monterrey,25.6866,-100.3161,Charakterystyczny profil góry 'Siodło' górującej nad miastem
+227,2026-12-19,19,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Brazylia,Recife,-8.0476,-34.877,Urokliwe mosty i rafy 'Brazylijskiej Wenecji'
+228,2026-12-19,19,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Brazylia,Belém,-1.4558,-48.4902,Wrota do delty Amazonki i zapach prażonych owoców açaí
+229,2026-12-20,20,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nowa Zelandia,Dunedin,-45.8788,170.5028,Sprawdzanie kolonii albatrosów na Półwyspie Otago
+230,2026-12-20,20,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Launceston,-41.4332,147.1441,Nocny lot w głąb spektakularnego wąwozu Cataract
+231,2026-12-20,20,3,04:00 - 05:00,05:00 - 06:00,Azja,Wietnam,Da Nang,16.0544,108.2022,Przelot nad Złotym Mostem trzymanym przez kamienne dłonie
+232,2026-12-20,20,4,06:00 - 07:00,07:00 - 08:00,Azja,Indonezja,Bali (Denpasar),-8.6705,115.2126,Wschód słońca nad wulkanem Batur i tarasami ryżowymi
+233,2026-12-20,20,5,08:00 - 09:00,09:00 - 10:00,Europa,Niemcy,Monachium,48.1351,11.582,Kuranty na wieży nowoogotyckiego ratusza na Marienplatz
+234,2026-12-20,20,6,10:00 - 11:00,11:00 - 12:00,Europa,Niemcy,Kolonia,50.9375,6.9603,Monumentalne wieże katedry w Kolonii górujące nad Renem
+235,2026-12-20,20,7,12:00 - 13:00,13:00 - 14:00,Afryka,Mali,Bamako,12.6392,-8.0029,Zmierzch nad szerokim nurtem rzeki Niger
+236,2026-12-20,20,8,14:00 - 15:00,15:00 - 16:00,Afryka,Burkina Faso,Ouagadougou,12.3714,-1.5197,Przystanek na sahelijskim szlaku
+237,2026-12-20,20,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Meksyk,Cancún,21.1619,-86.8515,Białe plaże Jukatanu pod gwiazdami Morza Karaibskiego
+238,2026-12-20,20,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Meksyk,Oaxaca,17.0732,-96.7266,Przygotowania do słynnej Nocy Rzodkiewek (Noche de Rábanos)
+239,2026-12-20,20,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Kolumbia,Cali,3.4516,-76.532,Gorące rytmy salsy na rozświetlonym bulwarze nad rzeką Cali
+240,2026-12-20,20,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Kolumbia,Barranquilla,10.9685,-74.7813,Karnawałowy nastrój u ujścia rzeki Magdalena
+241,2026-12-21,21,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nowa Zelandia,Napier,-39.4928,176.912,Wyjątkowa architektura w stylu Art Deco nad Zatoką Hawke
+242,2026-12-21,21,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Wollongong,-34.4278,150.8931,Malowniczy klif i most Sea Cliff Bridge w Illawarra
+243,2026-12-21,21,3,04:00 - 05:00,05:00 - 06:00,Azja,Kambodża,Siem Reap,13.3671,103.8448,Kultowe wieże świątyni Angkor Wat odbijające się w fosie
+244,2026-12-21,21,4,06:00 - 07:00,07:00 - 08:00,Azja,Laos,Luang Prabang,19.8893,102.1366,Tysiące papierowych lampionów spływających rzeką Mekong
+245,2026-12-21,21,5,08:00 - 09:00,09:00 - 10:00,Europa,Francja,Strasbourg,48.5734,7.7521,Europejska Stolica Świąt i wielka choinka na Place Kléber
+246,2026-12-21,21,6,10:00 - 11:00,11:00 - 12:00,Europa,Szwajcaria,Lucerne,47.0502,8.3093,Słynny drewniany Most Klasztorny (Kapellbrücke) na rzece Reuss
+247,2026-12-21,21,7,12:00 - 13:00,13:00 - 14:00,Afryka,Maroko,Fes,34.0181,-5.0078,Labirynt tysięcy uliczek najstarszej medyny na świecie
+248,2026-12-21,21,8,14:00 - 15:00,15:00 - 16:00,Afryka,Tanzania,Arusha,-3.3869,36.683,Baza wypadowa pod wulkan Meru i równiny Serengeti
+249,2026-12-21,21,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Kostaryka,San José,9.9281,-84.0907,Wzgórza kawowe w Dolinie Centralnej
+250,2026-12-21,21,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Panama,Panama City,8.9824,-79.5199,Śluzy Miraflores na Kanale Panamskim
+251,2026-12-21,21,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Ekwador,Cuenca,-2.9001,-79.0059,Błękitne kopuły Nowej Katedry górujące nad kolonialnym miastem
+252,2026-12-21,21,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Chile,Puerto Varas,-41.3195,-72.9854,Idealny stożek wulkanu Osorno przeglądający się w jeziorze Llanquihue
+253,2026-12-22,22,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nowa Zelandia,Rotorua,-38.1368,176.2497,Kąpiel parowa w gejzerach dla rozgrzania reniferów
+254,2026-12-22,22,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Mackay,-21.1411,149.1861,Zimowe podejście wzdłuż rzeki Pioneer
+255,2026-12-22,22,3,04:00 - 05:00,05:00 - 06:00,Azja,Indie,Bengaluru,12.9716,77.5946,Świąteczne kody i życzenia w Dolinie Krzemowej Indii
+256,2026-12-22,22,4,06:00 - 07:00,07:00 - 08:00,Azja,Indie,Jaipur,26.9124,75.7873,Ażurowa fasada Pałacu Wiatrów (Hawa Mahal)
+257,2026-12-22,22,5,08:00 - 09:00,09:00 - 10:00,Europa,Norwegia,Bergen,60.3913,5.3221,Zabytkowe drewniane domy hanzeatyckiego nabrzeża Bryggen
+258,2026-12-22,22,6,10:00 - 11:00,11:00 - 12:00,Europa,Finlandia,Helsinki,60.1699,24.9384,Biała neoklasycystyczna katedra na Placu Senackim
+259,2026-12-22,22,7,12:00 - 13:00,13:00 - 14:00,Afryka,Tanzania,Mount Kilimanjaro,-3.0674,37.3556,Przelot nad ośnieżonym szczytem Dachu Afryki
+260,2026-12-22,22,8,14:00 - 15:00,15:00 - 16:00,Afryka,Egipt,Aswan,24.0889,32.8998,Świątynia Izydy na wyspie pośród błękitnych wód Nilu
+261,2026-12-22,22,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Gwatemala,Guatemala City,14.6349,-90.5069,Nocny przelot pośród sylwetek dymiących wulkanów
+262,2026-12-22,22,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Jamajka,Kingston,17.9714,-76.7936,Świąteczny chillout w Górach Błękitnych
+263,2026-12-22,22,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Argentyna,El Calafate,-50.338,-72.2648,Błękitne ściany pękającego lodowca Perito Moreno
+264,2026-12-22,22,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Urugwaj,Punta del Este,-34.9667,-54.95,Słynny pomnik wyłaniających się z piasku palców na plaży Brava
+265,2026-12-23,23,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nowa Zelandia,Tauranga,-37.6878,176.1651,Zwrot nad świętą górą Mauao u wejścia do portu
+266,2026-12-23,23,2,02:00 - 03:00,03:00 - 04:00,Oceania,Australia,Rockhampton,-23.3791,150.51,Przelot dokładnie wzdłuż Zwrotnika Koziorożca
+267,2026-12-23,23,3,04:00 - 05:00,05:00 - 06:00,Azja,Kuwejt,Kuwait City,29.3759,47.9774,Charakterystyczne kule wież Kuwait Towers nad Zatoką
+268,2026-12-23,23,4,06:00 - 07:00,07:00 - 08:00,Azja,Bahrajn,Manama,26.2285,50.586,Turbiny wiatrowe łączące iglice wieżowców w Manamie
+269,2026-12-23,23,5,08:00 - 09:00,09:00 - 10:00,Europa,Szwecja,Gothenburg,57.7089,11.9746,Miliony lampek w zimowym parku rozrywki Liseberg
+270,2026-12-23,23,6,10:00 - 11:00,11:00 - 12:00,Europa,Włochy,Wenecja,45.4408,12.3155,Mknące sanie nad Canale Grande i mostem Rialto
+271,2026-12-23,23,7,12:00 - 13:00,13:00 - 14:00,Afryka,Sierra Leone,Freetown,8.484,-13.2299,Zielone wzgórza schodzące prosto do oceanu
+272,2026-12-23,23,8,14:00 - 15:00,15:00 - 16:00,Afryka,Gambia,Banjul,13.4549,-16.579,Szerokie ujście rzeki Gambia do Atlantyku
+273,2026-12-23,23,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Dominikana,Santo Domingo,18.4861,-69.9312,Najstarsza katedra Nowego Świata w Zona Colonial
+274,2026-12-23,23,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Bahamy,Nassau,25.0443,-77.3504,Gorączka przygotowań do barwnego festiwalu Junkanoo
+275,2026-12-23,23,11,20:00 - 21:00,21:00 - 22:00,Ameryka Południowa,Paragwaj,Ciudad del Este,-25.5097,-54.6111,Most Przyjaźni łączący Paragwaj i Brazylię nad rzeką Parana
+276,2026-12-23,23,12,22:00 - 23:00,23:00 - 00:00,Ameryka Południowa,Gujana,Kaieteur Falls,5.176,-59.48,Jeden z najpotężniejszych wodospadów świata ukryty w dżungli
+277,2026-12-24,24,1,00:00 - 01:00,01:00 - 02:00,Oceania,Nowa Zelandia,Gisborne,-38.6623,178.0176,Pierwsze miasto na świecie witające wschód słońca
+278,2026-12-24,24,2,02:00 - 03:00,03:00 - 04:00,Azja,Palestyna,Bethlehem,31.7054,35.2024,Wigilia na Placu Żłóbka przed Bazyliką Narodzenia
+279,2026-12-24,24,3,04:00 - 05:00,05:00 - 06:00,Azja,Cypr,Nicosia,35.1856,33.3823,Śródziemnomorski przelot nad zabytkowymi murami Nicosii
+280,2026-12-24,24,4,06:00 - 07:00,07:00 - 08:00,Afryka,Sudan,Khartoum,15.5007,32.5599,Punkt zbiegu Błękitnego i Białego Nilu
+281,2026-12-24,24,5,08:00 - 09:00,09:00 - 10:00,Afryka,Mauretania,Nouakchott,18.0735,-15.9582,"Miejsce, gdzie złote piaski Sahary spotykają się z oceanem"
+282,2026-12-24,24,6,10:00 - 11:00,11:00 - 12:00,Ameryka Południowa,Gujana Francuska,Cayenne,4.9224,-52.3135,Świąteczna kosmiczna prędkość nad Gujańskim Centrum Kosmicznym
+283,2026-12-24,24,7,12:00 - 13:00,13:00 - 14:00,Ameryka Południowa,Chile,Wyspa Wielkanocna (Hanga Roa),-27.1492,-109.4324,Północne powitanie z tajemniczymi posągami Moai
+284,2026-12-24,24,8,14:00 - 15:00,15:00 - 16:00,Oceania,Kiribati,Wyspa Bożego Narodzenia (Kiritimati),1.8721,-157.4278,Wyjątkowa wizyta na Wyspie Bożego Narodzenia!
+285,2026-12-24,24,9,16:00 - 17:00,17:00 - 18:00,Ameryka Północna,Stany Zjednoczone,Honolulu (HI),21.3069,-157.8583,Hawajskie 'Mele Kalikimaka' i surferskie pozdrowienia z Waikiki
+286,2026-12-24,24,10,18:00 - 19:00,19:00 - 20:00,Ameryka Północna,Grenlandia,Nuuk,64.1814,-51.6941,Światełka kolorowych domków w lodowatych fiordach Grenlandii
+287,2026-12-24,24,11,20:00 - 21:00,21:00 - 22:00,Europa,Biegun Północny,Baza na Biegunie Północnym,90,0,Baza Mikołaja: ładowanie ostatnich prezentów na wielki finał
+288,2026-12-24,24,12,22:00 - 23:00,23:00 - 00:00,Europa,Polska,Kraków,50.0647,19.945,"Wielki finał Wigilii! Rynek Główny, Sukiennice, dom dziecka i wymarzone prezenty pod choinką w rodzinnym Krakowie!"
