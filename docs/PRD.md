@@ -112,7 +112,7 @@ For the current operational radar screen, the physical and emulated buttons are 
 
 ---
 
-## 6. Milestone 1 Acceptance Criteria (Operational Radar End-to-End)
+## 6. Milestone 1 Acceptance Criteria (Operational Radar End-to-End) (COMPLETE ✅)
 
 1. **City List Ingestion:** Schema and parser support 288 stops across 24 Advent days from `Harmonogram Santa Tracker 2026 - Harmonogram_Lotow.csv`.
 2. **December 24th Grand Finale Route:**
@@ -124,7 +124,24 @@ For the current operational radar screen, the physical and emulated buttons are 
    * **Map Route Debugger (`/map-debugger`):** OpenStreetMap tiles, stop-by-stop inspector, stardust trajectory vectors, and sleigh flyby test simulator.
 4. **API Endpoint (`/api/journey`):** Serves complete multi-day schedule with CORS, edge caching, and active Day 24 payload.
 5. **M5StickC-Plus SE Firmware (`firmware/`):**
-   * Successfully connects to Wi-Fi on boot and downloads the JSON schedule.
-   * Hardcoded initial date: "Today is Dec 24th" to immediately test the Dec 24th finale route.
-   * Offline fallback: Uses preloaded Dec 24th itinerary if Wi-Fi is unavailable.
+   * Preloads all 24 days (288 stops) in Flash ROM (`PROGMEM`) with 0 dynamic heap allocations in render loop.
+   * Boots directly into December 24th Grand Finale route (Kraków arrival lock).
+   * Button A cycles days (1–24); Button B advances through cities on active day.
+   * 12 native desktop unit tests passing in 0.76s.
+
+---
+
+## 7. Phased Roadmap Sequence
+
+To ensure rich visual development and interactive verification outside of December, SANTA-OS operates on **simulated/demo time** (`secPerCity = 12s` or manual day/city jumping) through Milestones 2–4. Connecting live real-time clock (NTP/RTC) is reserved for the **very last milestone** before December 1st.
+
+* **Milestone 1 (COMPLETE ✅):** Fully Operational Aviation Radar End-to-End (Web & M5StickC hardware).
+* **Milestone 2 (ACTIVE 🎯):** Context-Aware Multi-Screen Expansion:
+  * Screen 2: Side-View Santa Cam (Cruising Sky, Hyper-Warp, Chimney Drop, Cookie Break).
+  * Screen 3: Flight Telemetry / Cockpit Dashboard (Mach Speed, KM counter, Gift Counter).
+  * 3-screen carousel navigation (Web first, Firmware second).
+* **Milestone 3:** Parent Customization & Wi-Fi Management (Bedtime arrival override, Burst & Sleep sync).
+* **Milestone 4:** Hardware Polish & Festive Packaging (Audio jingles, 3D printed dock, kid's flight log).
+* **Milestone 5 (Final Milestone Before Dec 1st):** Live Real-Time Clock & Advent Launch (NTP & RTC synchronization, 1h flight + 1h stay, with interactive demo override toggle).
+
 
