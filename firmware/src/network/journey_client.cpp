@@ -27,8 +27,9 @@ bool JourneyClient::parseJson(const char* jsonString, JourneyData& outData) {
     return false;
   }
 
-  outData.version = doc["version"] | 1;
-  outData.secPerCity = doc["secPerCity"] | 16.0f;
+  outData.version = doc["version"] | 2;
+  outData.activeDay = doc["activeDay"] | 24;
+  outData.secPerCity = doc["secPerCity"] | 12.0f;
   outData.speedMultiplier = doc["speedMultiplier"] | 1.0f;
 
   JsonArray route = doc["route"].as<JsonArray>();

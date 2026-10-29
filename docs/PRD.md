@@ -32,12 +32,12 @@ The physical gadget runs on the **M5StickC-Plus SE** (Special Edition, transluce
 * **Display:** 1.14" IPS LCD, `240 × 135` px landscape orientation, 16-bit RGB565 color.
 * **Internal RAM Buffer:** 16-bit double buffer (`240 × 135 × 2 = ~64.8 KB RAM`) via `M5Canvas` guaranteeing 30+ FPS flicker-free rendering.
 * **Memory Budget for 288 Cities:**
-  * 288 cities $\times$ 32 bytes per waypoint struct $\approx$ **9.2 KB of RAM**.
-  * Fits comfortably within available ESP32 SRAM (currently utilizing only 17.1% / 56 KB).
+  * 288 cities $\times$ 28 bytes per waypoint struct compiled in `PROGMEM` $\approx$ **8.0 KB of Flash ROM** (0 bytes dynamic heap allocation).
+  * Internal SRAM usage is only 11.0% (35.9 KB / 320 KB), well below the 25% (< 56 KB) safety budget.
 * **Power Management:** 120mAh LiPo battery with AXP192 PMU.
 * **Inputs:**
-  * `Button A` (Front M5 button): Screen navigation / waypoint jump.
-  * `Button B` (Top side button): Context actions (speed multiplier, audio mute/unmute).
+  * `Button A` (Front M5 button): Cycles through the 24 Advent Days (1 $\rightarrow$ 24 $\rightarrow$ 1).
+  * `Button B` (Top side button): Cycles Cities on active day (1 $\rightarrow$ 12 $\rightarrow$ 1). Long press toggles audio mute/unmute.
 * **Audio:** Onboard passive piezo buzzer (`M5.Speaker.tone()`).
 * **Hardware Note:** The *SE* model omits the 6-axis IMU (MPU6886). All interactions rely strictly on buttons.
 
