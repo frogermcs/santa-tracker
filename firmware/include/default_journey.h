@@ -5,26 +5,25 @@
   #define PROGMEM
 #endif
 
-// Default offline demo JSON (used if Wi-Fi is unreachable or disabled)
+// Default offline demo JSON: Day 24 Grand Finale Itinerary (12 Stops)
+// Used as JSON fallback if Wi-Fi is unreachable or disabled
 const char DEFAULT_JOURNEY_JSON[] PROGMEM = R"rawliteral({
-  "version": 1,
-  "secPerCity": 16,
+  "version": 2,
+  "activeDay": 24,
+  "secPerCity": 12,
   "speedMultiplier": 1,
   "route": [
-    { "name": "AUCKLAND",    "lon": 174.8,  "lat": -36.8 },
-    { "name": "SYDNEY",      "lon": 151.2,  "lat": -33.9 },
-    { "name": "TOKYO",       "lon": 139.7,  "lat": 35.7 },
-    { "name": "BEIJING",     "lon": 116.4,  "lat": 39.9 },
-    { "name": "DELHI",        "lon": 77.2,   "lat": 28.6 },
-    { "name": "DUBAI",        "lon": 55.3,   "lat": 25.2 },
-    { "name": "NAIROBI",      "lon": 36.8,   "lat": -1.3 },
-    { "name": "CAIRO",        "lon": 31.2,   "lat": 30.0 },
-    { "name": "KRAKOW",       "lon": 19.9,   "lat": 50.1 },
-    { "name": "LONDON",       "lon": -0.1,   "lat": 51.5 },
-    { "name": "RIO",         "lon": -43.2,  "lat": -22.9 },
-    { "name": "NEW YORK",    "lon": -74.0,  "lat": 40.7 },
-    { "name": "MEXICO CITY", "lon": -99.1,  "lat": 19.4 },
-    { "name": "LOS ANGELES", "lon": -118.2, "lat": 34.0 },
-    { "name": "HONOLULU",    "lon": -157.8, "lat": 21.3 }
+    { "name": "GISBORNE",          "lon": 178.0176, "lat": -38.6623 },
+    { "name": "BETHLEHEM",         "lon": 35.2024,  "lat": 31.7054 },
+    { "name": "NIKOZJA",           "lon": 33.3667,  "lat": 35.1667 },
+    { "name": "CHARTUM",           "lon": 32.5599,  "lat": 15.5007 },
+    { "name": "NOUAKCHOTT",        "lon": -15.9785, "lat": 18.0735 },
+    { "name": "CAYENNE",           "lon": -52.3135, "lat": 4.9224 },
+    { "name": "WYSPA WIELKANOCNA", "lon": -109.4324,"lat": -27.1492 },
+    { "name": "KIRITIMATI",        "lon": -157.4278,"lat": 1.8721 },
+    { "name": "HONOLULU",          "lon": -157.8583,"lat": 21.3069 },
+    { "name": "NUUK",              "lon": -51.6941, "lat": 64.1814 },
+    { "name": "BIEGUN POLNOCNY",   "lon": 0.0000,   "lat": 90.0000 },
+    { "name": "KRAKOW",            "lon": 19.9450,  "lat": 50.0647 }
   ]
 })rawliteral";

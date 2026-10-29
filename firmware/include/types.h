@@ -16,29 +16,32 @@ struct Waypoint {
   float lat;
 };
 
-// Maximum number of waypoints supported in memory
+// Maximum number of waypoints supported in active memory (12 stops/day standard)
 #define MAX_WAYPOINTS 32
 
-// Full journey dataset loaded from JSON or fallback memory
+// Journey dataset for the active day loaded from PROGMEM or network JSON
 struct JourneyData {
   int version;
-  float secPerCity;
-  float speedMultiplier;
-  int cityCount;
+  int activeDay;           // Advent Day 1..24
+  float secPerCity;        // 12.0s per city (6s flight + 6s landed)
+  float speedMultiplier;   // 1.0x fixed
+  int cityCount;           // Number of stops on active day (12)
   Waypoint cities[MAX_WAYPOINTS];
 };
 
 // Real-time calculated telemetry for rendering
 struct TelemetryState {
-  int currentCityIdx;
-  int safeIdx;
-  int targetCityIdx;
-  bool isFlightPhase;
-  float santaLon;
-  float santaLat;
-  float santaScreenX;
-  float santaScreenY;
-  const char* nextCityName;
-  int etaSeconds;
-  float progressRatio;
+  int activeDay;           // Active Advent Day (1..24)
+  int currentCityIdx;      // Simulation city counter
+  int safeIdx;             // Clamp/modulo city index (0..cityCount-1)
+  int targetCityIdx;       // Target blip index for blink highlight
+  bool isFlightPhase;      // true if in transit (u < 6.0s), false if landed
+  bool isDay24Finale;      // true if landed at Day 24 Kraków (Stop 12)
+  float santaLon;          // Interpolated GPS Longitude
+  float santaLat;          // Interpolated GPS Latitude
+  float santaScreenX;      // Projected pixel coordinate X (0..240)
+  float santaScreenY;      // Projected pixel coordinate Y (12..120)
+  const char* nextCityName;// Next or current destination city name
+  int etaSeconds;          // Seconds remaining until arrival
+  float progressRatio;     // Overall progress ratio (0.0 .. 1.0)
 };

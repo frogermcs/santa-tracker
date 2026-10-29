@@ -111,41 +111,59 @@ void ScreenRadar::render(const JourneyData& journey, const TelemetryState& telem
   _canvas->drawRect((int)telemetry.santaScreenX - 3, (int)telemetry.santaScreenY - 3, 7, 7, COLOR_BEACON_GLOW);
   _canvas->fillRect((int)telemetry.santaScreenX - 1, (int)telemetry.santaScreenY - 1, 3, 3, blink ? COLOR_BEACON_CORE : TFT_WHITE);
 
-  // 8. Top HUD Bar
+  // 8. Top HUD Bar (y: 0..12)
   _canvas->fillRect(0, 0, SCREEN_WIDTH, 12, COLOR_HUD_BG);
   _canvas->drawFastHLine(0, 12, SCREEN_WIDTH, COLOR_GRID);
-  _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
   _canvas->setTextSize(1);
-  _canvas->setCursor(4, 2);
-  _canvas->print("RADAR MIKOLAJA");
 
-  if (speedMultiplier > 1.0f) {
-    _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
-    _canvas->setCursor(130, 2);
-    _canvas->printf("%.0fx", speedMultiplier);
-  }
-
+  // Left (x: 4, y: 2): BAT % or USB 5V
   int battery = M5.Power.getBatteryLevel();
-  _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
-  _canvas->setCursor(188, 2);
+  char batBuf[16];
   if (battery >= 0) {
-    _canvas->printf("BAT %d%%", battery);
+    snprintf(batBuf, sizeof(batBuf), "BAT %d%%", battery);
   } else {
-    _canvas->print("USB 5V");
+    strncpy(batBuf, "USB 5V", sizeof(batBuf));
   }
+  _canvas->setTextDatum(top_left);
+  _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
+  _canvas->drawString(batBuf, 4, 2);
 
-  // 9. Bottom HUD Bar
+  // Center (x: 120, y: 2): RADAR MIKOLAJA
+  _canvas->setTextDatum(top_center);
+  _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
+  _canvas->drawString("RADAR MIKOLAJA", RADAR_CENTER_X, 2);
+
+  // Right (x: 236, y: 2): DZIEN <activeDay> (Gold on Day 24, Green on Days 1..23)
+  char dayBuf[16];
+  snprintf(dayBuf, sizeof(dayBuf), "DZIEN %d", telemetry.activeDay);
+  _canvas->setTextDatum(top_right);
+  _canvas->setTextColor(telemetry.activeDay == 24 ? COLOR_TEXT_GOLD : COLOR_TEXT_GREEN, COLOR_HUD_BG);
+  _canvas->drawString(dayBuf, SCREEN_WIDTH - 4, 2);
+
+  // 9. Bottom HUD Bar (y: 121..135)
   _canvas->fillRect(0, 121, SCREEN_WIDTH, 14, COLOR_HUD_BG);
   _canvas->drawFastHLine(0, 120, SCREEN_WIDTH, COLOR_GRID);
 
-  _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
-  _canvas->setCursor(4, 124);
-  _canvas->printf("CEL: %s", telemetry.nextCityName);
+  // Left (x: 4, y: 124): CEL: <CITY> or FINAL: KRAKOW
+  char targetBuf[32];
+  if (telemetry.isDay24Finale) {
+    snprintf(targetBuf, sizeof(targetBuf), "FINAL: %s", telemetry.nextCityName);
+    _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
+  } else {
+    snprintf(targetBuf, sizeof(targetBuf), "CEL: %s", telemetry.nextCityName);
+    _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
+  }
+  _canvas->setTextDatum(top_left);
+  _canvas->drawString(targetBuf, 4, 124);
 
+  // Right (x: 236, y: 124): CZAS 0:<ETA> or WIGILIA!
   char etaBuf[16];
-  snprintf(etaBuf, sizeof(etaBuf), "CZAS 0:%02d", telemetry.etaSeconds);
-  int etaWidth = _canvas->textWidth(etaBuf);
+  if (telemetry.isDay24Finale) {
+    strncpy(etaBuf, "WIGILIA!", sizeof(etaBuf));
+  } else {
+    snprintf(etaBuf, sizeof(etaBuf), "CZAS 0:%02d", telemetry.etaSeconds);
+  }
+  _canvas->setTextDatum(top_right);
   _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
-  _canvas->setCursor(SCREEN_WIDTH - etaWidth - 4, 124);
-  _canvas->print(etaBuf);
+  _canvas->drawString(etaBuf, SCREEN_WIDTH - 4, 124);
 }
