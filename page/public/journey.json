@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": "2026-10-28T20:20:43.104Z",
+  "updatedAt": "2026-10-29T16:38:10.190Z",
   "activeDay": 24,
   "secPerCity": 12,
   "speedMultiplier": 1,
@@ -157,7 +157,7 @@
       "continent": "Europa",
       "arrivalWindow": "22:00 - 23:00",
       "transitWindow": "23:00 - 00:00",
-      "activity": "Wielki finał Wigilii! Rynek Główny, Sukiennice, dom dziecka i wymarzone prezenty pod choinką w rodzinnym Krakowie!",
+      "activity": "Wielki finał Wigilii! Rynek Główny, Sukiennice, rodzinny dom i wymarzone prezenty pod choinką w Krakowie!",
       "stopOfDay": 12,
       "stopTotal": 288
     }
@@ -4045,7 +4045,7 @@
           "continent": "Europa",
           "arrivalWindow": "22:00 - 23:00",
           "transitWindow": "23:00 - 00:00",
-          "activity": "Wielki finał Wigilii! Rynek Główny, Sukiennice, dom dziecka i wymarzone prezenty pod choinką w rodzinnym Krakowie!",
+          "activity": "Wielki finał Wigilii! Rynek Główny, Sukiennice, rodzinny dom i wymarzone prezenty pod choinką w Krakowie!",
           "stopOfDay": 12,
           "stopTotal": 288
         }

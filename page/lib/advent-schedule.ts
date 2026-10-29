@@ -4248,7 +4248,7 @@ export const ADVENT_DAYS: Record<number, AdventDay> = {
         lon: 19.945,
         arrivalWindow: "22:00 - 23:00",
         transitWindow: "23:00 - 00:00",
-        activity: "Wielki finał Wigilii! Rynek Główny, Sukiennice, dom dziecka i wymarzone prezenty pod choinką w rodzinnym Krakowie!",
+        activity: "Wielki finał Wigilii! Rynek Główny, Sukiennice, rodzinny dom i wymarzone prezenty pod choinką w Krakowie!",
       },
     ],
   },
