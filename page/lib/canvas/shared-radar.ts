@@ -1,5 +1,17 @@
-// Shared Retro Aviation World Radar (Exact 1:1 Match with M5StickC-Plus SE Firmware)
-// Fixed Center Radar Sweep, 912 Land Dots, Traveling Santa Contact, and Dotted Breadcrumb Trail
+/**
+ * CANONICAL LIVING SPECIFICATION: Retro Aviation World Radar
+ * Exact 1:1 Reference Implementation for M5StickC-Plus firmware (`firmware/src/ui/screen_radar.cpp`).
+ *
+ * Physical & Render Specifications:
+ * - Display: 240 x 135 ST7789v2 IPS (RGB565 on device, 24-bit canvas in web)
+ * - Map Projection: projectCoordinates(lon, lat) -> [x: 0..240, y: 12..120]
+ * - World Dot Matrix: 912 green dots (2x2 px, step 3)
+ * - Radar Center: (120, 68), concentric rings at r=32, 64, 96 px
+ * - Sweep Ray: 3.2s period ((nowMs % 3200) * 2π / 3200), length 110 px
+ * - Top HUD (y: 0..12): BAT (left, x: 4), "RADAR MIKOLAJA" (center, x: 120), "DZIEN <N>" (right, x: 236)
+ * - Bottom HUD (y: 121..135): "CEL: <CITY>" / "FINAŁ: KRAKOW" (left, x: 4), "CZAS 0:<ETA>" / "WIGILIA!" (right, x: 236)
+ * - Font: 5x7 ASCII GlcdFont (Font 0 from M5GFX) rendered pixel-by-pixel with no antialiasing
+ */
 
 import { drawBitmapText } from "./glcd-font";
 
@@ -33,73 +45,6 @@ export const JOURNEY_CITIES: RadarWaypoint[] = [
   { name: "BIEGUN POLNOCNY",   lon: 0.0,    lat: 90.0,  country: "Arktyka",       continent: "Biegun" },
   { name: "KRAKOW",            lon: 19.9,   lat: 50.1,  country: "Polska",        continent: "Europa" }
 ];
-
-function haversine(a: RadarWaypoint, b: RadarWaypoint) {
-  const r = Math.PI / 180;
-  const dlon = (b.lon - a.lon) * r;
-  const dlat = (b.lat - a.lat) * r;
-  const q =
-    Math.sin(dlat / 2) ** 2 +
-    Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dlon / 2) ** 2;
-  return 12742 * Math.asin(Math.sqrt(q));
-}
-
-const cumDistance: number[] = [0];
-for (let i = 1; i < JOURNEY_CITIES.length; i++) {
-  cumDistance[i] = cumDistance[i - 1] + haversine(JOURNEY_CITIES[i - 1], JOURNEY_CITIES[i]);
-}
-
-function ease(q: number) {
-  return q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
-}
-
-function clamp(v: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, v));
-}
-
-export function getJourneyTelemetry(simTime: number, customCityOverride?: string | null) {
-  const N = JOURNEY_CITIES.length;
-  const total = N * SEC_PER_CITY;
-  const tt = ((simTime % total) + total) % total;
-  const cityIdx = Math.floor(tt / SEC_PER_CITY);
-  const u = tt - cityIdx * SEC_PER_CITY;
-  const safeIdx = Math.min(N - 1, Math.max(0, cityIdx));
-  const prev = JOURNEY_CITIES[Math.max(safeIdx - 1, 0)];
-  const curr = JOURNEY_CITIES[safeIdx];
-  const p = u < 6 ? ease(u / 6) : 1;
-  const k0 = safeIdx ? cumDistance[safeIdx - 1] : 0;
-
-  const isLastCity = safeIdx >= N - 1;
-  const isLandedAtFinal = isLastCity && u >= 6;
-
-  let nextCityName =
-    isLandedAtFinal
-      ? curr.name
-      : u < 6
-      ? curr.name
-      : safeIdx < N - 1
-      ? JOURNEY_CITIES[safeIdx + 1].name
-      : curr.name;
-
-  if (customCityOverride && isLastCity) {
-    nextCityName = customCityOverride;
-  }
-
-  return {
-    cityIdx,
-    safeIdx,
-    u,
-    isFlightPhase: u < 6,
-    lon: prev.lon + (curr.lon - prev.lon) * p,
-    lat: prev.lat + (curr.lat - prev.lat) * p,
-    p,
-    km: Math.round(k0 + (cumDistance[safeIdx] - k0) * p),
-    gifts: Math.round((safeIdx + clamp((u - 6) / 8, 0, 1)) * 8450) * 1000,
-    nextCity: nextCityName,
-    etaSeconds: Math.ceil(u < 6 ? 6 - u : SEC_PER_CITY - u + 6),
-    progressPercent: (safeIdx + u / SEC_PER_CITY) / N,
-  };
-}
 
 const W = 240;
 const H = 135;
