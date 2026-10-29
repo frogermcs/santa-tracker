@@ -93,9 +93,9 @@ For the current operational radar screen, the physical and emulated buttons are 
 
 ### 5.1. Performance & Hardware Budgets
 * **Performance:** Constant 30+ FPS rendering on ESP32 LCD.
-* **Flash Budget:** Within 3MB partition limit (`huge_app.csv`, ~1.6MB / 50.9% currently used).
-* **RAM Budget:** Under 25% total internal SRAM usage (9.2 KB for 288 cities). No dynamic allocations in the render loop.
-* **Testability:** Core simulation mathematics decoupled from LCD code; passes native unit tests on desktop macOS/Linux in under 1 second.
+* **Flash Budget:** Within 3MB partition limit (`huge_app.csv`, ~870 KB / 27.6% used).
+* **RAM Budget:** Under 25% total internal SRAM usage (35.9 KB / 11.0% used; 0 bytes dynamic heap allocation in render loop).
+* **Testability:** Core simulation mathematics decoupled from LCD code; passes 12 native unit tests on desktop macOS/Linux in under 1 second (0.76s).
 
 ### 5.2. Mandatory Delivery Gates (Zero Tolerance for Errors)
 * **Web Companion App (`page/`):**
