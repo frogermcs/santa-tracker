@@ -55,8 +55,11 @@ void JourneyEngine::update(float dt) {
   float cycleTotal = totalSimTime + holdDuration;
 
   _simTime += dt * _speedMultiplier;
-  while (_simTime >= cycleTotal) {
-    _simTime -= cycleTotal;
+  if (cycleTotal > 0.0f) {
+    if (_simTime >= cycleTotal || _simTime < 0.0f) {
+      _simTime = fmodf(_simTime, cycleTotal);
+      if (_simTime < 0.0f) _simTime += cycleTotal;
+    }
   }
 }
 

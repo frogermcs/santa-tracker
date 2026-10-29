@@ -1,4 +1,6 @@
 #include <unity.h>
+#include <stdio.h>
+#include <math.h>
 #include "types.h"
 #include "config.h"
 #include "advent_schedule.h"
@@ -177,6 +179,168 @@ void test_day24_krakow_grand_finale_lock(void) {
   TEST_ASSERT_FALSE(sLoop.isDay24Finale);
 }
 
+// Test 7: Validate Trajectory Interpolation and easeInOut curve
+void test_trajectory_ease_interpolation(void) {
+  JourneyEngine engine;
+  engine.init(24); // Day 24
+  const JourneyData& jd = engine.getJourneyData();
+
+  // Jump to stop 1 so we have a distinct prev (stop 0: Gisborne) and curr (stop 1: Bethlehem)
+  // At landed phase (u = 6.0s), advance to next leg's flight:
+  // Advance 6 seconds to complete stop 0, entering stop 1 flight at t = 12.0s
+  engine.update(6.0f); // t = 12.0s: leg 1 flight begins (u = 0.0s)
+
+  TelemetryState t0 = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(1, t0.safeIdx);
+  TEST_ASSERT_TRUE(t0.isFlightPhase);
+  // At u = 0.0, Santa should be exactly at previous city (stop 0)
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[0].lon, t0.santaLon);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[0].lat, t0.santaLat);
+
+  // Advance 3.0 seconds (halfway through 6.0s flight phase, u = 3.0s, u/6 = 0.5)
+  // easeInOut(0.5) = 2 * (0.5)^2 = 0.5 (exact halfway point!)
+  engine.update(3.0f);
+  TelemetryState tMid = engine.getTelemetry();
+  TEST_ASSERT_TRUE(tMid.isFlightPhase);
+  float expectedMidLon = jd.cities[0].lon + (jd.cities[1].lon - jd.cities[0].lon) * 0.5f;
+  float expectedMidLat = jd.cities[0].lat + (jd.cities[1].lat - jd.cities[0].lat) * 0.5f;
+  TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedMidLon, tMid.santaLon);
+  TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedMidLat, tMid.santaLat);
+
+  // Advance 3.0 seconds to finish flight phase (u = 6.0s, landed at stop 1)
+  engine.update(3.0f);
+  TelemetryState tLand = engine.getTelemetry();
+  TEST_ASSERT_FALSE(tLand.isFlightPhase);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[1].lon, tLand.santaLon);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[1].lat, tLand.santaLat);
+}
+
+// Test 8: Validate ETA Countdown Progression in both Flight and Landed phases
+void test_eta_countdown_progression(void) {
+  JourneyEngine engine;
+  engine.init(1); // Day 1
+
+  // Start landed at stop 0: ETA to next city (stop 1) is countdown to end of stop (12 - 6 = 6s)
+  TelemetryState sStart = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(6, sStart.etaSeconds);
+
+  // Advance 2s in landed phase -> ETA should decrease to 4s
+  engine.update(2.0f);
+  TelemetryState sLanded2 = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(4, sLanded2.etaSeconds);
+
+  // Advance 4s -> completes stop 0, enters stop 1 flight (u = 0s) -> ETA is flight duration (6s)
+  engine.update(4.0f);
+  TelemetryState sFlight0 = engine.getTelemetry();
+  TEST_ASSERT_TRUE(sFlight0.isFlightPhase);
+  TEST_ASSERT_EQUAL_INT(6, sFlight0.etaSeconds);
+
+  // Advance 3.5s in flight -> ETA should be ceil(6 - 3.5) = 3s
+  engine.update(3.5f);
+  TelemetryState sFlight35 = engine.getTelemetry();
+  TEST_ASSERT_TRUE(sFlight35.isFlightPhase);
+  TEST_ASSERT_EQUAL_INT(3, sFlight35.etaSeconds);
+}
+
+// Test 9: Validate Regular Day Looping without hold (Days 1 to 23)
+void test_normal_day_looping_without_hold(void) {
+  JourneyEngine engine;
+  engine.init(6); // Mikołajki (Day 6) - no celebration hold
+  TEST_ASSERT_EQUAL_INT(6, engine.getActiveDay());
+
+  // Jump to last stop (index 11) landed at t = 11 * 12 + 6 = 138.0s
+  for (int i = 0; i < 11; i++) {
+    engine.nextCity();
+  }
+  TelemetryState s11 = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(11, s11.safeIdx);
+  TEST_ASSERT_FALSE(s11.isDay24Finale); // Must NOT be finale on Day 6!
+
+  // Advance 7.0s: 138.0 + 7.0 = 145.0s, which cleanly exceeds totalSimTime 144.0s
+  // Without hold, Day 6 must wrap immediately to stop 0 (145.0 % 144.0 = 1.0s)
+  engine.update(7.0f);
+  TelemetryState sWrapped = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(0, sWrapped.safeIdx);
+  TEST_ASSERT_FALSE(sWrapped.isDay24Finale);
+}
+
+// Test 10: Validate Day Switching Isolation and State Reset
+void test_day_switch_state_isolation(void) {
+  JourneyEngine engine;
+  engine.init(24);
+
+  // Advance to Kraków lock
+  for (int i = 0; i < 11; i++) engine.nextCity();
+  TelemetryState sLock = engine.getTelemetry();
+  TEST_ASSERT_TRUE(sLock.isDay24Finale);
+  TEST_ASSERT_EQUAL_STRING("KRAKOW", sLock.nextCityName);
+
+  // Switch to Day 1
+  engine.nextDay();
+  TelemetryState sDay1 = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(1, sDay1.activeDay);
+  TEST_ASSERT_EQUAL_INT(0, sDay1.safeIdx);
+  TEST_ASSERT_FALSE(sDay1.isFlightPhase);
+  TEST_ASSERT_FALSE(sDay1.isDay24Finale);
+  TEST_ASSERT_EQUAL_STRING("SYDNEY", sDay1.nextCityName); // Landed at Auckland (stop 0), next destination is Sydney (stop 1)
+}
+
+// Test 11: Long-Duration Stability & Immunity to Large Time Steps
+void test_long_duration_stability(void) {
+  JourneyEngine engine;
+  engine.init(24);
+
+  // Advance clock by 24 hours (86,400 seconds) in one call
+  engine.update(86400.0f);
+  TelemetryState s24h = engine.getTelemetry();
+
+  TEST_ASSERT_TRUE(!isnan(s24h.santaLon));
+  TEST_ASSERT_TRUE(!isnan(s24h.santaLat));
+  TEST_ASSERT_TRUE(!isinf(s24h.santaLon));
+  TEST_ASSERT_TRUE(!isinf(s24h.santaLat));
+  TEST_ASSERT_TRUE(s24h.safeIdx >= 0 && s24h.safeIdx < 12);
+  TEST_ASSERT_TRUE(s24h.progressRatio >= 0.0f && s24h.progressRatio <= 1.0f);
+  TEST_ASSERT_TRUE(s24h.santaScreenX >= 0.0f && s24h.santaScreenX <= 240.0f);
+}
+
+// Test 12: Resilience Against Corrupt/Malformed JSON and Buffer Overflow Protection
+void test_malformed_json_resilience(void) {
+  JourneyData data;
+
+  // Null string
+  TEST_ASSERT_FALSE(JourneyClient::parseJson(nullptr, data));
+
+  // Empty string
+  TEST_ASSERT_FALSE(JourneyClient::parseJson("", data));
+
+  // Corrupt / truncated syntax
+  TEST_ASSERT_FALSE(JourneyClient::parseJson("{ invalid json :::", data));
+
+  // Valid JSON with 0 stops
+  TEST_ASSERT_FALSE(JourneyClient::parseJson("{\"route\":[]}", data));
+
+  // Buffer overflow test: 40-character city name (struct Waypoint has char name[24])
+  const char* longNameJson = R"({"route":[{"name":"VERY_LONG_CITY_NAME_EXCEEDING_TWENTY_FOUR_CHARS","lon":10.0,"lat":20.0}]})";
+  TEST_ASSERT_TRUE(JourneyClient::parseJson(longNameJson, data));
+  TEST_ASSERT_EQUAL_INT(1, data.cityCount);
+  // Verify safely null-terminated and truncated
+  TEST_ASSERT_EQUAL_INT(23, strlen(data.cities[0].name));
+  TEST_ASSERT_EQUAL_INT('\0', data.cities[0].name[23]);
+
+  // Array overflow test: 40 waypoints (exceeds MAX_WAYPOINTS 32)
+  // Must safely clamp to MAX_WAYPOINTS without memory corruption
+  char hugeJson[2048] = "{\"route\":[";
+  for (int i = 0; i < 40; i++) {
+    char entry[48];
+    snprintf(entry, sizeof(entry), "%s{\"name\":\"C%d\",\"lon\":%d.0,\"lat\":0.0}", (i > 0 ? "," : ""), i, i);
+    strcat(hugeJson, entry);
+  }
+  strcat(hugeJson, "]}");
+
+  TEST_ASSERT_TRUE(JourneyClient::parseJson(hugeJson, data));
+  TEST_ASSERT_EQUAL_INT(MAX_WAYPOINTS, data.cityCount);
+}
+
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_default_journey_parsing);
@@ -185,5 +349,11 @@ int main(void) {
   RUN_TEST(test_day_cycling_btn_a);
   RUN_TEST(test_city_jumping_btn_b);
   RUN_TEST(test_day24_krakow_grand_finale_lock);
+  RUN_TEST(test_trajectory_ease_interpolation);
+  RUN_TEST(test_eta_countdown_progression);
+  RUN_TEST(test_normal_day_looping_without_hold);
+  RUN_TEST(test_day_switch_state_isolation);
+  RUN_TEST(test_long_duration_stability);
+  RUN_TEST(test_malformed_json_resilience);
   return UNITY_END();
 }
