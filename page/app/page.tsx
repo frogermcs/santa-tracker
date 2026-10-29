@@ -239,7 +239,8 @@ export default function RadarPage() {
         nextName,
         etaSec,
         isFlight,
-        selectedDay === 24
+        selectedDay === 24,
+        selectedDay
       );
 
       animFrameRef.current = requestAnimationFrame(render);
@@ -346,7 +347,7 @@ export default function RadarPage() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
         {/* Left Column: M5StickC-Plus SE Hardware Emulator (7 cols) */}
-        <div className="lg:col-span-7 flex flex-col items-center justify-center gap-6">
+        <div className="lg:col-span-7 flex flex-col items-center justify-center gap-6 w-full max-w-full overflow-x-auto sm:overflow-visible py-1">
           {/* Interactive Hardware Shell */}
           <M5StickDevice
             canvasRef={canvasRef}

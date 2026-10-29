@@ -1,6 +1,8 @@
 // Shared Retro Aviation World Radar (Exact 1:1 Match with M5StickC-Plus SE Firmware)
 // Fixed Center Radar Sweep, 912 Land Dots, Traveling Santa Contact, and Dotted Breadcrumb Trail
 
+import { drawBitmapText } from "./glcd-font";
+
 export interface RadarWaypoint {
   name: string;
   lon: number;
@@ -103,7 +105,6 @@ const W = 240;
 const H = 135;
 const RADAR_CX = 120;
 const RADAR_CY = 68;
-const FONT = "'Press Start 2P', monospace";
 
 const RAW_LAND: number[][] = [
   [-168,66,-125,72,-80,73,-60,62,-55,48,-70,42,-76,35,-80,25,-83,30,-90,30,-97,27,-97,21,-90,21,-87,21,-88,16,-83,9,-78,8,-86,11,-92,14,-105,20,-110,24,-117,32,-124,40,-125,49,-140,60,-165,60],
@@ -184,7 +185,8 @@ export function renderSharedRadar(
   nextCityName: string,
   etaSeconds: number,
   isFlightPhase = true,
-  isGrandFinale = false
+  isGrandFinale = false,
+  dayNumber = 24
 ) {
   ctx.save();
 
@@ -198,14 +200,10 @@ export function renderSharedRadar(
     x: number,
     y: number,
     col = "#fff",
-    sz = 8,
-    al: CanvasTextAlign = "left"
+    al: "left" | "right" | "center" = "left",
+    scale = 1
   ) => {
-    ctx.font = `${sz}px ${FONT}`;
-    ctx.textBaseline = "top";
-    ctx.textAlign = al;
-    ctx.fillStyle = col;
-    ctx.fillText(str, Math.round(x), Math.round(y));
+    drawBitmapText(ctx, str, x, y, col, al, scale);
   };
 
   // 1. Deep CRT green background
@@ -318,8 +316,10 @@ export function renderSharedRadar(
   // 9. Top Radar HUD Bar
   rect("rgba(2,17,10,.85)", 0, 0, W, 12);
   rect("#073018", 0, 12, W, 1);
-  text("RADAR MIKOLAJA", 4, 2, "#7dff9b");
-  text("USB 5V", W - 4, 2, "#7dff9b", 8, "right");
+  text("BAT 98%", 4, 2, "#7dff9b", "left");
+  text("RADAR MIKOLAJA", RADAR_CX, 2, "#7dff9b", "center");
+  const dayText = "DZIEN " + dayNumber;
+  text(dayText, W - 4, 2, isGrandFinale ? "#ffd54a" : "#7dff9b", "right");
 
   // 10. Bottom HUD bar: Next stop & ETA
   rect("rgba(2,17,10,.85)", 0, 121, W, 14);
@@ -332,7 +332,6 @@ export function renderSharedRadar(
     W - 4,
     124,
     "#ffd54a",
-    8,
     "right"
   );
 
