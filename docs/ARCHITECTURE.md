@@ -13,25 +13,25 @@ flowchart TD
     subgraph Cloud["Next.js Web Platform (Vercel)"]
         DataFile["public/journey.json<br/>(Master Itinerary)"]
         API["Route Handler: /api/journey<br/>(CORS Enabled, Edge Cached)"]
-        WebRadar["/radar Presentation Page<br/>(Dedicated Hardware View)"]
-        WebHub["/ Interactive Hub<br/>(Multi-mode Emulator & Code Exporter)"]
+        WebHub["/ Interactive Hub<br/>(240x135 ST7789v2 Simulator & Telemetry)"]
+        MapDebugger["/map-debugger<br/>(World Map Vector Coordinate Inspector)"]
         
         DataFile --> API
-        API -->|Fetch API| WebRadar
         API -->|Fetch API| WebHub
+        API -->|Fetch API| MapDebugger
     end
 
     subgraph IoT["M5StickC-Plus SE Firmware (ESP32)"]
         WiFi["Wi-Fi Client<br/>(Burst Mode)"]
         JSONParser["ArduinoJson v7 Deserializer"]
-        EmbeddedFlash["default_journey.h<br/>(PROGMEM Flash Fallback)"]
+        AdventFlash["advent_schedule.h<br/>(288 Stops in PROGMEM)"]
         CoreEngine["JourneyEngine<br/>(Pure Simulation Math)"]
         RadarRenderer["ScreenRadar<br/>(16-bit Double Buffer)"]
         HardwareDisplay["ST7789v2 IPS LCD<br/>(240×135 @ 30 FPS)"]
 
         WiFi -->|HTTPS GET| JSONParser
         JSONParser -->|JourneyData Struct| CoreEngine
-        EmbeddedFlash -.->|If Offline / Timeout| CoreEngine
+        AdventFlash -.->|Preloaded Offline| CoreEngine
         CoreEngine -->|TelemetryState Struct| RadarRenderer
         RadarRenderer -->|canvas.pushSprite| HardwareDisplay
     end
@@ -92,7 +92,8 @@ firmware/
 │   ├── config.h             # Pinouts, screen bounds, network timeouts, URLs
 │   ├── types.h              # Platform-agnostic structs (Waypoint, JourneyData, TelemetryState)
 │   ├── land_dots.h          # 912 precomputed PROGMEM coastline coordinates
-│   └── default_journey.h    # Embedded fallback JSON string in PROGMEM
+│   ├── advent_schedule.h    # Preloaded 24-day itinerary (288 stops in PROGMEM)
+│   └── default_journey.h    # Day 24 Grand Finale offline fallback JSON in PROGMEM
 └── src/
     ├── core/
     │   ├── journey_engine.h # Pure math simulation (no display/hardware dependencies)
@@ -111,10 +112,11 @@ firmware/
 | Module | Responsibility | Hardware Bound? | Unit Testable on Mac? |
 | :--- | :--- | :--- | :--- |
 | **`types.h`** | Data model definitions with conditional stdint/math includes | No | Yes |
-| **`JourneyEngine`** | Coordinate projection, ease-in-out flight interpolation, ETA, speed multipliers | No | **Yes (0.55s native test)** |
+| **`advent_schedule.h`** | 288 stops (24 days x 12 stops) compiled in PROGMEM (Flash ROM) | No | Yes |
+| **`JourneyEngine`** | Coordinate projection, ease-in-out flight interpolation, ETA, day/city cycling, Kraków lock | No | **Yes (0.76s native test)** |
 | **`JourneyClient`** | Wi-Fi connection, HTTPClient, ArduinoJson deserialization, offline fallback | Only in fetch | **Yes (parseJson is tested)** |
 | **`ScreenRadar`** | 16-bit double buffer rendering, dot-matrix world map, sweep beam, CRT HUD | Yes (`M5Canvas`) | No (Render layer) |
-| **`main.cpp`** | Hardware init, button event polling, frame rate timing | Yes (`M5Unified`) | No (Entrypoint) |
+| **`main.cpp`** | Hardware init, button event polling (Btn A: Day, Btn B: City), audio chirps | Yes (`M5Unified`) | No (Entrypoint) |
 
 ---
 
@@ -124,26 +126,24 @@ The shared contract between the cloud API and the embedded client:
 
 ```json
 {
-  "version": 1,
-  "updatedAt": "2026-10-27T18:00:00Z",
-  "secPerCity": 16,
+  "version": 2,
+  "updatedAt": "2026-10-29T18:00:00Z",
+  "activeDay": 24,
+  "secPerCity": 12,
   "speedMultiplier": 1,
   "route": [
-    { "name": "AUCKLAND",    "lon": 174.8,  "lat": -36.8 },
-    { "name": "SYDNEY",      "lon": 151.2,  "lat": -33.9 },
-    { "name": "TOKYO",       "lon": 139.7,  "lat": 35.7 },
-    { "name": "BEIJING",     "lon": 116.4,  "lat": 39.9 },
-    { "name": "DELHI",        "lon": 77.2,   "lat": 28.6 },
-    { "name": "DUBAI",        "lon": 55.3,   "lat": 25.2 },
-    { "name": "NAIROBI",      "lon": 36.8,   "lat": -1.3 },
-    { "name": "CAIRO",        "lon": 31.2,   "lat": 30.0 },
-    { "name": "KRAKOW",       "lon": 19.9,   "lat": 50.1 },
-    { "name": "LONDON",       "lon": -0.1,   "lat": 51.5 },
-    { "name": "RIO",         "lon": -43.2,  "lat": -22.9 },
-    { "name": "NEW YORK",    "lon": -74.0,  "lat": 40.7 },
-    { "name": "MEXICO CITY", "lon": -99.1,  "lat": 19.4 },
-    { "name": "LOS ANGELES", -118.2,        "lat": 34.0 },
-    { "name": "HONOLULU",    -157.8,        "lat": 21.3 }
+    { "name": "GISBORNE",          "lon": 178.0176, "lat": -38.6623 },
+    { "name": "BETHLEHEM",         "lon": 35.2024,  "lat": 31.7054 },
+    { "name": "NIKOZJA",           "lon": 33.3667,  "lat": 35.1667 },
+    { "name": "CHARTUM",           "lon": 32.5599,  "lat": 15.5007 },
+    { "name": "NOUAKCHOTT",        "lon": -15.9785, "lat": 18.0735 },
+    { "name": "CAYENNE",           "lon": -52.3135, "lat": 4.9224 },
+    { "name": "WYSPA WIELKANOCNA", "lon": -109.4324,"lat": -27.1492 },
+    { "name": "KIRITIMATI",        "lon": -157.4278,"lat": 1.8721 },
+    { "name": "HONOLULU",          "lon": -157.8583,"lat": 21.3069 },
+    { "name": "NUUK",              "lon": -51.6941, "lat": 64.1814 },
+    { "name": "BIEGUN POLNOCNY",   "lon": 0.0000,   "lat": 90.0000 },
+    { "name": "KRAKOW",            "lon": 19.9450,  "lat": 50.0647 }
   ]
 }
 ```
@@ -153,18 +153,24 @@ The shared contract between the cloud API and the embedded client:
 ## 5. Testing & Verification Strategy
 
 ### 1. Desktop Native Unit Testing (`pio test -e native`)
-By keeping `JourneyEngine` free from Arduino and display headers, the entire simulation engine is compiled and executed directly on desktop macOS/Linux via `clang`/`gcc` with the **Unity test framework**:
+By keeping `JourneyEngine` free from Arduino and display headers, the entire simulation engine is compiled and executed directly on desktop macOS/Linux via `clang`/`gcc` with the **Unity test framework** (12/12 tests in 0.76s):
 
 * **Tests Covered:**
-  * `test_default_journey_parsing`: Verifies JSON deserialization and bounds.
+  * `test_default_journey_parsing`: Verifies JSON deserialization and bounds for Day 24 fallback.
+  * `test_advent_schedule_integrity`: Verifies all 288 stops across 24 days in PROGMEM with geographic bounds.
   * `test_coordinate_projection`: Ensures Equirectangular lat/lon math maps accurately to the 240×135 viewport.
-  * `test_journey_progression_and_interpolation`: Verifies ease-in-out interpolation curves between cities.
-  * `test_speed_multiplier_cycle`: Validates state transitions (`1x` → `2x` → `4x` → `8x` → `1x`).
-  * `test_jump_to_next_city`: Ensures Button A jump logic increments waypoints reliably.
-  * `test_global_wraparound`: Verifies no out-of-bounds memory accesses when the route loops from Honolulu back to Auckland.
+  * `test_day_cycling_btn_a`: Validates Button A day cycling ($1 \rightarrow 24 \rightarrow 1$) and landed phase initialization.
+  * `test_city_jumping_btn_b`: Ensures Button B city jump logic cycles all 12 stops reliably.
+  * `test_day24_krakow_grand_finale_lock`: Validates Kraków arrival state (`isDay24Finale == true`, `eta == 0`) and 16-second celebration hold.
+  * `test_trajectory_ease_interpolation`: Mathematically verifies the `easeInOut` curve and halfway midpoint accuracy.
+  * `test_eta_countdown_progression`: Validates ETA countdowns across flight and landed phases.
+  * `test_normal_day_looping_without_hold`: Verifies Days 1–23 loop cleanly at $144.0\text{s}$ without hold.
+  * `test_day_switch_state_isolation`: Verifies switching away from Kraków lock resets state cleanly.
+  * `test_long_duration_stability`: Simulates 24 continuous hours ($86,400\text{s}$) with $O(1)$ `fmodf` time wrapping and zero floating drift.
+  * `test_malformed_json_resilience`: Fuzz-tests against null, empty, corrupt JSON, string overflow, and array clamping.
 
 ### 2. Automated GitHub Actions CI (`.github/workflows/ci.yml`)
 Every commit pushed to GitHub automatically runs:
-1. **Web Build:** Installs npm dependencies and verifies Next.js App Router build with zero TypeScript or lint errors.
+1. **Web Build & Test:** Runs `npm --prefix page test` verifying typecheck and 288-stop schedule tests with zero errors.
 2. **Firmware Desktop Tests:** Runs `pio test -e native` on Ubuntu runners.
-3. **Firmware Hardware Compilation:** Runs `pio run -e m5stick-c` verifying flash size within the 3MB partition limit.
+3. **Firmware Hardware Compilation:** Runs `pio run -e m5stick-c` verifying SRAM < 25% and flash size within the 3MB partition limit.

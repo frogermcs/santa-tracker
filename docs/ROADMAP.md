@@ -51,28 +51,29 @@ stateDiagram-v2
 
 ---
 
-## Milestone 1: Fully Operational Radar End-to-End (ACTIVE 🎯)
+## Milestone 1: Fully Operational Radar End-to-End (COMPLETE ✅)
 
 * **Goal:** Deliver an end-to-end operational radar experience across Web and M5StickC hardware driven by the user's multi-day city dataset.
 * **Requirements & Deliverables:**
-  - [ ] **1. User City List Ingestion:**
-    * Ingest user's curated list of global cities spanning all continents across the Dec 1–24 calendar.
-    * Structure schema with: `name`, `lat`, `lon`, `day` (1–24), `arrivalHour` (~1h flight + ~1h stay).
-  - [ ] **2. Web Presentation & Testing Suite (`page/`):**
-    * **Day Selector:** Interactive UI (dropdown / slider) to select any day from **Dec 01 to Dec 24**, dynamically updating the radar route.
-    * **10x Speed Testing Mode:** Dedicated test toggle to accelerate journey progression by **10x**, enabling rapid verification of complete daily flight paths in minutes.
-  - [ ] **3. Production JSON Endpoint (`/api/journey`):**
-    * Expose the full multi-day city list via `/api/journey` with edge caching and CORS.
-    * Support day filtering / structured response consumed by both Web and M5StickC.
-  - [ ] **4. M5StickC-Plus SE Firmware (`firmware/`):**
-    * Fetch remote JSON from `/api/journey` via Wi-Fi on boot.
-    * **Hardcode "Today is Dec 24th"** for Milestone 1: The device defaults to December 24th's route and grand finale sequence.
-    * Fallback to embedded Dec 24th schedule if Wi-Fi is unconfigured or unreachable.
-    * Physical buttons: Button A jumps to next city; Button B cycles speed multipliers (including 10x test speed).
+  - [x] **1. User City List Ingestion:**
+    * Ingest user's curated list of global cities spanning all continents across the Dec 1–24 calendar (`Harmonogram Santa Tracker 2026 - Harmonogram_Lotow.csv`).
+    * Structured schema with 288 stops (12 stops/day) with coordinates, windows, and Santa's tasks.
+  - [x] **2. Web Presentation & Testing Suite (`page/`):**
+    * **Day Selector:** Interactive ribbon to select any day from **Dec 01 to Dec 24**, dynamically updating the radar route.
+    * **10x / Warp Speed Testing Mode:** Dedicated test toggle to accelerate journey progression, enabling rapid verification.
+    * **Coordinates Debugger (`/map-debugger`):** Interactive world map with great-circle trajectories and flight simulation.
+  - [x] **3. Production JSON Endpoint (`/api/journey`):**
+    * Exposes the full multi-day city list via `/api/journey` with edge caching and CORS.
+    * Supports `?day=N` and `?mode=all` query parameters.
+  - [x] **4. M5StickC-Plus SE Firmware (`firmware/`):**
+    * Preloads all 24 days (288 stops) into flash ROM (`advent_schedule.h` in PROGMEM) with 0 bytes dynamic heap allocation.
+    * Boots directly into December 24th Grand Finale route (culminating in Kraków, Poland at 22:00-23:00 UTC).
+    * Physical buttons: Button A cycles days (1 $\rightarrow$ 24 $\rightarrow$ 1); Button B advances through cities on the active day.
+    * 12 native desktop unit tests passing in 0.76s.
 
 ---
 
-## Milestone 2: Live Real-Time Clock (NTP & RTC Progression)
+## Milestone 2: Live Real-Time Clock (NTP & RTC Progression) (ACTIVE 🎯)
 
 * **Objective:** Expand route to 288 cities (>200) spanning Dec 1 – Dec 24, with context-aware timing (1h flight + 1h city stay).
 * **Key Deliverables:**

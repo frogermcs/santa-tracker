@@ -17,13 +17,14 @@ A pocket-sized retro aviation Santa Tracker gadget for the **M5StickC-Plus SE** 
 ```
 .
 ├── firmware/       # ESP32 C++17 firmware (PlatformIO + M5Unified + ArduinoJson)
-│   ├── include/    # Config, types, fallback JSON, and 912 coastline dots
+│   ├── include/    # Config, types, advent schedule (288 stops in PROGMEM), and land dots
 │   ├── src/        # Core engine, network client, and radar UI renderer
-│   └── test/       # Native desktop unit test suite (runs in 0.5s!)
+│   └── test/       # Native desktop unit test suite (12 tests passing in 0.7s!)
 ├── page/           # Next.js 15 web platform & emulator (App Router, Tailwind)
-│   ├── app/        # / (Interactive Hub), /radar (Dedicated View), /api/journey
+│   ├── app/        # / (Mission Control Hub & Emulator), /map-debugger, /api/journey
 │   └── public/     # Static assets and master journey.json
 ├── docs/           # PRD, Architecture, and Roadmap specifications
+├── scripts/        # CSV ingest & C++ PROGMEM schedule export scripts
 └── .github/        # GitHub Actions CI workflow (Web + Firmware build & tests)
 ```
 
@@ -37,13 +38,13 @@ cd page
 npm install
 npm run dev
 ```
-Open [http://localhost:3000/radar](http://localhost:3000/radar) for the dedicated hardware view, or [http://localhost:3000](http://localhost:3000) for the full hub.
+Open [http://localhost:3000](http://localhost:3000) for the Mission Control hub & hardware emulator, or [http://localhost:3000/map-debugger](http://localhost:3000/map-debugger) for the full geographic coordinates debugger.
 
 ### 2. Firmware Testing & Flashing (`firmware/`)
 ```bash
 cd firmware
 
-# Run fast desktop unit tests (no hardware needed!)
+# Run fast desktop unit tests (12 tests in 0.7s, no hardware needed!)
 pio test -e native
 
 # Compile ESP32 firmware
@@ -59,6 +60,6 @@ pio run -e m5stick-c --target upload
 
 | Input | Action |
 | :--- | :--- |
-| **Button A (Front M5)** | Jump immediately to next city |
-| **Button B (Side)** | Cycle simulation speed (`1x` → `2x` → `4x` → `8x`) |
+| **Button A (Front M5)** | Cycle through Advent Days (`D01` → `D02` → ... → `D24` → `D01`) |
+| **Button B (Top Side)** | Advance to next city on active day (1 → 12 → 1) |
 | **Button B (Hold)** | Toggle buzzer sound chirps (Mute / Unmute) |
