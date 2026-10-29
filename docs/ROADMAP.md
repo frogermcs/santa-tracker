@@ -73,51 +73,42 @@ stateDiagram-v2
 
 ---
 
-## Milestone 2: Live Real-Time Clock (NTP & RTC Progression) (ACTIVE 🎯)
+## Milestone 2: Context-Aware Multi-Screen Visual Experience (ACTIVE 🎯)
 
-* **Objective:** Expand route to 288 cities (>200) spanning Dec 1 – Dec 24, with context-aware timing (1h flight + 1h city stay).
+> [!NOTE]
+> **Why Multi-Screen Before Real-Time Clock?**
+> We are currently ~1 month before December. Connecting the hardware to the live real-time clock (NTP/RTC) now would freeze Santa until December 1st and prevent interactive visual development and testing. We remain on **simulated/demo clock mode** (`secPerCity = 12s`, Day & City button cycling) to build, animate, and evaluate all screens and states smoothly. Real-Time Clock progression will be delivered as the final milestone right before December.
+
+* **Objective:** Deliver the 2 remaining core screens on the web companion emulator first, then port them to the M5StickC firmware with strict 1:1 parity and zero dynamic heap allocation.
+* **Sequential Delivery Rule:** **Web Companion App First (`page/`), Firmware Second (`firmware/`)**.
 * **Key Deliverables:**
-  - [ ] **288-City Master Route Generation:**
-    - Curate a geo-balanced itinerary spanning all 7 continents evenly across all 24 days.
-    - Expose via `/api/journey` and `journey.json` (~10–14 KB payload, ~9.2 KB ESP32 RAM).
-  - [ ] **Dual Clock Simulation Engine (`journey_engine`):**
-    - **Live Advent Mode:** Reads RTC time (BM8563 / NTP) and matches the exact city for the current date & hour (Dec 1–24).
-    - **Interactive Demo Mode:** Allows manual speed acceleration (`1x`, `2x`, `4x`, `8x`) and city jumping for testing outside December.
-  - [ ] **State Transitions:**
-    - Flag `isFlightPhase`: `true` for first 60 minutes, `false` for next 60 minutes.
-    - Scaled progress interpolation and dynamic ETA countdowns to arrival/departure.
+  - [ ] **Screen 2: Side-View Santa Cam (`ui/screen_cam`):**
+    * **During Transit (Flight Phase):**
+      - Mode A: *Cruising Sky* — Rudolph & sleigh bobbing through parallax starry skies, falling snowflakes, and silhouetted mountain pines.
+      - Mode B: *Hyper-Warp* — Hyperspace star streaks, sleigh shake, glowing red Rudolph nose aura when speed accelerates.
+    * **During City Stay (Landed Gift Drop Phase):**
+      - Mode C: *Chimney Drop* — Parachuting wrapped gift boxes onto scrolling cozy rooftop chimneys.
+      - Mode D: *Cookie & Milk Break* — Santa eating cookies next to a fireplace with an animated cookie munch counter.
+  - [ ] **Screen 3: Flight Telemetry / Cockpit Dashboard (`ui/screen_dash`):**
+    - High Mach speed indicator (e.g. `M 4.5` during flight, `0.0 Mach` when landed).
+    - Cumulative distance traveled counter (`KM`).
+    - Worldwide gift delivery counter (ticks up during city stays).
+    - Destination HUD banner: Current city, next arrival ETA, and outdoor temperature/weather badge.
+  - [ ] **Screen Cycling & Navigation:**
+    - Carousel cycling: `Screen 1 (World Radar)` $\leftrightarrow$ `Screen 2 (Santa Cam)` $\leftrightarrow$ `Screen 3 (Flight Telemetry)`.
+    - Web UI: Direct tab switcher and keyboard shortcut (`Space` / `1`, `2`, `3`).
+    - Firmware: Hardware button navigation for screen switching.
 
 ---
 
-## Phase 3: Context-Aware Multi-Screen Expansion
-
-* **Objective:** Port Side-View Santa Cam and Telemetry Dashboard, visually coupled to Santa's active state.
-* **Key Deliverables:**
-  - [ ] **Context-Aware Side-View Santa Cam (`ui/screen_cam.cpp`):**
-    * **During Transit (Flight Hour):**
-      - Mode A: *Cruising Sky* — Rudolph & sleigh bobbing through parallax snowfall and pine trees.
-      - Mode B: *Hyper-Warp* — Star streaks, sleigh shake, glowing red Rudolph aura.
-    * **During City Stay (Gift Drop Hour):**
-      - Mode C: *Chimney Drop* — Parachuting gift boxes onto scrolling rooftops.
-      - Mode D: *Cookie & Milk Break* — Santa eating cookies with animated munch counter.
-  - [ ] **Santa's Telemetry Dashboard (`ui/screen_dash.cpp`):**
-    - Live distance traveled (`KM`).
-    - Sleigh speed (`MACH` during flight, `0.0` during roof landing).
-    - Gifts delivered counter (ticks up during city stay).
-    - Next destination banner.
-  - [ ] **Hardware UI Cycling:**
-    - Button A short-press cycles: `World Radar` (Hero) → `Santa Cam` → `Telemetry Dashboard`.
-
----
-
-## Phase 4: Parent Customization & Wi-Fi Management
+## Milestone 3: Parent Customization & Wi-Fi Management
 
 * **Objective:** Enable parents to customize Santa's December 24th route (e.g. inject their hometown) and configure Wi-Fi.
 * **Key Deliverables:**
   - [ ] **Hometown Override in Itinerary:**
     - Cloud API allows custom hometown injection for Dec 24 bedtime window.
     - Santa's radar and ETA lock on the child's home city as the grand finale before returning to the North Pole.
-  - [ ] **Smart Wi-Fi Sync:**
+  - [ ] **Smart Wi-Fi Sync ("Burst & Sleep"):**
     - Device periodically connects (e.g. once every 24h or on boot) to refresh the journey schedule via `/api/journey`.
     - Shuts down Wi-Fi radio immediately after sync to preserve the 120mAh battery.
   - [ ] **Fallback & Offline Safety:**
@@ -127,10 +118,28 @@ stateDiagram-v2
 
 ---
 
-## Phase 5: Hardware Polish & Festive Packaging
+## Milestone 4: Hardware Polish & Festive Packaging
 
 * **Objective:** Package the gadget into an heirloom Christmas Eve maker toy.
 * **Key Deliverables:**
   - [ ] **3D-Printed Sleigh/Chimney Dock:** Snap-on display dock with USB-C power pass-through.
   - [ ] **Audio Jingle Engine:** Polyphonic 8-bit Christmas chimes on city arrival using `M5.Speaker`.
   - [ ] **Kid's Flight Manual:** Retro printable mission log card to track cities daily from Dec 1 to Dec 24.
+
+---
+
+## Milestone 5: Live Real-Time Clock & Advent Launch (THE FINAL PRE-DECEMBER MILESTONE 🎄)
+
+* **Objective:** Transition the firmware and web platform from simulated/demo time to the live 24-day Advent calendar clock (Dec 1 – Dec 24) using ESP32 RTC (BM8563) and NTP synchronization.
+* **Key Deliverables:**
+  - [ ] **Dual Clock Engine (`journey_engine`):**
+    - **Live Advent Mode (Production):**
+      - Synchronized to real-world RTC/NTP time.
+      - Matches exact day (Dec 1–24) and exact 2-hour window (1h flight + 1h city stay).
+    - **Interactive Demo Override Mode (Preserved):**
+      - Dedicated hardware button hold during boot or web toggle allowing parents and kids to simulate any day/city anytime outside of December.
+  - [ ] **Pre-Advent Countdown Screen (Pre-December 1st):**
+    - If powered on before Dec 1st, displays a festive "North Pole Workshop — Sleigh Pre-Flight Prep" countdown until launch.
+  - [ ] **State Transition Cadence:**
+    - Exact 60-minute in-flight phase + 60-minute landed city phase.
+    - Day 24 22:00-23:00 UTC Kraków Grand Finale arrival lock.
