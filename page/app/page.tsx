@@ -3,10 +3,12 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Compass, Wifi, Volume2, VolumeX, RefreshCw, Map, Calendar } from "lucide-react";
+import { Compass, Wifi, Volume2, VolumeX, RefreshCw, Map, Calendar, Gauge, Layers, Sparkles } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
 import { SnowEffect } from "@/components/SnowEffect";
 import { renderSharedRadar, RadarWaypoint, SEC_PER_CITY } from "@/lib/canvas/shared-radar";
+import { renderDashboardScreen } from "@/lib/canvas/dashboard-screen";
+import { computeSantaMetrics, SantaCockpitMetrics } from "@/lib/telemetry/santa-metrics";
 import { buzzer } from "@/lib/audio/buzzer";
 import { getDaySchedule, DEFAULT_ADVENT_DAY } from "@/lib/advent-schedule";
 
@@ -41,15 +43,19 @@ export default function RadarPage() {
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [scanlines, setScanlines] = useState<boolean>(true);
 
-  // Timing: 6s journey + 6s stop = 12s per city (hardcoded 1x scale matching 1hr flight + 1hr stop)
-  const secPerCity = SEC_PER_CITY; // 12 seconds
+  // Screen Selection (Screen 1: Radar, Screen 2: Kokpit Mikołaja)
+  const [activeScreen, setActiveScreen] = useState<"radar" | "cockpit">("cockpit");
+  const [liveMetrics, setLiveMetrics] = useState<SantaCockpitMetrics | null>(null);
+
+  // Timing: 12s journey + 12s stop = 24s per city (hardcoded 1x scale matching 1hr flight + 1hr stop)
+  const secPerCity = SEC_PER_CITY; // 24 seconds
   const speedMultiplier = 1;
 
   // Active telemetry states
   const [currentCityName, setCurrentCityName] = useState<string>("GISBORNE");
   const [nextCityName, setNextCityName] = useState<string>("BETHLEHEM");
   const [activeStopIndex, setActiveStopIndex] = useState<number>(0);
-  const [eta, setEta] = useState<number>(12);
+  const [eta, setEta] = useState<number>(24);
   const [coords, setCoords] = useState<{ lat: string; lon: string }>({ lat: "-38.7", lon: "178.0" });
   const [isFlightPhase, setIsFlightPhase] = useState<boolean>(false);
 
@@ -59,7 +65,7 @@ export default function RadarPage() {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
-  const simTimeRef = useRef<number>(6); // Start landed at Stop 1
+  const simTimeRef = useRef<number>(12); // Start landed at Stop 1 (after 12s flight)
   const lastTimeRef = useRef<number>(0);
 
   // Helper to load route for any day
@@ -79,7 +85,7 @@ export default function RadarPage() {
       stopTotal: s.stopTotal,
     }));
     setRoute(newRoute);
-    simTimeRef.current = 6; // Start landed at first city
+    simTimeRef.current = 12; // Start landed at first city
   }, []);
 
   // 1. Fetch live journey from API endpoint on mount
@@ -126,8 +132,8 @@ export default function RadarPage() {
     if (!route || route.length === 0) return;
     const curIdx = Math.floor(simTimeRef.current / secPerCity);
     const nextIdx = ((curIdx + 1) % route.length + route.length) % route.length;
-    // +6 seconds lands Santa directly at that city (6s stop begins)
-    simTimeRef.current = nextIdx * secPerCity + 6;
+    // +12 seconds lands Santa directly at that city (12s stop begins)
+    simTimeRef.current = nextIdx * secPerCity + 12;
   }, [route, secPerCity, isMuted]);
 
   const handleSelectDay = useCallback((dayNum: number) => {
@@ -140,7 +146,7 @@ export default function RadarPage() {
   const handleSelectCity = useCallback((targetIdx: number) => {
     if (!route || route.length === 0) return;
     const safeTarget = Math.max(0, Math.min(route.length - 1, targetIdx));
-    simTimeRef.current = safeTarget * secPerCity + 6;
+    simTimeRef.current = safeTarget * secPerCity + 12;
     if (!isMuted) buzzer.playTone(1300 + safeTarget * 50, 40);
   }, [route, secPerCity, isMuted]);
 
@@ -157,11 +163,19 @@ export default function RadarPage() {
       } else if (e.key === "m" || e.key === "M") {
         e.preventDefault();
         setIsMuted((prev) => !prev);
+      } else if (e.key === "1") {
+        e.preventDefault();
+        setActiveScreen("radar");
+        if (!isMuted) buzzer.playTone(1500, 30);
+      } else if (e.key === "2") {
+        e.preventDefault();
+        setActiveScreen("cockpit");
+        if (!isMuted) buzzer.playTone(1700, 30);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleBtnA, handleBtnB]);
+  }, [handleBtnA, handleBtnB, isMuted]);
 
   // 3. Render Loop matching firmware exactly
   useEffect(() => {
@@ -186,7 +200,7 @@ export default function RadarPage() {
       if (totalSimTime <= 0) return;
 
       // Give a celebration hold at the final city (Kraków on Day 24) before looping
-      const holdDuration = selectedDay === 24 ? 16 : 0;
+      const holdDuration = selectedDay === 24 ? 32 : 0;
       const cycleTotal = totalSimTime + holdDuration;
       if (simTimeRef.current >= cycleTotal || simTimeRef.current < 0) {
         simTimeRef.current = 0;
@@ -200,10 +214,11 @@ export default function RadarPage() {
       const prevIdx = safeIdx > 0 ? safeIdx - 1 : 0;
 
       const isLastCity = safeIdx === route.length - 1;
-      const isDay24Finale = selectedDay === 24 && isLastCity && (u >= 6 || simTimeRef.current >= totalSimTime);
+      const isDay24Finale = selectedDay === 24 && isLastCity && (u >= 12 || simTimeRef.current >= totalSimTime);
 
-      const isFlight = !isDay24Finale && u < 6;
-      const p = isFlight ? (u / 6 < 0.5 ? 2 * (u / 6) ** 2 : 1 - (-2 * (u / 6) + 2) ** 2 / 2) : 1;
+      const isFlight = !isDay24Finale && u < 12;
+      const uFlight = u / 12;
+      const p = isFlight ? (uFlight < 0.5 ? 2 * uFlight ** 2 : 1 - (-2 * uFlight + 2) ** 2 / 2) : 1;
 
       const curr = route[safeIdx] ?? route[0];
       const prev = route[prevIdx] ?? curr;
@@ -215,11 +230,11 @@ export default function RadarPage() {
       const nextIdx = (safeIdx + 1) % route.length;
       const nextName = isDay24Finale
         ? curr.name
-        : u < 6
+        : u < 12
         ? curr.name
         : (route[nextIdx]?.name || curr.name);
 
-      const etaSec = isDay24Finale ? 0 : Math.ceil(u < 6 ? 6 - u : secPerCity - u);
+      const etaSec = isDay24Finale ? 0 : Math.ceil(u < 12 ? 12 - u : secPerCity - u);
 
       setCurrentCityName(curr.name);
       setNextCityName(nextName);
@@ -228,20 +243,35 @@ export default function RadarPage() {
       setEta(etaSec);
       setCoords({ lat: sLat.toFixed(1), lon: sLon.toFixed(1) });
 
-      // Draw the exact shared radar
-      renderSharedRadar(
-        ctx,
-        now / 1000,
-        route,
+      // Compute telemetry metrics for cockpit and HUD
+      const metrics = computeSantaMetrics(
+        selectedDay,
         safeIdx,
-        sLon,
-        sLat,
+        u,
+        now / 1000,
         nextName,
-        etaSec,
-        isFlight,
-        selectedDay === 24,
-        selectedDay
+        isDay24Finale
       );
+      setLiveMetrics(metrics);
+
+      // Render Active Screen (Screen 1: Radar or Screen 2: Kokpit Mikołaja)
+      if (activeScreen === "radar") {
+        renderSharedRadar(
+          ctx,
+          now / 1000,
+          route,
+          safeIdx,
+          sLon,
+          sLat,
+          nextName,
+          etaSec,
+          isFlight,
+          selectedDay === 24,
+          selectedDay
+        );
+      } else {
+        renderDashboardScreen(ctx, metrics, selectedDay, now / 1000);
+      }
 
       animFrameRef.current = requestAnimationFrame(render);
     };
@@ -250,7 +280,7 @@ export default function RadarPage() {
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [route, secPerCity, speedMultiplier, selectedDay]);
+  }, [route, secPerCity, speedMultiplier, selectedDay, activeScreen]);
 
   return (
     <div className="min-h-screen bg-[#060a16] text-slate-100 flex flex-col selection:bg-rose-900 selection:text-amber-100 relative overflow-x-hidden">
@@ -347,31 +377,72 @@ export default function RadarPage() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
         {/* Left Column: M5StickC-Plus SE Hardware Emulator (7 cols) */}
-        <div className="lg:col-span-7 flex flex-col items-center justify-center gap-6 w-full max-w-full overflow-x-auto sm:overflow-visible py-1">
+        <div className="lg:col-span-7 flex flex-col items-center justify-center gap-4 w-full max-w-full overflow-x-auto sm:overflow-visible py-1">
+          {/* Tactical Screen Selector Bar */}
+          <div className="flex items-center justify-center gap-2 bg-[#081224]/80 border border-white/10 rounded-2xl p-1.5 px-2.5 shadow-lg">
+            <button
+              onClick={() => {
+                setActiveScreen("radar");
+                if (!isMuted) buzzer.playTone(1500, 30);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer ${
+                activeScreen === "radar"
+                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-sm"
+                  : "bg-slate-900/50 text-slate-400 border-white/5 hover:bg-slate-800/70"
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5 text-emerald-400" />
+              <span>1: Radar Lotu</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveScreen("cockpit");
+                if (!isMuted) buzzer.playTone(1700, 30);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer ${
+                activeScreen === "cockpit"
+                  ? "bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm ring-1 ring-amber-400/30"
+                  : "bg-slate-900/50 text-slate-400 border-white/5 hover:bg-slate-800/70"
+              }`}
+            >
+              <Gauge className="w-3.5 h-3.5 text-amber-400" />
+              <span>2: Kokpit Mikołaja</span>
+            </button>
+          </div>
+
           {/* Interactive Hardware Shell */}
-          <M5StickDevice
-            canvasRef={canvasRef}
-            scanlines={scanlines}
-            isTilted={false}
-            onButtonAPress={handleBtnA}
-            onButtonBPress={handleBtnB}
-            isButtonAPressed={isBtnAPressed}
-            isButtonBPressed={isBtnBPressed}
-          />
+          <div className="pt-2 sm:pt-4">
+            <M5StickDevice
+              canvasRef={canvasRef}
+              scanlines={scanlines}
+              isTilted={false}
+              onButtonAPress={handleBtnA}
+              onButtonBPress={handleBtnB}
+              isButtonAPressed={isBtnAPressed}
+              isButtonBPressed={isBtnBPressed}
+            />
+          </div>
 
           {/* Keyboard Helper Legend */}
-          <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-mono text-slate-400">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs font-mono text-slate-400">
             <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2.5 py-1 rounded border border-white/10 shadow-sm">
               <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">Space</kbd>
               <span>/</span>
               <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">A</kbd>
-              <span className="text-slate-200 font-bold">Następny Dzień (Przycisk M5)</span>
+              <span className="text-slate-200 font-bold">Dzień (Przycisk M5)</span>
             </div>
             <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2.5 py-1 rounded border border-white/10 shadow-sm">
               <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">B</kbd>
-              <span className="text-slate-200 font-bold">Następne Miasto (Przycisk Górny)</span>
+              <span className="text-slate-200 font-bold">Miasto (Przycisk Górny)</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2.5 py-1 rounded border border-white/10 shadow-sm">
+            <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2 py-1 rounded border border-white/10 shadow-sm">
+              <kbd className="px-1 py-0.5 bg-slate-800 text-emerald-400 rounded text-[10px]">1</kbd>
+              <span>/</span>
+              <kbd className="px-1 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">2</kbd>
+              <span className="text-slate-300">Ekran</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2 py-1 rounded border border-white/10 shadow-sm">
               <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">M</kbd>
               <span className="text-slate-300">Dźwięk</span>
             </div>
@@ -384,7 +455,7 @@ export default function RadarPage() {
             <div>
               <h2 className="text-base font-bold font-mono text-white flex items-center gap-2">
                 <Compass className="w-4 h-4 text-amber-400" />
-                Live Sleigh Telemetry
+                Telemetria Lotu Mikołaja
               </h2>
             </div>
             <span className="px-2 py-0.5 rounded text-xs font-mono font-bold border bg-amber-500/10 border-amber-400/30 text-amber-300">
@@ -396,14 +467,22 @@ export default function RadarPage() {
           <div className="grid grid-cols-2 gap-3 text-xs font-mono">
             <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
               <span className="text-slate-400 text-[10px] block">
-                {selectedDay === 24 && activeStopIndex === route.length - 1 ? "FINAŁ WIGILII 🎁" : "AKTUALNY CEL"}
+                {selectedDay === 24 && activeStopIndex === route.length - 1
+                  ? "FINAŁ WIGILII 🎁"
+                  : isFlightPhase
+                  ? "AKTUALNY CEL"
+                  : "AKTUALNY POSTÓJ"}
               </span>
               <span className="text-white font-bold text-sm block mt-0.5 truncate">
-                {selectedDay === 24 && activeStopIndex === route.length - 1 ? "KRAKÓW (PL)" : nextCityName}
+                {selectedDay === 24 && activeStopIndex === route.length - 1
+                  ? "KRAKÓW (PL)"
+                  : isFlightPhase
+                  ? nextCityName
+                  : currentCityName}
               </span>
             </div>
             <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
-              <span className="text-slate-400 text-[10px] block">ETA COUNTDOWN</span>
+              <span className="text-slate-400 text-[10px] block">ODLICZANIE ETA</span>
               <span className="text-amber-400 font-bold text-sm block mt-0.5">
                 {selectedDay === 24 && activeStopIndex === route.length - 1 && eta === 0
                   ? "WIGILIA!"
@@ -411,18 +490,58 @@ export default function RadarPage() {
               </span>
             </div>
             <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
-              <span className="text-slate-400 text-[10px] block">STATUS RUCHU</span>
+              <span className="text-slate-400 text-[10px] block">PRĘDKOŚĆ / FAZA</span>
               <span className="text-amber-300 font-bold text-sm block mt-0.5">
-                {isFlightPhase ? "Tranzyt" : "Miasto"}
+                {liveMetrics ? liveMetrics.machDisplay : isFlightPhase ? "M 4.8 (Lot)" : "M 0.0 (Dach)"}
               </span>
             </div>
             <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
-              <span className="text-slate-400 text-[10px] block">POZYCJA GPS</span>
+              <span className="text-slate-400 text-[10px] block">PUŁAP LOTU</span>
               <span className="text-sky-300 font-bold text-sm block mt-0.5 truncate">
-                {coords.lat}° N, {coords.lon}° E
+                {liveMetrics ? liveMetrics.altitudeDisplay : isFlightPhase ? "11.5k M" : "65 M"}
               </span>
             </div>
           </div>
+
+          {/* Festive Cockpit Telemetry Highlights */}
+          {liveMetrics && (
+            <div className="p-3.5 bg-[#0b172d]/80 border border-amber-500/20 rounded-2xl space-y-2.5 text-xs font-mono">
+              <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
+                <span className="text-amber-300 font-bold flex items-center gap-1.5 text-[11px]">
+                  <Layers className="w-3.5 h-3.5 text-amber-400" />
+                  Parametry Kokpitu Mikołaja:
+                </span>
+                <span className="text-[10px] text-amber-300 font-bold">
+                  Przystanek {activeStopIndex + 1}/{route.length}
+                </span>
+              </div>
+
+              {/* Faza Misji Box */}
+              <div className="bg-black/40 border border-sky-500/30 rounded-xl p-2.5 text-center space-y-0.5">
+                <div className="text-[10px] text-sky-400 font-bold uppercase tracking-wider">Aktualna Faza Misji:</div>
+                <div className="text-amber-300 font-bold text-xs">{liveMetrics.stageTitle}</div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div className="flex items-center justify-between bg-black/30 p-2 rounded-lg px-2.5 border border-white/5">
+                  <span className="text-slate-400">Ciastka 🍪:</span>
+                  <span className="text-amber-300 font-bold">{liveMetrics.cookiesEatenDisplay}</span>
+                </div>
+                <div className="flex items-center justify-between bg-black/30 p-2 rounded-lg px-2.5 border border-white/5">
+                  <span className="text-slate-400">Mleko 🥛:</span>
+                  <span className="text-sky-300 font-bold">{liveMetrics.milkLitersDisplay}</span>
+                </div>
+                <div className="flex items-center justify-between bg-black/30 p-2 rounded-lg px-2.5 border border-white/5">
+                  <span className="text-slate-400">Dostarczono 🎁:</span>
+                  <span className="text-emerald-300 font-bold">{liveMetrics.giftsDeliveredDisplay}</span>
+                </div>
+                <div className="flex items-center justify-between bg-black/30 p-2 rounded-lg px-2.5 border border-white/5">
+                  <span className="text-slate-400">Zrzut ⏱️:</span>
+                  <span className="text-emerald-400 font-bold">{liveMetrics.giftRateDisplay}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Interactive Route Stop Sequence */}
           <div className="space-y-2">

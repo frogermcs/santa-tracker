@@ -61,9 +61,34 @@ The app features 3 distinct views, where animations automatically reflect Santa'
 | :--- | :--- | :--- |
 | **1. World Radar** (Hero) | Santa moving along dotted flight path toward next city | Radar locked on city coordinates; beacon pulsing |
 | **2. Side-View Santa Cam** | **Cruising Sky** (bobbing in snowflakes) / **Hyper-Warp** (speed lines) | **Chimney Drop** (parachuting gifts) / **Cookie Break** (eating cookies) |
-| **3. Telemetry Dashboard** | **High Mach Speed** readout (e.g. `M 4.5`); distance climbing | **Speed: 0.0 Mach** (Landed); Gifts counter ticking rapidly |
+| **3. Telemetry Dashboard** | **High Mach Speed** readout (e.g. `M 4.8`), stratospheric altitude, Rudolph strobe beacon, high-speed carrot burn | **Speed: 0.0 Mach** (Landed); Cookie intake surge, rapid Gift delivery cascade (`+18.5k/s`), cocoa refill |
 
-### 3.3. Single Source of Truth & Parent Customization
+### 3.3. Cockpit Dashboard Specification (Milestone 2 — Screen 3)
+For the 240×135 ST7789v2 display, the Cockpit Dashboard (`Screen 3`) provides a dense, legible, 100% Polish aerospace telemetry interface matching the physical device constraints:
+* **Header Bar**: Battery indicator (`BAT 98%`), screen title (`KOKPIT MIKOLAJA`), and active Advent day badge (`DZIEN 24` / `DZIEN XX`).
+* **Flight Dynamics Box (Left Column, Upper)**:
+  * Speed meter: `PREDK. M 4.8` (Mach 4.8 in flight, Mach 0.0 landed) with a 10-segment amber level bar.
+  * Stratospheric altitude: Metric readout in meters (`PULAP 11.5k M` cruising at 11,500m; `PULAP 65 M` on city rooftops).
+* **Gift Payload Box (Right Column, Upper)**:
+  * Header: `PREZENTY`.
+  * Delivered count: `DOSTARCZONO:` with right-aligned demographic metrics based on ~2.20B global children (e.g. `2.20B`).
+  * Drop rate: `ZRZUT:` displaying strictly `0/s` during transit flight and regional distribution rates (e.g. `+105.6k/s`) while landed.
+  * Progress bar: 10-segment green LED meter scaling across the active day's stops.
+* **Sustenance Box ("Paliwo Mikołaja", Full Width, Middle)**:
+  * Header: `PALIWO MIKOLAJA`.
+  * Real-world consumption counters: `CIASTKA: 330.0M 🍪` and `MLEKO: 25.3M L 🥛` (clean counters without overlapping deltas).
+* **Mission Phase Box (Full Width, Lower Middle)**:
+  * Single concise status headline with dynamic contextual text:
+    * In transit: `PRZELOT HIPERSONICZNY (M4.8)`.
+    * Rooftop phase 1 (0–4s): `BEZPIECZNY DACH // ZRZUT PREZENTOW`.
+    * Rooftop phase 2 (4–8s): `PRZERWA NA CIASTKA I MLEKO`.
+    * Rooftop phase 3 (8–12s): `DACH ZALICZONY // START ZA CHWILE`.
+    * Grand Finale: `FINAL WIGILII: KRAKOW!`.
+* **Telemetry Footer (Bottom)**:
+  * Dynamic destination indicator: `CEL: <MIASTO>` during transit flight vs `POSTOJ: <MIASTO>` during rooftop stay (or `FINAL: KRAKOW` on Dec 24 finale).
+  * Phase countdown timer: `CZAS 0:12` (or `WIGILIA!` on finale hold).
+
+### 3.4. Single Source of Truth & Parent Customization
 * **JSON Master Schedule:** Master 288-city route served at `/api/journey` and `journey.json`.
 * **Hometown Injection:** Parents can configure their hometown on December 24th, letting Santa approach their house right at bedtime.
 * **Wi-Fi Sync ("Burst & Sleep"):** Device periodically checks the API, updates its route in memory, and powers down Wi-Fi immediately to maximize the 120mAh battery.
@@ -80,11 +105,12 @@ For the current operational radar screen, the physical and emulated buttons are 
 | :--- | :--- | :--- | :--- |
 | **Button A (Big Front M5)** | Front `M5` button | Click M5 Button or press `Space` / `A` | **Jump Between Days (1–24)**: Cycles through the 24 Advent days (`D01` → `D02` → ... → `D24` → `D01`), instantly loading that day's 12-stop itinerary. |
 | **Button B (Top Side Button)** | Small top edge button | Click Side Button or press `B` | **Jump Between Cities (1–12)**: Advances Santa to the next city on the active day, placing Santa landed at that city. |
+| **Screen Toggle** | Physical button / Web toggle | Keys `1` / `2` or header tabs | **Screen Selector**: Switch between Screen 1 (`Radar Lotu`) and Screen 3 (`Kokpit Mikołaja`). |
 | **Audio Toggle** | Top Header / Key | Audio Icon or press `M` | **Mute / Unmute**: Toggles synthesized retro buzzer chirps and chimes. |
 
 ### 4.2. Simulation Rhythm & Speed Ratio
 * **Real-World Itinerary**: 1 hour in transit (flight) + 1 hour in city (stop) = 2 hours per waypoint (12 stops = 24 hours).
-* **Hardcoded Web Simulation**: Scaled to **~6 seconds in transit + ~6 seconds landed in city** (**12 seconds total per waypoint**, `secPerCity = 12`).
+* **Hardcoded Web Simulation**: Scaled to **12 seconds in transit + 12 seconds landed in city** (**24 seconds total per waypoint**, `secPerCity = 24`).
 * **Day 24 Grand Finale Hold**: Once Santa lands in Kraków (#288), Santa remains landed in Kraków for an extended celebration hold (`FINAŁ: KRAKOW 🎁`).
 
 ---
