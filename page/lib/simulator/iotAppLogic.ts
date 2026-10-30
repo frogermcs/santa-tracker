@@ -241,14 +241,24 @@ export function update(
   // 1. Advance simulation clock (JourneyEngine::update)
   if (state.cityCount > 0) {
     const totalSimTime = state.cityCount * SEC_PER_CITY;
-    const holdDuration = state.activeDay === 24 ? 16.0 : 0.0;
-    const cycleTotal = totalSimTime + holdDuration;
 
-    state.simTime += dtSec * state.speedMultiplier;
-    if (cycleTotal > 0.0) {
-      if (state.simTime >= cycleTotal || state.simTime < 0.0) {
-        state.simTime = state.simTime % cycleTotal;
-        if (state.simTime < 0.0) state.simTime += cycleTotal;
+    if (state.activeDay === 24) {
+      // Day 24 Grand Finale Lock (AGENTS.md Section 5):
+      // On arrival at Kraków (Stop 11 after 12s transit flight), Santa lands and permanently
+      // locks in the celebration state (FINAŁ: KRAKOW 🎁), never prematurely wrapping back to the Pacific!
+      const krakowArrivalTime = (state.cityCount - 1) * SEC_PER_CITY + FLIGHT_DURATION;
+      state.simTime += dtSec * state.speedMultiplier;
+      if (state.simTime >= krakowArrivalTime) {
+        state.simTime = krakowArrivalTime;
+      }
+    } else {
+      // Days 1..23: loop through all 12 stops continuously
+      state.simTime += dtSec * state.speedMultiplier;
+      if (totalSimTime > 0.0) {
+        if (state.simTime >= totalSimTime || state.simTime < 0.0) {
+          state.simTime = state.simTime % totalSimTime;
+          if (state.simTime < 0.0) state.simTime += totalSimTime;
+        }
       }
     }
   }

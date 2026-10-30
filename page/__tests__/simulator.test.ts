@@ -348,5 +348,71 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(cockpitFinaleStrings).toContain("FINAL WIGILII: KRAKOW!");
       expect(cockpitFinaleStrings).toContain("WIGILIA!");
     });
+
+    it("locks indefinitely on Day 24 at Kraków without wrapping back to the Pacific", () => {
+      const state = setup(0);
+      state.activeDay = 24;
+      const krakowArrivalTime = 11 * 24.0 + 12.0; // 276.0s (Stop 11 arrival)
+      state.simTime = krakowArrivalTime;
+
+      // Simulate 120 seconds of continuous clock advancement
+      for (let i = 0; i < 120; i++) {
+        update(state, noButtons, 1000, 1000 * i);
+      }
+
+      // Must remain locked at krakowArrivalTime
+      expect(state.simTime).toBe(krakowArrivalTime);
+      const telemetry = getTelemetry(state);
+      expect(telemetry.isDay24Finale).toBe(true);
+      expect(telemetry.safeIdx).toBe(11);
+      expect(telemetry.nextCityName).toBe("KRAKOW");
+      expect(telemetry.etaSeconds).toBe(0);
+    });
+
+    it("loops continuously through all 12 stops on Days 1 to 23", () => {
+      const state = setup(0);
+      state.activeDay = 1;
+      const totalDayTime = 12 * 24.0; // 288.0s
+      state.simTime = totalDayTime - 1.0; // 287.0s
+
+      // Advance by 2.0s (20 frames of 100ms) -> crosses 288.0s boundary
+      for (let i = 0; i < 20; i++) {
+        update(state, noButtons, 100, 100 * i);
+      }
+      expect(Math.round(state.simTime * 10) / 10).toBe(1.0); // Cleanly wrapped to 1.0s
+      const telemetry = getTelemetry(state);
+      expect(telemetry.isDay24Finale).toBe(false);
+      expect(telemetry.safeIdx).toBe(0); // Back at Stop 0
+    });
+
+    it("transliterates Polish diacritics cleanly to ASCII in M5CanvasSim", () => {
+      const fillRectSpy = vi.fn();
+      const mockCtx = {
+        imageSmoothingEnabled: false,
+        fillStyle: "",
+        strokeStyle: "",
+        lineWidth: 1,
+        fillRect: fillRectSpy,
+        strokeRect: vi.fn(),
+        beginPath: vi.fn(),
+        moveTo: vi.fn(),
+        lineTo: vi.fn(),
+        stroke: vi.fn(),
+        fill: vi.fn(),
+        closePath: vi.fn(),
+        arc: vi.fn(),
+        roundRect: vi.fn(),
+      };
+      const mockCanvas = { width: 240, height: 135 };
+      const sim = new M5CanvasSim(
+        mockCtx as unknown as CanvasRenderingContext2D,
+        mockCanvas as unknown as HTMLCanvasElement
+      );
+
+      // String with Polish characters: "FINAŁ KRAKÓW"
+      expect(sim.textWidth("FINAŁ KRAKÓW")).toBe(12 * 6);
+      expect(() => sim.drawString("FINAŁ KRAKÓW", 10, 20)).not.toThrow();
+      expect(fillRectSpy).toHaveBeenCalled();
+    });
   });
 });

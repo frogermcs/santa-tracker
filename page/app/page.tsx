@@ -55,6 +55,7 @@ export default function RadarPage() {
     wasHoldB: false,
     wasPressedPWR: false,
   });
+  const lastReactUpdateRef = useRef<number>(0);
 
   // Current day stops for sidebar
   const currentStops = getDaySchedule(selectedDay).stops;
@@ -159,27 +160,38 @@ export default function RadarPage() {
         renderSimulator(canvasSimRef.current, simStateRef.current, now);
       }
 
-      // 3. Extract telemetry for the surrounding UI sidebar
-      const t = getTelemetry(simStateRef.current);
-      setSelectedDay(t.activeDay);
-      setActiveScreen(simStateRef.current.activeScreen === 0 ? "radar" : "cockpit");
-      setActiveStopIndex(t.safeIdx);
-      setCurrentCityName(simStateRef.current.cities[t.safeIdx]?.name || "");
-      setNextCityName(t.nextCityName);
-      setEta(t.etaSeconds);
-      setIsFlightPhase(t.isFlightPhase);
-      setCoords({ lat: t.santaLat.toFixed(1), lon: t.santaLon.toFixed(1) });
+      // 3. Decouple high-frequency 60 FPS canvas rendering from React DOM tree reconciliation
+      // Throttle React state updates to ~6 Hz (every 150ms) to eliminate React re-render thrashing
+      if (now - lastReactUpdateRef.current >= 150) {
+        lastReactUpdateRef.current = now;
+        const t = getTelemetry(simStateRef.current);
+        setSelectedDay((prev) => (prev !== t.activeDay ? t.activeDay : prev));
+        setActiveScreen((prev) => {
+          const next = simStateRef.current.activeScreen === 0 ? "radar" : "cockpit";
+          return prev !== next ? next : prev;
+        });
+        setActiveStopIndex((prev) => (prev !== t.safeIdx ? t.safeIdx : prev));
+        const curCity = simStateRef.current.cities[t.safeIdx]?.name || "";
+        setCurrentCityName((prev) => (prev !== curCity ? curCity : prev));
+        setNextCityName((prev) => (prev !== t.nextCityName ? t.nextCityName : prev));
+        setEta((prev) => (prev !== t.etaSeconds ? t.etaSeconds : prev));
+        setIsFlightPhase((prev) => (prev !== t.isFlightPhase ? t.isFlightPhase : prev));
 
-      // Compute festive cockpit metrics for the right panel
-      const metrics = computeSantaMetrics(
-        t.activeDay,
-        t.safeIdx,
-        t.u,
-        nowSec,
-        t.nextCityName,
-        t.isDay24Finale
-      );
-      setLiveMetrics(metrics);
+        const newLat = t.santaLat.toFixed(1);
+        const newLon = t.santaLon.toFixed(1);
+        setCoords((prev) => (prev.lat !== newLat || prev.lon !== newLon ? { lat: newLat, lon: newLon } : prev));
+
+        // Compute festive cockpit metrics for the right panel
+        const metrics = computeSantaMetrics(
+          t.activeDay,
+          t.safeIdx,
+          t.u,
+          nowSec,
+          t.nextCityName,
+          t.isDay24Finale
+        );
+        setLiveMetrics(metrics);
+      }
 
       animId = requestAnimationFrame(tick);
     };

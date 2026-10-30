@@ -37,6 +37,18 @@ function getGlcdBytes(): Uint8Array {
   return glcdFontBytes;
 }
 
+function normalizeAscii(str: string): string {
+  return str
+    .replace(/[Ąą]/g, "A")
+    .replace(/[Ćć]/g, "C")
+    .replace(/[Ęę]/g, "E")
+    .replace(/[Łł]/g, "L")
+    .replace(/[Ńń]/g, "N")
+    .replace(/[Óó]/g, "O")
+    .replace(/[Śś]/g, "S")
+    .replace(/[ŹźŻż]/g, "Z");
+}
+
 export class M5CanvasSim {
   private ctx: CanvasRenderingContext2D;
   private canvasElement: HTMLCanvasElement;
@@ -308,7 +320,7 @@ export class M5CanvasSim {
   }
 
   public textWidth(text: string): number {
-    return text.length * 6 * this.textSize;
+    return normalizeAscii(text).length * 6 * this.textSize;
   }
 
   public fontHeight(): number {
@@ -317,15 +329,17 @@ export class M5CanvasSim {
 
   /**
    * Draws a string at the specified coordinates taking text datum alignment
-   * and optional background bounding fill into account.
+   * and optional background bounding fill into account. Automatically transliterates
+   * Polish diacritics to clean ASCII for Font 0 rasterization.
    */
   public drawString(text: string, x: number, y: number): void {
+    const cleanText = normalizeAscii(text);
     const ix = Math.floor(x);
     const iy = Math.floor(y);
     const scale = this.textSize;
     const charW = 6 * scale;
     const fontH = 8 * scale;
-    const totalW = text.length * charW;
+    const totalW = cleanText.length * charW;
 
     let startX = ix;
     let startY = iy;
@@ -354,8 +368,8 @@ export class M5CanvasSim {
     const fontBytes = getGlcdBytes();
     this.ctx.fillStyle = toCssColor(this.textFgColor);
 
-    for (let c = 0; c < text.length; c++) {
-      const code = text.charCodeAt(c);
+    for (let c = 0; c < cleanText.length; c++) {
+      const code = cleanText.charCodeAt(c);
       if (code >= 0 && code < 256) {
         const fontOffset = code * 5;
         const charX = startX + c * charW;

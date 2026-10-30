@@ -243,6 +243,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
               className="w-[240px] h-[135px] block"
               style={{
                 imageRendering: "pixelated",
+                contain: "strict",
               }}
             />
 
