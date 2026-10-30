@@ -144,14 +144,17 @@ void ScreenRadar::render(const JourneyData& journey, const TelemetryState& telem
   _canvas->fillRect(0, 121, SCREEN_WIDTH, 14, COLOR_HUD_BG);
   _canvas->drawFastHLine(0, 120, SCREEN_WIDTH, COLOR_GRID);
 
-  // Left (x: 4, y: 124): CEL: <CITY> or FINAL: KRAKOW
+  // Left (x: 4, y: 124): CEL: <CITY> or POSTOJ: <CITY> or FINAL: KRAKOW
   char targetBuf[32];
   if (telemetry.isDay24Finale) {
     snprintf(targetBuf, sizeof(targetBuf), "FINAL: %s", telemetry.nextCityName);
     _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
-  } else {
+  } else if (telemetry.isFlightPhase) {
     snprintf(targetBuf, sizeof(targetBuf), "CEL: %s", telemetry.nextCityName);
     _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
+  } else {
+    snprintf(targetBuf, sizeof(targetBuf), "POSTOJ: %s", telemetry.nextCityName);
+    _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
   }
   _canvas->setTextDatum(top_left);
   _canvas->drawString(targetBuf, 4, 124);

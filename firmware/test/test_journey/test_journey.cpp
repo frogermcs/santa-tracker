@@ -5,6 +5,7 @@
 #include "config.h"
 #include "advent_schedule.h"
 #include "core/journey_engine.h"
+#include "core/santa_metrics.h"
 #include "network/journey_client.h"
 
 void setUp(void) {}
@@ -18,7 +19,7 @@ void test_default_journey_parsing(void) {
   TEST_ASSERT_EQUAL_INT(2, data.version);
   TEST_ASSERT_EQUAL_INT(24, data.activeDay);
   TEST_ASSERT_EQUAL_INT(12, data.cityCount);
-  TEST_ASSERT_EQUAL_FLOAT(12.0f, data.secPerCity);
+  TEST_ASSERT_EQUAL_FLOAT(24.0f, data.secPerCity);
   TEST_ASSERT_EQUAL_STRING("GISBORNE", data.cities[0].name);
   TEST_ASSERT_EQUAL_STRING("KRAKOW", data.cities[11].name);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 19.9450f, data.cities[11].lon);
@@ -35,7 +36,7 @@ void test_advent_schedule_integrity(void) {
     TEST_ASSERT_TRUE_MESSAGE(ok, "Day failed to load from PROGMEM");
     TEST_ASSERT_EQUAL_INT(day, dayData.activeDay);
     TEST_ASSERT_EQUAL_INT(12, dayData.cityCount);
-    TEST_ASSERT_EQUAL_FLOAT(12.0f, dayData.secPerCity);
+    TEST_ASSERT_EQUAL_FLOAT(24.0f, dayData.secPerCity);
 
     for (int s = 0; s < 12; s++) {
       totalStopsCounted++;
@@ -144,7 +145,7 @@ void test_city_jumping_btn_b(void) {
   TEST_ASSERT_FALSE(sWrap.isFlightPhase);
 }
 
-// Test 6: Validate Day 24 Kraków Grand Finale Lock and Celebration Hold
+// Test 6: Validate Day 24 Kraków Grand Finale Lock (AGENTS.md Section 5)
 void test_day24_krakow_grand_finale_lock(void) {
   JourneyEngine engine;
   engine.init(24);
@@ -163,8 +164,8 @@ void test_day24_krakow_grand_finale_lock(void) {
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 19.9450f, sKrakow.santaLon);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 50.0647f, sKrakow.santaLat);
 
-  // Advance 10 seconds into the 16-second celebration hold
-  engine.update(10.0f);
+  // Advance 60 seconds into celebration
+  engine.update(60.0f);
   TelemetryState sHold = engine.getTelemetry();
   TEST_ASSERT_TRUE(sHold.isDay24Finale);
   TEST_ASSERT_EQUAL_STRING("KRAKOW", sHold.nextCityName);
@@ -172,11 +173,12 @@ void test_day24_krakow_grand_finale_lock(void) {
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 19.9450f, sHold.santaLon);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 50.0647f, sHold.santaLat);
 
-  // Advance past the 16-second celebration hold (+15s -> total 163s, wraps past cycleTotal 160s)
-  engine.update(15.0f);
-  TelemetryState sLoop = engine.getTelemetry();
-  TEST_ASSERT_EQUAL_INT(0, sLoop.safeIdx);
-  TEST_ASSERT_FALSE(sLoop.isDay24Finale);
+  // Advance another 3600 seconds (1 hour): Santa must REMAIN in Kraków permanently!
+  engine.update(3600.0f);
+  TelemetryState sPermanent = engine.getTelemetry();
+  TEST_ASSERT_TRUE(sPermanent.isDay24Finale);
+  TEST_ASSERT_EQUAL_INT(11, sPermanent.safeIdx);
+  TEST_ASSERT_EQUAL_STRING("KRAKOW", sPermanent.nextCityName);
 }
 
 // Test 7: Validate Trajectory Interpolation and easeInOut curve
@@ -186,9 +188,8 @@ void test_trajectory_ease_interpolation(void) {
   const JourneyData& jd = engine.getJourneyData();
 
   // Jump to stop 1 so we have a distinct prev (stop 0: Gisborne) and curr (stop 1: Bethlehem)
-  // At landed phase (u = 6.0s), advance to next leg's flight:
-  // Advance 6 seconds to complete stop 0, entering stop 1 flight at t = 12.0s
-  engine.update(6.0f); // t = 12.0s: leg 1 flight begins (u = 0.0s)
+  // At landed phase (u = 12.0s), advance 12.0s to complete stop 0, entering stop 1 flight at t = 24.0s
+  engine.update(12.0f); // t = 24.0s: leg 1 flight begins (u = 0.0s)
 
   TelemetryState t0 = engine.getTelemetry();
   TEST_ASSERT_EQUAL_INT(1, t0.safeIdx);
@@ -197,9 +198,9 @@ void test_trajectory_ease_interpolation(void) {
   TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[0].lon, t0.santaLon);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[0].lat, t0.santaLat);
 
-  // Advance 3.0 seconds (halfway through 6.0s flight phase, u = 3.0s, u/6 = 0.5)
+  // Advance 6.0 seconds (halfway through 12.0s flight phase, u = 6.0s, u/12 = 0.5)
   // easeInOut(0.5) = 2 * (0.5)^2 = 0.5 (exact halfway point!)
-  engine.update(3.0f);
+  engine.update(6.0f);
   TelemetryState tMid = engine.getTelemetry();
   TEST_ASSERT_TRUE(tMid.isFlightPhase);
   float expectedMidLon = jd.cities[0].lon + (jd.cities[1].lon - jd.cities[0].lon) * 0.5f;
@@ -207,8 +208,8 @@ void test_trajectory_ease_interpolation(void) {
   TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedMidLon, tMid.santaLon);
   TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedMidLat, tMid.santaLat);
 
-  // Advance 3.0 seconds to finish flight phase (u = 6.0s, landed at stop 1)
-  engine.update(3.0f);
+  // Advance 6.0 seconds to finish flight phase (u = 12.0s, landed at stop 1)
+  engine.update(6.0f);
   TelemetryState tLand = engine.getTelemetry();
   TEST_ASSERT_FALSE(tLand.isFlightPhase);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[1].lon, tLand.santaLon);
@@ -220,45 +221,45 @@ void test_eta_countdown_progression(void) {
   JourneyEngine engine;
   engine.init(1); // Day 1
 
-  // Start landed at stop 0: ETA to next city (stop 1) is countdown to end of stop (12 - 6 = 6s)
+  // Start landed at stop 0: ETA to takeoff is 24 - 12 = 12s
   TelemetryState sStart = engine.getTelemetry();
-  TEST_ASSERT_EQUAL_INT(6, sStart.etaSeconds);
+  TEST_ASSERT_EQUAL_INT(12, sStart.etaSeconds);
 
-  // Advance 2s in landed phase -> ETA should decrease to 4s
-  engine.update(2.0f);
-  TelemetryState sLanded2 = engine.getTelemetry();
-  TEST_ASSERT_EQUAL_INT(4, sLanded2.etaSeconds);
-
-  // Advance 4s -> completes stop 0, enters stop 1 flight (u = 0s) -> ETA is flight duration (6s)
+  // Advance 4s in landed phase -> ETA should decrease to 8s
   engine.update(4.0f);
+  TelemetryState sLanded4 = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(8, sLanded4.etaSeconds);
+
+  // Advance 8s -> completes stop 0, enters stop 1 flight (u = 0s) -> ETA is flight duration (12s)
+  engine.update(8.0f);
   TelemetryState sFlight0 = engine.getTelemetry();
   TEST_ASSERT_TRUE(sFlight0.isFlightPhase);
-  TEST_ASSERT_EQUAL_INT(6, sFlight0.etaSeconds);
+  TEST_ASSERT_EQUAL_INT(12, sFlight0.etaSeconds);
 
-  // Advance 3.5s in flight -> ETA should be ceil(6 - 3.5) = 3s
-  engine.update(3.5f);
-  TelemetryState sFlight35 = engine.getTelemetry();
-  TEST_ASSERT_TRUE(sFlight35.isFlightPhase);
-  TEST_ASSERT_EQUAL_INT(3, sFlight35.etaSeconds);
+  // Advance 7.0s in flight -> ETA should be ceil(12 - 7.0) = 5s
+  engine.update(7.0f);
+  TelemetryState sFlight7 = engine.getTelemetry();
+  TEST_ASSERT_TRUE(sFlight7.isFlightPhase);
+  TEST_ASSERT_EQUAL_INT(5, sFlight7.etaSeconds);
 }
 
-// Test 9: Validate Regular Day Looping without hold (Days 1 to 23)
+// Test 9: Validate Regular Day Looping (Days 1 to 23)
 void test_normal_day_looping_without_hold(void) {
   JourneyEngine engine;
-  engine.init(6); // Mikołajki (Day 6) - no celebration hold
+  engine.init(6); // Mikołajki (Day 6) - loops smoothly
   TEST_ASSERT_EQUAL_INT(6, engine.getActiveDay());
 
-  // Jump to last stop (index 11) landed at t = 11 * 12 + 6 = 138.0s
+  // Jump to last stop (index 11) landed at t = 11 * 24 + 12 = 276.0s
   for (int i = 0; i < 11; i++) {
     engine.nextCity();
   }
   TelemetryState s11 = engine.getTelemetry();
   TEST_ASSERT_EQUAL_INT(11, s11.safeIdx);
-  TEST_ASSERT_FALSE(s11.isDay24Finale); // Must NOT be finale on Day 6!
+  TEST_ASSERT_FALSE(s11.isDay24Finale);
 
-  // Advance 7.0s: 138.0 + 7.0 = 145.0s, which cleanly exceeds totalSimTime 144.0s
-  // Without hold, Day 6 must wrap immediately to stop 0 (145.0 % 144.0 = 1.0s)
-  engine.update(7.0f);
+  // Advance 15.0s: 276.0 + 15.0 = 291.0s, which cleanly exceeds totalSimTime 288.0s (12 * 24s)
+  // Day 6 must wrap to stop 0 (291.0 % 288.0 = 3.0s, which is flight phase of stop 0)
+  engine.update(15.0f);
   TelemetryState sWrapped = engine.getTelemetry();
   TEST_ASSERT_EQUAL_INT(0, sWrapped.safeIdx);
   TEST_ASSERT_FALSE(sWrapped.isDay24Finale);
@@ -282,7 +283,7 @@ void test_day_switch_state_isolation(void) {
   TEST_ASSERT_EQUAL_INT(0, sDay1.safeIdx);
   TEST_ASSERT_FALSE(sDay1.isFlightPhase);
   TEST_ASSERT_FALSE(sDay1.isDay24Finale);
-  TEST_ASSERT_EQUAL_STRING("SYDNEY", sDay1.nextCityName); // Landed at Auckland (stop 0), next destination is Sydney (stop 1)
+  TEST_ASSERT_EQUAL_STRING("AUCKLAND", sDay1.nextCityName);
 }
 
 // Test 11: Long-Duration Stability & Immunity to Large Time Steps
@@ -323,12 +324,10 @@ void test_malformed_json_resilience(void) {
   const char* longNameJson = R"({"route":[{"name":"VERY_LONG_CITY_NAME_EXCEEDING_TWENTY_FOUR_CHARS","lon":10.0,"lat":20.0}]})";
   TEST_ASSERT_TRUE(JourneyClient::parseJson(longNameJson, data));
   TEST_ASSERT_EQUAL_INT(1, data.cityCount);
-  // Verify safely null-terminated and truncated
   TEST_ASSERT_EQUAL_INT(23, strlen(data.cities[0].name));
   TEST_ASSERT_EQUAL_INT('\0', data.cities[0].name[23]);
 
   // Array overflow test: 40 waypoints (exceeds MAX_WAYPOINTS 32)
-  // Must safely clamp to MAX_WAYPOINTS without memory corruption
   char hugeJson[2048] = "{\"route\":[";
   for (int i = 0; i < 40; i++) {
     char entry[48];
@@ -339,6 +338,107 @@ void test_malformed_json_resilience(void) {
 
   TEST_ASSERT_TRUE(JourneyClient::parseJson(hugeJson, data));
   TEST_ASSERT_EQUAL_INT(MAX_WAYPOINTS, data.cityCount);
+}
+
+// Test 13: Validate formatCompact helper string outputs
+void test_format_compact(void) {
+  char buf[16];
+
+  formatCompact(0ULL, buf, sizeof(buf));
+  TEST_ASSERT_EQUAL_STRING("0", buf);
+
+  formatCompact(999ULL, buf, sizeof(buf));
+  TEST_ASSERT_EQUAL_STRING("999", buf);
+
+  formatCompact(1500ULL, buf, sizeof(buf));
+  TEST_ASSERT_EQUAL_STRING("1.5k", buf);
+
+  formatCompact(105600ULL, buf, sizeof(buf));
+  TEST_ASSERT_EQUAL_STRING("105.6k", buf);
+
+  formatCompact(15000000ULL, buf, sizeof(buf));
+  TEST_ASSERT_EQUAL_STRING("15.0M", buf);
+
+  formatCompact(380000000ULL, buf, sizeof(buf));
+  TEST_ASSERT_EQUAL_STRING("380.0M", buf);
+
+  formatCompact(2200000000ULL, buf, sizeof(buf));
+  TEST_ASSERT_EQUAL_STRING("2.20B", buf);
+}
+
+// Test 14: Validate Cockpit Flight Dynamics (Mach and Altitude transitions)
+void test_santa_metrics_flight_dynamics(void) {
+  SantaCockpitMetrics m;
+
+  // START phase: u = 1.2s (flightProgress = 0.1)
+  computeSantaMetrics(24, 0, 1.2f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_START, m.flightPhase);
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 2.1f, m.machSpeed);
+  TEST_ASSERT_EQUAL_STRING("START // HYPER-ROZPEDZANIE", m.stageTitle);
+
+  // PRZELOT phase: u = 6.0s (flightProgress = 0.5)
+  computeSantaMetrics(24, 0, 6.0f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_PRZELOT, m.flightPhase);
+  TEST_ASSERT_FLOAT_WITHIN(0.4f, 4.8f, m.machSpeed);
+  TEST_ASSERT_EQUAL_STRING("PRZELOT HIPERSONICZNY (M4.8)", m.stageTitle);
+
+  // ZNIZANIE phase: u = 10.8s (flightProgress = 0.9)
+  computeSantaMetrics(24, 0, 10.8f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_ZNIZANIE, m.flightPhase);
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 2.4f, m.machSpeed);
+  TEST_ASSERT_EQUAL_STRING("HAMOWANIE I ZNIZANIE", m.stageTitle);
+
+  // DACH phase: u = 12.0s
+  computeSantaMetrics(24, 0, 12.0f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_DACH, m.flightPhase);
+  TEST_ASSERT_EQUAL_FLOAT(0.0f, m.machSpeed);
+  TEST_ASSERT_EQUAL_STRING("M 0.0", m.machDisplay);
+  TEST_ASSERT_EQUAL_INT(65, m.altitudeM);
+  TEST_ASSERT_EQUAL_STRING("65 M", m.altitudeDisplay);
+}
+
+// Test 15: Validate Rooftop Sub-Phases (Gifts, Cookies & Milk, Ready for takeoff)
+void test_santa_metrics_rooftop_subphases(void) {
+  SantaCockpitMetrics m;
+
+  // Sub-phase 0 (0-4s rooftop -> u = 13.0s): Gift drop
+  computeSantaMetrics(24, 1, 13.0f, 0.0f, "BETHLEHEM", false, m);
+  TEST_ASSERT_EQUAL_STRING("BEZPIECZNY DACH // ZRZUT PREZENTOW", m.stageTitle);
+  TEST_ASSERT_TRUE(m.giftRatePerSec > 0);
+
+  // Sub-phase 1 (4-8s rooftop -> u = 17.0s): Cookie break
+  computeSantaMetrics(24, 1, 17.0f, 0.0f, "BETHLEHEM", false, m);
+  TEST_ASSERT_EQUAL_STRING("PRZERWA NA CIASTKA I MLEKO", m.stageTitle);
+
+  // Sub-phase 2 (8-12s rooftop -> u = 21.0s): Preparing for launch
+  computeSantaMetrics(24, 1, 21.0f, 0.0f, "BETHLEHEM", false, m);
+  TEST_ASSERT_EQUAL_STRING("DACH ZALICZONY // START ZA CHWILE", m.stageTitle);
+}
+
+// Test 16: Validate Day 24 Demographic Totals & Grand Finale Values
+void test_santa_metrics_krakow_finale(void) {
+  SantaCockpitMetrics m;
+
+  // Kraków Grand Finale reached
+  computeSantaMetrics(24, 11, 12.0f, 0.0f, "KRAKOW", true, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_FINAL, m.flightPhase);
+  TEST_ASSERT_EQUAL_FLOAT(0.0f, m.machSpeed);
+  TEST_ASSERT_EQUAL_INT(219, m.altitudeM); // Kraków altitude
+  TEST_ASSERT_EQUAL_STRING("219 M", m.altitudeDisplay);
+  TEST_ASSERT_EQUAL_STRING("FINAL WIGILII: KRAKOW!", m.stageTitle);
+  TEST_ASSERT_EQUAL_INT(0, m.etaSeconds);
+
+  // Exactly 2.20 Billion gifts delivered
+  TEST_ASSERT_EQUAL_UINT64(2200000000ULL, m.giftsDelivered);
+  TEST_ASSERT_EQUAL_STRING("2.20B", m.giftsDeliveredDisplay);
+
+  // Cookies: 2.20B * 0.15 = 330.0M
+  TEST_ASSERT_EQUAL_UINT64(330000000ULL, m.cookiesEaten);
+  TEST_ASSERT_EQUAL_STRING("330.0M", m.cookiesEatenDisplay);
+
+  // Milk: 2.20B * 0.0115 = 25,300,000 L (25.3M L)
+  TEST_ASSERT_EQUAL_UINT64(25300000ULL, m.milkLiters);
+  TEST_ASSERT_EQUAL_STRING("25.3M L", m.milkLitersDisplay);
 }
 
 int main(void) {
@@ -355,5 +455,9 @@ int main(void) {
   RUN_TEST(test_day_switch_state_isolation);
   RUN_TEST(test_long_duration_stability);
   RUN_TEST(test_malformed_json_resilience);
+  RUN_TEST(test_format_compact);
+  RUN_TEST(test_santa_metrics_flight_dynamics);
+  RUN_TEST(test_santa_metrics_rooftop_subphases);
+  RUN_TEST(test_santa_metrics_krakow_finale);
   return UNITY_END();
 }

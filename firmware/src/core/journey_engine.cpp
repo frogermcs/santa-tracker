@@ -3,10 +3,10 @@
 #include <math.h>
 
 JourneyEngine::JourneyEngine()
-  : _activeDay(24), _simTime(6.0f), _speedMultiplier(1.0f) {
+  : _activeDay(24), _simTime(12.0f), _speedMultiplier(1.0f) {
   _data.version = 2;
   _data.activeDay = 24;
-  _data.secPerCity = 12.0f;
+  _data.secPerCity = 24.0f;
   _data.speedMultiplier = 1.0f;
   _data.cityCount = 0;
   loadAdventDay(24, _data);
@@ -21,7 +21,7 @@ void JourneyEngine::setDay(int dayNumber) {
   if (dayNumber > 24) dayNumber = 24;
   _activeDay = dayNumber;
   loadAdventDay(dayNumber, _data);
-  _simTime = 6.0f; // Start landed at the first stop (matches web companion)
+  _simTime = 12.0f; // Start landed at the first stop (matches web companion)
 }
 
 void JourneyEngine::nextDay() {
@@ -33,32 +33,41 @@ void JourneyEngine::nextCity() {
   if (_data.cityCount == 0 || _data.secPerCity <= 0.0f) return;
   int curIdx = (int)(_simTime / _data.secPerCity);
   int nextIdx = (curIdx + 1) % _data.cityCount;
-  // Setting simTime to nextIdx * secPerCity + 6 lands Santa immediately at that city
-  _simTime = nextIdx * _data.secPerCity + 6.0f;
+  // Setting simTime to nextIdx * secPerCity + 12 lands Santa immediately at that city
+  _simTime = nextIdx * _data.secPerCity + 12.0f;
 }
 
 void JourneyEngine::setJourneyData(const JourneyData& data) {
   _data = data;
-  if (_data.secPerCity < 1.0f) _data.secPerCity = 12.0f;
+  if (_data.secPerCity < 1.0f) _data.secPerCity = 24.0f;
   if (_data.activeDay >= 1 && _data.activeDay <= 24) {
     _activeDay = _data.activeDay;
   }
-  _simTime = 6.0f;
+  _simTime = 12.0f;
 }
 
 void JourneyEngine::update(float dt) {
   if (_data.cityCount == 0 || _data.secPerCity <= 0.0f) return;
 
   float totalSimTime = _data.cityCount * _data.secPerCity;
-  // Day 24 Kraków Grand Finale holds for 16 seconds celebration before looping
-  float holdDuration = (_activeDay == 24) ? 16.0f : 0.0f;
-  float cycleTotal = totalSimTime + holdDuration;
 
-  _simTime += dt * _speedMultiplier;
-  if (cycleTotal > 0.0f) {
-    if (_simTime >= cycleTotal || _simTime < 0.0f) {
-      _simTime = fmodf(_simTime, cycleTotal);
-      if (_simTime < 0.0f) _simTime += cycleTotal;
+  if (_activeDay == 24) {
+    // Day 24 Grand Finale Lock (AGENTS.md Section 5):
+    // On arrival at Kraków (Stop 12 after 12s transit flight), Santa lands and permanently
+    // locks in the celebration state (FINAŁ: KRAKOW 🎁), never prematurely wrapping back to the Pacific!
+    float krakowArrivalTime = (_data.cityCount - 1) * _data.secPerCity + 12.0f;
+    _simTime += dt * _speedMultiplier;
+    if (_simTime >= krakowArrivalTime) {
+      _simTime = krakowArrivalTime;
+    }
+  } else {
+    // Days 1..23: loop through all 12 stops continuously
+    _simTime += dt * _speedMultiplier;
+    if (totalSimTime > 0.0f) {
+      if (_simTime >= totalSimTime || _simTime < 0.0f) {
+        _simTime = fmodf(_simTime, totalSimTime);
+        if (_simTime < 0.0f) _simTime += totalSimTime;
+      }
     }
   }
 }
@@ -89,11 +98,11 @@ TelemetryState JourneyEngine::getTelemetry() const {
     state.nextCityName = "UNKNOWN";
     state.etaSeconds = 0;
     state.progressRatio = 0.0f;
+    state.u = 0.0f;
     return state;
   }
 
   float totalSimTime = _data.cityCount * _data.secPerCity;
-  // Clamp simulation time during the grand finale celebration hold
   float effectiveSimTime = (_simTime >= totalSimTime) ? (totalSimTime - 0.001f) : _simTime;
   if (effectiveSimTime < 0.0f) effectiveSimTime = 0.0f;
 
@@ -105,10 +114,10 @@ TelemetryState JourneyEngine::getTelemetry() const {
   int prevIdx = (safeIdx > 0) ? (safeIdx - 1) : 0;
 
   bool isLastCity = (safeIdx == _data.cityCount - 1);
-  bool isDay24Finale = (_activeDay == 24) && isLastCity && (u >= 6.0f || _simTime >= totalSimTime);
+  bool isDay24Finale = (_activeDay == 24) && isLastCity && (u >= 12.0f || _simTime >= totalSimTime);
 
-  bool isFlight = !isDay24Finale && (u < 6.0f);
-  float p = isFlight ? easeInOut(u / 6.0f) : 1.0f;
+  bool isFlight = !isDay24Finale && (u < 12.0f);
+  float p = isFlight ? easeInOut(u / 12.0f) : 1.0f;
 
   float prevLon = _data.cities[prevIdx].lon;
   float prevLat = _data.cities[prevIdx].lat;
@@ -127,20 +136,20 @@ TelemetryState JourneyEngine::getTelemetry() const {
 
   projectCoordinates(state.santaLon, state.santaLat, state.santaScreenX, state.santaScreenY);
 
-  int nextIdx = (safeIdx + 1) % _data.cityCount;
   if (isDay24Finale) {
     state.nextCityName = _data.cities[safeIdx].name; // KRAKOW
     state.etaSeconds = 0;
-  } else if (u < 6.0f) {
+  } else if (isFlight) {
     state.nextCityName = _data.cities[safeIdx].name;
-    state.etaSeconds = (int)ceilf(6.0f - u);
+    state.etaSeconds = (int)ceilf(12.0f - u);
   } else {
-    state.nextCityName = _data.cities[nextIdx].name;
+    state.nextCityName = _data.cities[safeIdx].name;
     state.etaSeconds = (int)ceilf(_data.secPerCity - u);
   }
 
   state.progressRatio = _simTime / totalSimTime;
   if (state.progressRatio > 1.0f) state.progressRatio = 1.0f;
+  state.u = u;
 
   return state;
 }

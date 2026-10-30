@@ -23,7 +23,7 @@ struct Waypoint {
 struct JourneyData {
   int version;
   int activeDay;           // Advent Day 1..24
-  float secPerCity;        // 12.0s per city (6s flight + 6s landed)
+  float secPerCity;        // 24.0s per city (12s flight + 12s landed)
   float speedMultiplier;   // 1.0x fixed
   int cityCount;           // Number of stops on active day (12)
   Waypoint cities[MAX_WAYPOINTS];
@@ -35,7 +35,7 @@ struct TelemetryState {
   int currentCityIdx;      // Simulation city counter
   int safeIdx;             // Clamp/modulo city index (0..cityCount-1)
   int targetCityIdx;       // Target blip index for blink highlight
-  bool isFlightPhase;      // true if in transit (u < 6.0s), false if landed
+  bool isFlightPhase;      // true if in transit (u < 12.0s), false if landed
   bool isDay24Finale;      // true if landed at Day 24 Kraków (Stop 12)
   float santaLon;          // Interpolated GPS Longitude
   float santaLat;          // Interpolated GPS Latitude
@@ -44,4 +44,5 @@ struct TelemetryState {
   const char* nextCityName;// Next or current destination city name
   int etaSeconds;          // Seconds remaining until arrival
   float progressRatio;     // Overall progress ratio (0.0 .. 1.0)
+  float u;                 // Active city cycle time in seconds (0.0 .. 24.0f)
 };
