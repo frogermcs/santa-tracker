@@ -56,7 +56,7 @@ To eliminate bugs and compilation cycle delays on physical hardware, every firmw
 | **Color Math** | `M5Constants.ts` | 16-bit RGB565 (`color565()`) | Exact RGB565 packing and CSS color translation |
 | **Simulation Kernel** | `iotAppLogic.ts` (`JourneyEngine`) | `core/journey_engine.cpp` | Identical easing curve (`easeInOut`), $O(1)$ time wrapping, and Kraków finale lock |
 | **Screen 1: Radar** | `renderRadarScreen()` in `iotAppLogic.ts` | `ui/screen_radar.cpp` | CRT phosphor palette, 360° sweep ray, pulsing red beacon, 912-dot land matrix |
-| **Screen 2: Cockpit**| `renderCockpitScreen()` in `iotAppLogic.ts` | `ui/screen_cockpit.cpp` (Active) | Modern full-color glass cockpit, Mach gauge, pixel-art sustenance icons |
+| **Screen 2: Cockpit**| `renderCockpitScreen()` in `iotAppLogic.ts` | `ui/screen_cockpit.cpp` (COMPLETE ✅) | Modern full-color glass cockpit, Mach gauge, pixel-art sustenance icons |
 | **Coastline Matrix** | `landDots.ts` (912 coordinates) | `land_dots.h` (PROGMEM) | Byte-for-byte identical dot coordinates |
 | **Advent Schedule**  | `advent-schedule.ts` (288 stops) | `advent_schedule.h` (PROGMEM) | Exact 24-day itinerary, windows, and geographical coordinates |
 

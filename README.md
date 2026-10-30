@@ -18,8 +18,8 @@ A pocket-sized retro aviation Santa Tracker gadget for the **M5StickC-Plus SE** 
 .
 ├── firmware/       # ESP32 C++17 firmware (PlatformIO + M5Unified + ArduinoJson)
 │   ├── include/    # Config, types, advent schedule (288 stops in PROGMEM), and land dots
-│   ├── src/        # Core engine, network client, and radar UI renderer
-│   └── test/       # Native desktop unit test suite (12 tests passing in 0.7s!)
+│   ├── src/        # Core engine, demographic telemetry, radar & cockpit UI renderers
+│   └── test/       # Native desktop unit test suite (16 tests passing in 1.8s!)
 ├── page/           # Next.js 15 web platform & emulator (App Router, Tailwind)
 │   ├── app/        # / (Mission Control Hub & Emulator), /map-debugger, /api/journey
 │   └── public/     # Static assets and master journey.json
@@ -44,7 +44,7 @@ Open [http://localhost:3000](http://localhost:3000) for the Mission Control hub 
 ```bash
 cd firmware
 
-# Run fast desktop unit tests (12 tests in 0.7s, no hardware needed!)
+# Run fast desktop unit tests (16 tests in 1.8s, no hardware needed!)
 pio test -e native
 
 # Compile ESP32 firmware
@@ -60,6 +60,7 @@ pio run -e m5stick-c --target upload
 
 | Input | Action |
 | :--- | :--- |
-| **Button A (Front M5)** | Cycle through Advent Days (`D01` → `D02` → ... → `D24` → `D01`) |
-| **Button B (Top Side)** | Advance to next city on active day (1 → 12 → 1) |
-| **Button B (Hold)** | Toggle buzzer sound chirps (Mute / Unmute) |
+| **Button A (Front M5)** | **Toggle Screen**: Cycles between Screen 1 (`Radar Lotu`) and Screen 2 (`Kokpit Mikołaja`) |
+| **Button A (Hold >0.6s)** | **Next Advent Day**: Cycles through 24 Advent Days (`D01` → `D02` → ... → `D24` → `D01`) |
+| **Button B (Top Side)** | **Next City**: Advances to next city waypoint on active day (1 → 12 → 1) |
+| **Button B (Hold >0.6s)** | **Sound Mute/Unmute**: Toggles buzzer sound chirps and chimes |

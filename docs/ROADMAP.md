@@ -82,10 +82,10 @@ stateDiagram-v2
 * **Objective:** Deliver the 2 remaining core screens on the web companion emulator first, then port them to the M5StickC firmware with strict 1:1 parity and zero dynamic heap allocation.
 * **Sequential Delivery Rule:** **Web Companion App First (`page/`), Firmware Second (`firmware/`)**.
 * **Key Deliverables:**
-  - [ ] **Screen 2: Cockpit Dashboard (`ui/screen_cockpit`):**
+  - [x] **Screen 2: Cockpit Dashboard (`ui/screen_cockpit`) (COMPLETE ✅):**
     * [x] **Web Living Specification:** 1:1 `renderCockpitScreen()` in `iotAppLogic.ts` with modern aerospace glass cockpit palette, multi-color Mach 4.8 gauge, demographic gift distribution, pixel-art cookies & milk, and dynamic tactical mission phase box.
-    * [ ] **C++ Firmware Port (`firmware/src/ui/screen_cockpit.cpp`):** Direct zero-heap port to LovyanGFX for ST7789v2 IPS display.
-  - [ ] **Screen 3: Side-View Santa Cam (`ui/screen_cam`):**
+    * [x] **C++ Firmware Port (`firmware/src/ui/screen_cockpit.cpp`):** Direct zero-heap port to LovyanGFX for ST7789v2 IPS display with 16 native Unity tests passing in 1.8s.
+  - [ ] **Screen 3: Side-View Santa Cam (`ui/screen_cam`) (NEXT 🎯):**
     * **During Transit (Flight Phase):**
       - Mode A: *Cruising Sky* — Rudolph & sleigh bobbing through parallax starry skies, falling snowflakes, and silhouetted mountain pines.
       - Mode B: *Hyper-Warp* — Hyperspace star streaks, sleigh shake, glowing red Rudolph nose aura when speed accelerates.
