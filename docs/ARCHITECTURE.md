@@ -4,44 +4,65 @@ This document details the software engineering architecture, data pipelines, har
 
 ---
 
-## 1. High-Level System Architecture
+## 1. High-Level System Architecture (Twin-Engine Architecture)
 
-SANTA-OS employs a **dual-target, single-source-of-truth** architecture. Both the web application and embedded device share identical coordinate projections, simulation math, and route definitions.
+SANTA-OS employs a **twin-engine, single-source-of-truth** architecture. The web application (`page/`) serves as the living, pixel-accurate hardware emulator and behavioral specification for the physical M5StickC-Plus SE IoT firmware (`firmware/`).
 
 ```mermaid
 flowchart TD
-    subgraph Cloud["Next.js Web Platform (Vercel)"]
-        DataFile["public/journey.json<br/>(Master Itinerary)"]
-        API["Route Handler: /api/journey<br/>(CORS Enabled, Edge Cached)"]
-        WebHub["/ Interactive Hub<br/>(240x135 ST7789v2 Simulator & Telemetry)"]
-        MapDebugger["/map-debugger<br/>(World Map Vector Coordinate Inspector)"]
+    subgraph Web["Web Twin (Living Specification — page/)"]
+        M5CanvasSim["M5CanvasSim.ts<br/>(LovyanGFX Shim over 2D Canvas)"]
+        IoTLogic["iotAppLogic.ts<br/>(Zero-Allocation Portable C++ Logic)"]
+        RootPage["/ Root Viewport<br/>(1x Physical ST7789v2 240x135 Enclosure)"]
+        MapDebugger["/map-debugger<br/>(Vector Coordinates Inspector)"]
         
-        DataFile --> API
-        API -->|Fetch API| WebHub
-        API -->|Fetch API| MapDebugger
+        IoTLogic --> M5CanvasSim
+        M5CanvasSim --> RootPage
     end
 
-    subgraph IoT["M5StickC-Plus SE Firmware (ESP32)"]
-        WiFi["Wi-Fi Client<br/>(Burst Mode)"]
-        JSONParser["ArduinoJson v7 Deserializer"]
+    subgraph Cloud["Cloud API Contract (Vercel)"]
+        DataFile["public/journey.json<br/>(288-City Master Itinerary)"]
+        API["Route Handler: /api/journey<br/>(CORS Enabled, Edge Cached)"]
+        DataFile --> API
+        API -.->|Wi-Fi HTTP Sync| IoT
+    end
+
+    subgraph IoT["M5StickC-Plus SE Firmware (C++17 — firmware/)"]
+        WiFi["Wi-Fi Client (Burst Mode)"]
         AdventFlash["advent_schedule.h<br/>(288 Stops in PROGMEM)"]
         CoreEngine["JourneyEngine<br/>(Pure Simulation Math)"]
-        RadarRenderer["ScreenRadar<br/>(16-bit Double Buffer)"]
+        LovyanGFX["M5Canvas / LovyanGFX<br/>(16-bit Double Buffer)"]
         HardwareDisplay["ST7789v2 IPS LCD<br/>(240×135 @ 30 FPS)"]
 
-        WiFi -->|HTTPS GET| JSONParser
-        JSONParser -->|JourneyData Struct| CoreEngine
+        WiFi --> CoreEngine
         AdventFlash -.->|Preloaded Offline| CoreEngine
-        CoreEngine -->|TelemetryState Struct| RadarRenderer
-        RadarRenderer -->|canvas.pushSprite| HardwareDisplay
+        CoreEngine --> LovyanGFX
+        LovyanGFX --> HardwareDisplay
     end
 
-    API -.->|Wi-Fi HTTP Sync| WiFi
+    IoTLogic -.->|1:1 Direct Port| CoreEngine
+    M5CanvasSim -.->|1:1 API Parity| LovyanGFX
 ```
 
 ---
 
-## 2. Communication Scheme & Power Management
+## 2. Web <-> IoT 1:1 Parity Mapping
+
+To eliminate bugs and compilation cycle delays on physical hardware, every firmware subsystem has a corresponding 1:1 TypeScript module with matching API signatures, memory constraints, and coordinate math:
+
+| Subsystem | Web Living Spec (`page/lib/simulator/`) | Firmware C++ Implementation (`firmware/`) | Parity Standard |
+| :--- | :--- | :--- | :--- |
+| **Graphics API** | `M5CanvasSim.ts` | `M5Canvas` (`LovyanGFX`) | Exact 1:1 method signatures (`fillRect`, `drawFastHLine`, `setTextDatum`, etc.), integer coordinate truncation (`Math.floor`) |
+| **Color Math** | `M5Constants.ts` | 16-bit RGB565 (`color565()`) | Exact RGB565 packing and CSS color translation |
+| **Simulation Kernel** | `iotAppLogic.ts` (`JourneyEngine`) | `core/journey_engine.cpp` | Identical easing curve (`easeInOut`), $O(1)$ time wrapping, and Kraków finale lock |
+| **Screen 1: Radar** | `renderRadarScreen()` in `iotAppLogic.ts` | `ui/screen_radar.cpp` | CRT phosphor palette, 360° sweep ray, pulsing red beacon, 912-dot land matrix |
+| **Screen 2: Cockpit**| `renderCockpitScreen()` in `iotAppLogic.ts` | `ui/screen_cockpit.cpp` (Active) | Modern full-color glass cockpit, Mach gauge, pixel-art sustenance icons |
+| **Coastline Matrix** | `landDots.ts` (912 coordinates) | `land_dots.h` (PROGMEM) | Byte-for-byte identical dot coordinates |
+| **Advent Schedule**  | `advent-schedule.ts` (288 stops) | `advent_schedule.h` (PROGMEM) | Exact 24-day itinerary, windows, and geographical coordinates |
+
+---
+
+## 3. Communication Scheme & Power Management
 
 ### The "Burst & Sleep" Battery Lifecycle
 The M5StickC-Plus SE contains a 120mAh LiPo battery. Continuous Wi-Fi radio usage draws ~150mA, exhausting the battery in ~45 minutes. With the radio powered down, CPU and display draw ~40mA, achieving 2.5 to 3 hours of battery life.
@@ -57,7 +78,7 @@ sequenceDiagram
     participant Display as ST7789v2 LCD
 
     M5->>M5: Hardware Boot (M5Unified)
-    M5->>Display: Init 240x135 Canvas & Show CRT Grid
+    M5->>Display: Init 240x135 Canvas & Show Screen
 
     alt Wi-Fi SSID Provided & In Range
         M5->>AP: Connect (Fast 3s Timeout)
@@ -68,14 +89,13 @@ sequenceDiagram
         M5->>AP: Disconnect & Turn OFF Radio (WIFI_OFF)
         Note over M5: Wi-Fi completely asleep to conserve power
     else Offline Presentation Mode (Empty SSID / Timeout)
-        Note over M5: No Wi-Fi delay
-        M5->>M5: Parse PROGMEM Fallback JSON
-        Note over M5: Boots instantly with zero delay
+        Note over M5: Instant boot with zero delay
+        M5->>M5: Load PROGMEM Advent Schedule (288 stops)
     end
 
     loop Every 33ms (30 FPS)
         M5->>M5: JourneyEngine::update(dt)
-        M5->>Display: ScreenRadar::render(doubleBuffer)
+        M5->>Display: ActiveScreen::render(doubleBuffer)
     end
 ```
 

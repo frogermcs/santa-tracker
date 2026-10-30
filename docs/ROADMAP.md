@@ -82,22 +82,19 @@ stateDiagram-v2
 * **Objective:** Deliver the 2 remaining core screens on the web companion emulator first, then port them to the M5StickC firmware with strict 1:1 parity and zero dynamic heap allocation.
 * **Sequential Delivery Rule:** **Web Companion App First (`page/`), Firmware Second (`firmware/`)**.
 * **Key Deliverables:**
-  - [ ] **Screen 2: Side-View Santa Cam (`ui/screen_cam`):**
+  - [ ] **Screen 2: Cockpit Dashboard (`ui/screen_cockpit`):**
+    * [x] **Web Living Specification:** 1:1 `renderCockpitScreen()` in `iotAppLogic.ts` with modern aerospace glass cockpit palette, multi-color Mach 4.8 gauge, demographic gift distribution, pixel-art cookies & milk, and dynamic tactical mission phase box.
+    * [ ] **C++ Firmware Port (`firmware/src/ui/screen_cockpit.cpp`):** Direct zero-heap port to LovyanGFX for ST7789v2 IPS display.
+  - [ ] **Screen 3: Side-View Santa Cam (`ui/screen_cam`):**
     * **During Transit (Flight Phase):**
       - Mode A: *Cruising Sky* — Rudolph & sleigh bobbing through parallax starry skies, falling snowflakes, and silhouetted mountain pines.
       - Mode B: *Hyper-Warp* — Hyperspace star streaks, sleigh shake, glowing red Rudolph nose aura when speed accelerates.
     * **During City Stay (Landed Gift Drop Phase):**
       - Mode C: *Chimney Drop* — Parachuting wrapped gift boxes onto scrolling cozy rooftop chimneys.
       - Mode D: *Cookie & Milk Break* — Santa eating cookies next to a fireplace with an animated cookie munch counter.
-  - [ ] **Screen 3: Flight Telemetry / Cockpit Dashboard (`ui/screen_dash`):**
-    - High Mach speed indicator (e.g. `M 4.5` during flight, `0.0 Mach` when landed).
-    - Cumulative distance traveled counter (`KM`).
-    - Worldwide gift delivery counter (ticks up during city stays).
-    - Destination HUD banner: Current city, next arrival ETA, and outdoor temperature/weather badge.
-  - [ ] **Screen Cycling & Navigation:**
-    - Carousel cycling: `Screen 1 (World Radar)` $\leftrightarrow$ `Screen 2 (Santa Cam)` $\leftrightarrow$ `Screen 3 (Flight Telemetry)`.
-    - Web UI: Direct tab switcher and keyboard shortcut (`Space` / `1`, `2`, `3`).
-    - Firmware: Hardware button navigation for screen switching.
+  - [x] **Screen Cycling & Navigation:**
+    * [x] Carousel cycling on Button A: `Screen 1 (Radar)` $\leftrightarrow$ `Screen 2 (Cockpit)`.
+    * [x] Hardware button parity (Button A: Screen Toggle, Button B: City Advance, Button B Hold: Sound Chirp Mute).
 
 ---
 

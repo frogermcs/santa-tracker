@@ -21,6 +21,7 @@ The companion web application (`page/`) serves as the definitive functional, vis
 * **Web-First Delivery Sequence**: The web app must always be 100% development-complete, tested, and approved **prior** to porting features to the IoT firmware.
 * **1:1 Screen Parity**: Every single screen, mode, and state present on the IoT device must have an exact 1:1 corresponding screen on the web companion app (running the exact 240×135 ST7789v2 canvas emulation).
 * **Algorithm & Coordinate Parity**: Coordinate projections, interpolation easing curves (`ease()`), and transit/landed timings are perfected and verified on the web before being mirrored into C++.
+* **1:1 LovyanGFX / M5Canvas Web Twin (`/`)**: Root application page directly executes `M5CanvasSim` and zero-allocation C++ logic (`iotAppLogic.ts`) inside the native 1x physical ST7789v2 enclosure. Implements exact LovyanGFX method signatures, RGB565 color math, text datums, and integer coordinate truncation (`Math.floor`) with instant HMR and 100% C++ portability.
 
 ---
 
@@ -63,30 +64,34 @@ The app features 3 distinct views, where animations automatically reflect Santa'
 | **2. Side-View Santa Cam** | **Cruising Sky** (bobbing in snowflakes) / **Hyper-Warp** (speed lines) | **Chimney Drop** (parachuting gifts) / **Cookie Break** (eating cookies) |
 | **3. Telemetry Dashboard** | **High Mach Speed** readout (e.g. `M 4.8`), stratospheric altitude, Rudolph strobe beacon, high-speed carrot burn | **Speed: 0.0 Mach** (Landed); Cookie intake surge, rapid Gift delivery cascade (`+18.5k/s`), cocoa refill |
 
-### 3.3. Cockpit Dashboard Specification (Milestone 2 — Screen 3)
-For the 240×135 ST7789v2 display, the Cockpit Dashboard (`Screen 3`) provides a dense, legible, 100% Polish aerospace telemetry interface matching the physical device constraints:
-* **Header Bar**: Battery indicator (`BAT 98%`), screen title (`KOKPIT MIKOLAJA`), and active Advent day badge (`DZIEN 24` / `DZIEN XX`).
+### 3.3. Cockpit Dashboard Specification (Milestone 2 — Screen 3 / Modern Glass Cockpit)
+For the 240×135 ST7789v2 IPS display, the Cockpit Dashboard provides a high-contrast, modern aerospace glass cockpit interface (pitch-black obsidian background, titanium slate dividers, electric ice cyan headers, pure white live telemetry, and full-color 16-bit iconography):
+* **Header Bar**: Sleek dark avionics glass (`0x0821`), battery level with green gauge and pure white readout (`98%`), electric cyan system title (`KOKPIT MIKOLAJA`), and active Advent day badge in high-visibility amber (`DZIEN 24` / `DZIEN XX`).
 * **Flight Dynamics Box (Left Column, Upper)**:
-  * Speed meter: `PREDK. M 4.8` (Mach 4.8 in flight, Mach 0.0 landed) with a 10-segment amber level bar.
-  * Stratospheric altitude: Metric readout in meters (`PULAP 11.5k M` cruising at 11,500m; `PULAP 65 M` on city rooftops).
+  * Speed meter: `PREDK.` with live readout in flame amber (`M 4.8` in flight) or muted slate (`M 0.0` landed).
+  * Multi-color 10-segment speed bar: Segments 0–3 in Ice Cyan (`0x07ff`), 4–6 in Aviation Amber (`0xfde0`), and 7–9 in Hypersonic Flame/Red (`0xf800`) over dark graphite slots (`0x18e3`).
+  * Stratospheric altitude: Metric readout in electric cyan (`PULAP 11.5k M` cruising at 11,500m; `PULAP 65 M` on city rooftops).
 * **Gift Payload Box (Right Column, Upper)**:
-  * Header: `PREZENTY`.
-  * Delivered count: `DOSTARCZONO:` with right-aligned demographic metrics based on ~2.20B global children (e.g. `2.20B`).
-  * Drop rate: `ZRZUT:` displaying strictly `0/s` during transit flight and regional distribution rates (e.g. `+105.6k/s`) while landed.
-  * Progress bar: 10-segment green LED meter scaling across the active day's stops.
+  * Header: `PREZENTY` in electric cyan with 8×8 full-color pixel-art gift box icon (ruby red box with bright yellow/gold ribbon).
+  * Delivered count: `DOSTARCZONO:` in cool slate with pure white (`0xffff`) demographic metrics based on ~2.20B global children (e.g. `2.20B`).
+  * Drop rate: `ZRZUT:` displaying strictly `0/s` (muted) during transit flight and regional distribution rates in flame gold (e.g. `+105.6k/s`) while landed.
+  * Progress bar: 10-segment vivid emerald neon meter (`0x07e0`) over dark graphite slots.
 * **Sustenance Box ("Paliwo Mikołaja", Full Width, Middle)**:
-  * Header: `PALIWO MIKOLAJA`.
-  * Real-world consumption counters: `CIASTKA: 330.0M 🍪` and `MLEKO: 25.3M L 🥛` (clean counters without overlapping deltas).
-* **Mission Phase Box (Full Width, Lower Middle)**:
+  * Header: `PALIWO MIKOLAJA` in electric cyan.
+  * 8×8 Pixel-Art Chocolate Chip Cookie: Golden-amber baked cookie (`0xfc80`) with crispy edges and dark chocolate chips, placed before label `CIASTKA:` with pure white counter (e.g. `330.0M`).
+  * 7×9 Pixel-Art Milk Bottle: Crisp pure white glass bottle (`0xffff`) with red cap and sky-blue label band, placed before label `MLEKO:` with pure white counter (e.g. `25.3M L`).
+* **Mission Phase Tactical Box (Full Width, Lower Middle)**:
+  * Sleek avionics console panel (`0x0842`) framed by dynamic status borders: Electric Cyan during flight, Vivid Emerald Neon on rooftops, and flashing Gold/Red during the Kraków finale.
+  * Header: `AKTUALNA FAZA MISJI:` in cool slate.
   * Single concise status headline with dynamic contextual text:
-    * In transit: `PRZELOT HIPERSONICZNY (M4.8)`.
-    * Rooftop phase 1 (0–4s): `BEZPIECZNY DACH // ZRZUT PREZENTOW`.
-    * Rooftop phase 2 (4–8s): `PRZERWA NA CIASTKA I MLEKO`.
-    * Rooftop phase 3 (8–12s): `DACH ZALICZONY // START ZA CHWILE`.
-    * Grand Finale: `FINAL WIGILII: KRAKOW!`.
-* **Telemetry Footer (Bottom)**:
-  * Dynamic destination indicator: `CEL: <MIASTO>` during transit flight vs `POSTOJ: <MIASTO>` during rooftop stay (or `FINAL: KRAKOW` on Dec 24 finale).
-  * Phase countdown timer: `CZAS 0:12` (or `WIGILIA!` on finale hold).
+    * In transit: `PRZELOT HIPERSONICZNY (M4.8)` in bright flame amber.
+    * Rooftop phase 1 (0–4s): `BEZPIECZNY DACH // ZRZUT PREZENTOW` in vivid emerald neon.
+    * Rooftop phase 2 (4–8s): `PRZERWA NA CIASTKA I MLEKO` in vivid emerald neon.
+    * Rooftop phase 3 (8–12s): `DACH ZALICZONY // START ZA CHWILE` in vivid emerald neon.
+    * Grand Finale: `FINAL WIGILII: KRAKOW!` in pure white on flashing border.
+* **Telemetry Navigation Footer (Bottom)**:
+  * Dynamic destination indicator: `CEL:` in Electric Cyan during flight vs `POSTOJ:` in Vivid Emerald on rooftops (or `FINAL:` in Amber Gold on Dec 24 finale), followed by target city name in pure white (`0xffff`).
+  * Phase countdown timer: `CZAS 0:12` in high-visibility amber (or `WIGILIA!` on finale hold).
 
 ### 3.4. Single Source of Truth & Parent Customization
 * **JSON Master Schedule:** Master 288-city route served at `/api/journey` and `journey.json`.
@@ -145,8 +150,8 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
    * Sequence: `Oceania` $\rightarrow$ `Asia` $\rightarrow$ `Africa` $\rightarrow$ `Americas` $\rightarrow$ `Europe`.
    * Final Stop (#288): **Kraków, Poland** (`22:00 - 23:00 UTC` / 23:00-midnight CET in Poland).
    * Radar lock on Kraków: Santa lands and remains in Kraków with `FINAŁ: KRAKOW 🎁` celebration.
-3. **Web Simulation Enhancements (`/` and `/map-debugger`):**
-   * **Radar Preview (`/`):** Live M5StickC emulator with 12-stop interactive waypoints list, instant arrival jump, and grand finale hold.
+3. **Web Simulation & Twin Engine (`/` and `/map-debugger`):**
+   * **Root Device Twin (`/`):** Pixel-accurate 1:1 hardware emulator (`240×135` @ 1x scale) executing `M5CanvasSim` and `iotAppLogic.ts` directly inside the physical M5Stick enclosure, with 1:1 button navigation (Button A toggles screen, Button B jumps city, Button B hold toggles buzzer).
    * **Map Route Debugger (`/map-debugger`):** OpenStreetMap tiles, stop-by-stop inspector, stardust trajectory vectors, and sleigh flyby test simulator.
 4. **API Endpoint (`/api/journey`):** Serves complete multi-day schedule with CORS, edge caching, and active Day 24 payload.
 5. **M5StickC-Plus SE Firmware (`firmware/`):**

@@ -6,9 +6,9 @@
 
 ## Palette & Color Tokens
 - **Background Base**: Deep obsidian night `#060913` with layered midnight navy `#0b1021`.
-- **Primary Radar Accent**: CRT Phosphor Emerald (`#10b981`, dark `#022c16`, light `#34d399`). Used for radar beam, locked waypoints, and nominal telemetry.
+- **Screen 1: Retro CRT Radar Accent**: CRT Phosphor Emerald (`#10b981`, dark `#022c16`, light `#34d399`), rotating sweep ray, golden breadcrumb dots (`#fea9`), and pulsing red contact beacon (`#f800`).
+- **Screen 2: Modern Glass Cockpit System**: Pure pitch-black obsidian (`#000000`, 0x0000), titanium slate framing (`#20242c`, 0x2124), electric ice cyan headers (`#00f0ff`, 0x07ff), multi-color Mach power bar (Cyan → Amber → Flame Red), vivid emerald gifts (`#00ff00`, 0x07e0), and crisp pure white readouts (`#ffffff`, 0xffff).
 - **Tactical Alert & Sleigh Accent**: Translucent Enclosure Amber / Orange (`#f59e0b`, `#ea580c`). Used for hardware buttons, warp acceleration, and active target highlight.
-- **Atmospheric Cyan**: Ice Cyan (`#0ea5e9`, `#38bdf8`) for altitude, distance, and secondary flight metrics.
 - **Rule on Colored Surfaces**: Any text on colored backgrounds must be tinted from that hue (e.g. `text-emerald-100` on emerald, `text-amber-100` on amber). Never gray.
 
 ## Typography

@@ -145,7 +145,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
         onPointerCancel={handlePointerCancelB}
         onPointerLeave={handlePointerCancelB}
         title="Przycisk B (Górny): Klik = Następne Miasto | Przytrzymaj (>0.6s) = Dźwięk Mute/Unmute"
-        className={`absolute -top-3 sm:-top-3.5 left-14 sm:left-24 md:left-28 w-14 sm:w-20 h-3.5 sm:h-4 rounded-t-md z-0 flex items-center justify-center transition-all duration-75 cursor-pointer shadow-md ${
+        className={`absolute -top-3 sm:-top-3.5 left-16 sm:left-20 w-16 h-3.5 sm:h-4 rounded-t-md z-0 flex items-center justify-center transition-all duration-75 cursor-pointer shadow-md ${
           isButtonBPressed || isBHolding
             ? "translate-y-1 bg-neutral-900 border-t-2 border-orange-500 ring-1 ring-orange-400/50"
             : "bg-gradient-to-b from-neutral-700 to-neutral-900 hover:from-neutral-600 border-t border-neutral-500 hover:shadow-orange-500/20"
@@ -156,8 +156,8 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
         </span>
       </button>
 
-      {/* Main Translucent Orange Enclosure (StickC-Plus SE) */}
-      <div className="relative z-10 rounded-2xl sm:rounded-[28px] p-2.5 sm:p-4 md:p-5 flex items-center gap-2 sm:gap-4 md:gap-6 border-2 border-amber-300/40 shadow-2xl bg-gradient-to-br from-amber-500/85 via-orange-600/80 to-amber-700/90 backdrop-blur-md overflow-hidden max-w-full">
+      {/* Main Translucent Orange Enclosure (StickC-Plus SE - 1x Native Hardware Scale) */}
+      <div className="relative z-10 rounded-2xl sm:rounded-3xl p-3 sm:p-4 flex items-center gap-3 sm:gap-4 border-2 border-amber-300/40 shadow-2xl bg-gradient-to-br from-amber-500/85 via-orange-600/80 to-amber-700/90 backdrop-blur-md overflow-hidden max-w-full">
         {/* Subtle internal PCB Silkscreen & Trace Silhouette Layer */}
         <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -204,7 +204,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
         </div>
 
         {/* Left End: Infrared LED & Microphone Pinhole & Translucent Ribs */}
-        <div className="flex flex-col items-center justify-between h-28 sm:h-36 md:h-44 py-0.5 sm:py-1 relative z-20 shrink-0">
+        <div className="flex flex-col items-center justify-between h-32 sm:h-36 py-1 relative z-20 shrink-0">
           {/* Status Red LED */}
           <div
             className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-600 shadow-[0_0_8px_#ef4444] animate-pulse"
@@ -212,7 +212,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
           />
           {/* Enclosure Silkscreen Branding */}
           <div
-            className="text-[7px] sm:text-[9px] font-black tracking-widest text-amber-950/70 uppercase select-none font-mono"
+            className="text-[7.5px] sm:text-[8.5px] font-black tracking-widest text-amber-950/70 uppercase select-none font-mono"
             style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
           >
             M5StickC Plus SE
@@ -220,27 +220,27 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
           {/* Microphone Port & Grove Connector Accent */}
           <div className="flex flex-col items-center gap-1 sm:gap-1.5">
             <div
-              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-neutral-900 border border-neutral-700/60"
+              className="w-1.5 h-1.5 rounded-full bg-neutral-900 border border-neutral-700/60"
               title="Mic"
             />
             <div
-              className="w-2.5 h-3.5 sm:w-3 sm:h-5 rounded-xs bg-neutral-900/50 border border-neutral-800"
+              className="w-2.5 h-3.5 sm:w-3 sm:h-4 rounded-xs bg-neutral-900/50 border border-neutral-800"
               title="Grove port"
             />
           </div>
         </div>
 
         {/* Center: ST7789v2 240x135 Screen Bezel */}
-        <div className="bg-neutral-950/95 p-1.5 sm:p-2.5 md:p-3 rounded-xl sm:rounded-2xl relative border-2 border-neutral-800 shadow-[inset_0_4px_12px_rgba(0,0,0,0.9)] z-20 shrink-0">
-          {/* Actual 240x135 Pixel Viewport */}
+        <div className="bg-neutral-950/95 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl relative border-2 border-neutral-800 shadow-[inset_0_4px_12px_rgba(0,0,0,0.9)] z-20 shrink-0">
+          {/* Exact 1:1 240x135 Pixel Viewport */}
           <div
-            className="relative rounded-lg overflow-hidden border border-neutral-800/80 bg-black shadow-inner flex items-center justify-center w-[200px] h-[112.5px] min-[380px]:w-[224px] min-[380px]:h-[126px] sm:w-[288px] sm:h-[162px] md:w-[384px] md:h-[216px]"
+            className="relative rounded-lg overflow-hidden border border-neutral-800/80 bg-black shadow-inner flex items-center justify-center w-[240px] h-[135px]"
           >
             <canvas
               ref={canvasRef}
               width={240}
               height={135}
-              className="w-full h-full block"
+              className="w-[240px] h-[135px] block"
               style={{
                 imageRendering: "pixelated",
               }}
@@ -261,27 +261,27 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
         </div>
 
         {/* Right End: Big Tactile Button A (M5 Front Push Button) */}
-        <div className="flex flex-col items-center justify-center pr-0.5 sm:pr-1 relative z-20 shrink-0">
+        <div className="flex flex-col items-center justify-center pr-1 relative z-20 shrink-0">
           <button
             onPointerDown={handlePointerDownA}
             onPointerUp={handlePointerUpA}
             onPointerCancel={handlePointerCancelA}
             onPointerLeave={handlePointerCancelA}
             title="Przycisk A (M5): Klik = Zmień Ekran | Przytrzymaj (>0.6s) = Zmień Dzień Adwentu"
-            className={`w-10 h-20 sm:w-16 sm:h-28 md:w-20 md:h-32 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-0.5 sm:gap-1 cursor-pointer transition-all duration-75 border ${
+            className={`w-12 sm:w-14 h-24 sm:h-28 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-75 border ${
               isButtonAPressed || isAHolding
                 ? "translate-y-1 scale-98 bg-gradient-to-b from-amber-200 to-amber-300 shadow-inner border-amber-500 ring-2 ring-amber-400"
                 : "bg-gradient-to-b from-neutral-100 via-neutral-200 to-neutral-300 hover:from-white shadow-[0_4px_0_#4b5563,0_6px_10px_rgba(0,0,0,0.4)] sm:shadow-[0_6px_0_#4b5563,0_8px_14px_rgba(0,0,0,0.4)] border-white/60 active:translate-y-1 active:shadow-[0_2px_0_#4b5563]"
             }`}
           >
-            <span className="text-sm sm:text-lg md:text-xl font-black text-neutral-800 tracking-tighter">
+            <span className="text-base sm:text-lg font-black text-neutral-800 tracking-tighter">
               M5
             </span>
-            <span className="text-[7px] sm:text-[9px] font-bold text-neutral-600 uppercase tracking-widest font-mono">
+            <span className="text-[7.5px] sm:text-[8.5px] font-bold text-neutral-600 uppercase tracking-widest font-mono">
               {isAHolding ? "TRZYMAJ..." : "EKRAN"}
             </span>
           </button>
-          <span className="text-[8px] sm:text-[10px] font-bold text-amber-950/80 mt-1 sm:mt-2 tracking-wide font-mono">
+          <span className="text-[8px] sm:text-[9px] font-bold text-amber-950/80 mt-1.5 tracking-wide font-mono">
             PRZYCISK A
           </span>
         </div>
