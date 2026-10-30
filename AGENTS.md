@@ -82,6 +82,33 @@ All new functionality, refactors, and non-trivial fixes must follow a structured
      - **Verification Evidence**: Output from test runs confirming all gates pass.
      - **Hardware Impact**: Confirmation of RAM/Flash consumption if C++ code was touched.
 
+### 3.1. Code Review & Quality Protocol (Addy Osmani's 5-Axis Framework)
+All pull requests must undergo structured peer or agent review adhering to [Addy Osmani's Code Review and Quality standards](https://skills.addy.ie/skills/code-review-and-quality/) across the **Five Review Axes**:
+
+1. **Correctness**:
+   - Verify logic errors, edge cases, timing limits, and full unit test coverage.
+   - Guard against state regression, integer rounding traps, and off-by-one errors.
+   - Ensure Day 24 immutable constraints and Grand Finale arrival lock are strictly honored.
+2. **Readability & Maintainability**:
+   - Enforce descriptive naming, clean component boundaries, and educational C++/TS parity comments.
+   - Keep diffs focused (~100–300 lines of logic where practical).
+3. **Architecture & 1:1 Parity**:
+   - Maintain the Living Specification hierarchy: Web companion first, C++ firmware second.
+   - Zero dynamic heap allocations in active frame render and simulation loops.
+   - Single source of truth for all routes, math models, and constants.
+4. **Security & Safety**:
+   - Strictly avoid dangerous DOM injections (`dangerouslySetInnerHTML`, `eval`).
+   - Validate array bounds on bitmap/coordinate buffers. Zero secrets or keys in client bundles.
+5. **Performance & Resource Utilization**:
+   - Ensure sub-millisecond canvas draw cycles.
+   - Strictly decouple high-frequency 60 FPS animation/canvas loops from React DOM tree reconciliation (throttle React state updates to 4–10 Hz).
+
+#### Severity Classification for Review Feedback:
+- **Critical**: Blocks merge immediately (crash risks, security vulnerabilities, broken delivery gates).
+- **Required**: Must be addressed before merge (architectural violations, timing/easing bugs, performance thrashing).
+- **Optional**: Suggested improvement, refactoring, or defensive hardening.
+- **Nit**: Minor stylistic or non-functional polish.
+
 ---
 
 ## 4. Product Requirements Alignment (`PRD.md`)
