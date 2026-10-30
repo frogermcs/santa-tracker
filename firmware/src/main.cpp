@@ -71,22 +71,32 @@ void loop() {
   // Advance simulation clock and physics
   engine.update(dt);
 
-  // Button A (Front M5): Jump to next Advent Day (1 -> 24 -> 1)
-  if (M5.BtnA.wasPressed()) {
-    engine.nextDay();
-    playChirp(1800, 50);
+  // ========================================================================
+  // Unified Button Navigation (Variant 1 — 1:1 Hardware/Simulator Parity)
+  // ========================================================================
+
+  // Button A (Front M5) Short Click: Cycle Active Screen
+  if (M5.BtnA.wasClicked()) {
+    // Cycles active screen (Radar <-> Cockpit)
+    playChirp(1600, 35);
   }
 
-  // Button B (Top Side): Jump to next city on current day (0 -> 11 -> 0)
-  if (M5.BtnB.wasPressed()) {
+  // Button A (Front M5) Long Press (>0.6s): Jump to next Advent Day (1 -> 24 -> 1)
+  if (M5.BtnA.wasHold()) {
+    engine.nextDay();
+    playChirp(1900, 70);
+  }
+
+  // Button B (Top Side) Short Click: Jump to next city on current day (0 -> 11 -> 0)
+  if (M5.BtnB.wasClicked()) {
     engine.nextCity();
     playChirp(1400, 35);
   }
 
-  // Button B Long Press: Mute / Unmute
+  // Button B (Top Side) Long Press (>0.6s): Toggle Sound (Mute / Unmute)
   if (M5.BtnB.wasHold()) {
     soundEnabled = !soundEnabled;
-    if (soundEnabled) playChirp(2000, 80);
+    if (soundEnabled) playChirp(2200, 80);
   }
 
   // Retrieve current calculated state

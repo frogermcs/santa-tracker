@@ -109,12 +109,20 @@ export default function RadarPage() {
     fetchJourney();
   }, [fetchJourney]);
 
-  // 2. Interactive Handlers
-  // Big Button A (Front M5 / Space / A): JUMPS BETWEEN DAYS (1 -> 24 -> 1)
-  const handleBtnA = useCallback(() => {
+  // 2. Interactive Handlers (Matching M5StickC-Plus SE Physical Hardware 1:1)
+  // Button A Short Press (Front M5): Cycle screen (Radar <-> Kokpit)
+  const handleButtonAShortPress = useCallback(() => {
     setIsBtnAPressed(true);
     setTimeout(() => setIsBtnAPressed(false), 200);
-    if (!isMuted) buzzer.playTone(1800, 50);
+    setActiveScreen((prev) => (prev === "radar" ? "cockpit" : "radar"));
+    if (!isMuted) buzzer.playTone(1600, 35);
+  }, [isMuted]);
+
+  // Button A Long Press (Front M5, >0.6s): Advance Advent Day (1 -> 24 -> 1)
+  const handleButtonALongPress = useCallback(() => {
+    setIsBtnAPressed(true);
+    setTimeout(() => setIsBtnAPressed(false), 300);
+    if (!isMuted) buzzer.playTone(1900, 70);
 
     setSelectedDay((prevDay) => {
       const nextDay = (prevDay % 24) + 1;
@@ -123,8 +131,8 @@ export default function RadarPage() {
     });
   }, [applyDayRoute, isMuted]);
 
-  // Top Button B (Side / B): JUMPS BETWEEN CITIES on the active day
-  const handleBtnB = useCallback(() => {
+  // Button B Short Press (Top Side): Advance to next city on active day (0 -> 11 -> 0)
+  const handleButtonBShortPress = useCallback(() => {
     setIsBtnBPressed(true);
     setTimeout(() => setIsBtnBPressed(false), 200);
     if (!isMuted) buzzer.playTone(1400, 35);
@@ -135,6 +143,19 @@ export default function RadarPage() {
     // +12 seconds lands Santa directly at that city (12s stop begins)
     simTimeRef.current = nextIdx * secPerCity + 12;
   }, [route, secPerCity, isMuted]);
+
+  // Button B Long Press (Top Side, >0.6s): Toggle Sound (Mute / Unmute)
+  const handleButtonBLongPress = useCallback(() => {
+    setIsBtnBPressed(true);
+    setTimeout(() => setIsBtnBPressed(false), 300);
+    setIsMuted((prev) => {
+      const next = !prev;
+      if (!next) {
+        buzzer.playTone(2200, 80);
+      }
+      return next;
+    });
+  }, []);
 
   const handleSelectDay = useCallback((dayNum: number) => {
     const validDay = Math.max(1, Math.min(24, dayNum));
@@ -149,33 +170,6 @@ export default function RadarPage() {
     simTimeRef.current = safeTarget * secPerCity + 12;
     if (!isMuted) buzzer.playTone(1300 + safeTarget * 50, 40);
   }, [route, secPerCity, isMuted]);
-
-  // Keyboard controls
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.code === "Space" || e.key === "a" || e.key === "A") {
-        e.preventDefault();
-        handleBtnA();
-      } else if (e.key === "b" || e.key === "B") {
-        e.preventDefault();
-        handleBtnB();
-      } else if (e.key === "m" || e.key === "M") {
-        e.preventDefault();
-        setIsMuted((prev) => !prev);
-      } else if (e.key === "1") {
-        e.preventDefault();
-        setActiveScreen("radar");
-        if (!isMuted) buzzer.playTone(1500, 30);
-      } else if (e.key === "2") {
-        e.preventDefault();
-        setActiveScreen("cockpit");
-        if (!isMuted) buzzer.playTone(1700, 30);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleBtnA, handleBtnB, isMuted]);
 
   // 3. Render Loop matching firmware exactly
   useEffect(() => {
@@ -417,34 +411,28 @@ export default function RadarPage() {
               canvasRef={canvasRef}
               scanlines={scanlines}
               isTilted={false}
-              onButtonAPress={handleBtnA}
-              onButtonBPress={handleBtnB}
+              onButtonAShortPress={handleButtonAShortPress}
+              onButtonALongPress={handleButtonALongPress}
+              onButtonBShortPress={handleButtonBShortPress}
+              onButtonBLongPress={handleButtonBLongPress}
               isButtonAPressed={isBtnAPressed}
               isButtonBPressed={isBtnBPressed}
             />
           </div>
 
-          {/* Keyboard Helper Legend */}
+          {/* Pure Hardware Simulator Legend */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs font-mono text-slate-400">
-            <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2.5 py-1 rounded border border-white/10 shadow-sm">
-              <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">Space</kbd>
-              <span>/</span>
-              <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">A</kbd>
-              <span className="text-slate-200 font-bold">Dzień (Przycisk M5)</span>
+            <div className="flex items-center gap-2 bg-[#0c162b]/80 px-3 py-1.5 rounded-lg border border-white/10 shadow-sm">
+              <span className="text-amber-400 font-bold">Przycisk M5 (Front):</span>
+              <span className="text-slate-200">Klik = Ekran</span>
+              <span className="text-slate-600">|</span>
+              <span className="text-slate-400">Przytrzymaj (&gt;0.6s) = Dzień</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2.5 py-1 rounded border border-white/10 shadow-sm">
-              <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">B</kbd>
-              <span className="text-slate-200 font-bold">Miasto (Przycisk Górny)</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2 py-1 rounded border border-white/10 shadow-sm">
-              <kbd className="px-1 py-0.5 bg-slate-800 text-emerald-400 rounded text-[10px]">1</kbd>
-              <span>/</span>
-              <kbd className="px-1 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">2</kbd>
-              <span className="text-slate-300">Ekran</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-[#0c162b]/80 px-2 py-1 rounded border border-white/10 shadow-sm">
-              <kbd className="px-1.5 py-0.5 bg-slate-800 text-amber-400 rounded text-[10px]">M</kbd>
-              <span className="text-slate-300">Dźwięk</span>
+            <div className="flex items-center gap-2 bg-[#0c162b]/80 px-3 py-1.5 rounded-lg border border-white/10 shadow-sm">
+              <span className="text-amber-400 font-bold">Przycisk B (Góra):</span>
+              <span className="text-slate-200">Klik = Miasto</span>
+              <span className="text-slate-600">|</span>
+              <span className="text-slate-400">Przytrzymaj (&gt;0.6s) = Dźwięk</span>
             </div>
           </div>
         </div>

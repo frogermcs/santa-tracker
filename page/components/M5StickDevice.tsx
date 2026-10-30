@@ -1,19 +1,29 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 interface M5StickDeviceProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  onButtonAPress: () => void;
-  onButtonBPress: () => void;
+  onButtonAShortPress?: () => void;
+  onButtonALongPress?: () => void;
+  onButtonBShortPress?: () => void;
+  onButtonBLongPress?: () => void;
+  onButtonAPress?: () => void;
+  onButtonBPress?: () => void;
   isButtonAPressed?: boolean;
   isButtonBPressed?: boolean;
   scanlines?: boolean;
   isTilted?: boolean;
 }
 
+const LONG_PRESS_THRESHOLD_MS = 600;
+
 export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
   canvasRef,
+  onButtonAShortPress,
+  onButtonALongPress,
+  onButtonBShortPress,
+  onButtonBLongPress,
   onButtonAPress,
   onButtonBPress,
   isButtonAPressed = false,
@@ -21,6 +31,107 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
   scanlines = true,
   isTilted = false,
 }) => {
+  const [isAHolding, setIsAHolding] = useState(false);
+  const [isBHolding, setIsBHolding] = useState(false);
+
+  const timerARef = useRef<NodeJS.Timeout | null>(null);
+  const timerBRef = useRef<NodeJS.Timeout | null>(null);
+
+  const longTriggeredARef = useRef(false);
+  const longTriggeredBRef = useRef(false);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (timerARef.current) clearTimeout(timerARef.current);
+      if (timerBRef.current) clearTimeout(timerBRef.current);
+    };
+  }, []);
+
+  // Button A Pointer Handlers
+  const handlePointerDownA = (e: React.PointerEvent) => {
+    e.preventDefault();
+    longTriggeredARef.current = false;
+    setIsAHolding(true);
+
+    timerARef.current = setTimeout(() => {
+      longTriggeredARef.current = true;
+      if (onButtonALongPress) {
+        onButtonALongPress();
+      } else if (onButtonAPress) {
+        onButtonAPress();
+      }
+    }, LONG_PRESS_THRESHOLD_MS);
+  };
+
+  const handlePointerUpA = (e: React.PointerEvent) => {
+    e.preventDefault();
+    if (timerARef.current) {
+      clearTimeout(timerARef.current);
+      timerARef.current = null;
+    }
+    setIsAHolding(false);
+
+    if (!longTriggeredARef.current) {
+      if (onButtonAShortPress) {
+        onButtonAShortPress();
+      } else if (onButtonAPress) {
+        onButtonAPress();
+      }
+    }
+  };
+
+  const handlePointerCancelA = () => {
+    if (timerARef.current) {
+      clearTimeout(timerARef.current);
+      timerARef.current = null;
+    }
+    setIsAHolding(false);
+    longTriggeredARef.current = false;
+  };
+
+  // Button B Pointer Handlers
+  const handlePointerDownB = (e: React.PointerEvent) => {
+    e.preventDefault();
+    longTriggeredBRef.current = false;
+    setIsBHolding(true);
+
+    timerBRef.current = setTimeout(() => {
+      longTriggeredBRef.current = true;
+      if (onButtonBLongPress) {
+        onButtonBLongPress();
+      } else if (onButtonBPress) {
+        onButtonBPress();
+      }
+    }, LONG_PRESS_THRESHOLD_MS);
+  };
+
+  const handlePointerUpB = (e: React.PointerEvent) => {
+    e.preventDefault();
+    if (timerBRef.current) {
+      clearTimeout(timerBRef.current);
+      timerBRef.current = null;
+    }
+    setIsBHolding(false);
+
+    if (!longTriggeredBRef.current) {
+      if (onButtonBShortPress) {
+        onButtonBShortPress();
+      } else if (onButtonBPress) {
+        onButtonBPress();
+      }
+    }
+  };
+
+  const handlePointerCancelB = () => {
+    if (timerBRef.current) {
+      clearTimeout(timerBRef.current);
+      timerBRef.current = null;
+    }
+    setIsBHolding(false);
+    longTriggeredBRef.current = false;
+  };
+
   return (
     <div
       className={`relative transition-all duration-300 select-none max-w-full ${
@@ -29,16 +140,19 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
     >
       {/* Top Side Button (Button B) */}
       <button
-        onClick={onButtonBPress}
-        title="Przycisk B (Górny przycisk akcji) - Klawisz 'B'"
-        className={`absolute -top-3 sm:-top-3.5 left-14 sm:left-24 md:left-28 w-12 sm:w-16 h-3.5 sm:h-4 rounded-t-md z-0 flex items-center justify-center transition-all duration-75 cursor-pointer shadow-md ${
-          isButtonBPressed
-            ? "translate-y-1 bg-neutral-900 border-t-2 border-orange-500"
+        onPointerDown={handlePointerDownB}
+        onPointerUp={handlePointerUpB}
+        onPointerCancel={handlePointerCancelB}
+        onPointerLeave={handlePointerCancelB}
+        title="Przycisk B (Górny): Klik = Następne Miasto | Przytrzymaj (>0.6s) = Dźwięk Mute/Unmute"
+        className={`absolute -top-3 sm:-top-3.5 left-14 sm:left-24 md:left-28 w-14 sm:w-20 h-3.5 sm:h-4 rounded-t-md z-0 flex items-center justify-center transition-all duration-75 cursor-pointer shadow-md ${
+          isButtonBPressed || isBHolding
+            ? "translate-y-1 bg-neutral-900 border-t-2 border-orange-500 ring-1 ring-orange-400/50"
             : "bg-gradient-to-b from-neutral-700 to-neutral-900 hover:from-neutral-600 border-t border-neutral-500 hover:shadow-orange-500/20"
         }`}
       >
         <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold tracking-tight text-amber-200/90 -mt-2 bg-neutral-950/90 px-1 py-0.5 rounded border border-neutral-700 shadow-inner">
-          PRZYCISK B
+          {isBHolding ? "TRZYMAJ..." : "PRZYCISK B"}
         </span>
       </button>
 
@@ -149,11 +263,14 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
         {/* Right End: Big Tactile Button A (M5 Front Push Button) */}
         <div className="flex flex-col items-center justify-center pr-0.5 sm:pr-1 relative z-20 shrink-0">
           <button
-            onClick={onButtonAPress}
-            title="Przycisk A (Główny przycisk M5) - Wciśnij Spację"
+            onPointerDown={handlePointerDownA}
+            onPointerUp={handlePointerUpA}
+            onPointerCancel={handlePointerCancelA}
+            onPointerLeave={handlePointerCancelA}
+            title="Przycisk A (M5): Klik = Zmień Ekran | Przytrzymaj (>0.6s) = Zmień Dzień Adwentu"
             className={`w-10 h-20 sm:w-16 sm:h-28 md:w-20 md:h-32 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-0.5 sm:gap-1 cursor-pointer transition-all duration-75 border ${
-              isButtonAPressed
-                ? "translate-y-1 scale-98 bg-gradient-to-b from-neutral-300 to-neutral-400 shadow-inner border-neutral-500"
+              isButtonAPressed || isAHolding
+                ? "translate-y-1 scale-98 bg-gradient-to-b from-amber-200 to-amber-300 shadow-inner border-amber-500 ring-2 ring-amber-400"
                 : "bg-gradient-to-b from-neutral-100 via-neutral-200 to-neutral-300 hover:from-white shadow-[0_4px_0_#4b5563,0_6px_10px_rgba(0,0,0,0.4)] sm:shadow-[0_6px_0_#4b5563,0_8px_14px_rgba(0,0,0,0.4)] border-white/60 active:translate-y-1 active:shadow-[0_2px_0_#4b5563]"
             }`}
           >
@@ -161,7 +278,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
               M5
             </span>
             <span className="text-[7px] sm:text-[9px] font-bold text-neutral-600 uppercase tracking-widest font-mono">
-              WCISKAJ
+              {isAHolding ? "TRZYMAJ..." : "EKRAN"}
             </span>
           </button>
           <span className="text-[8px] sm:text-[10px] font-bold text-amber-950/80 mt-1 sm:mt-2 tracking-wide font-mono">

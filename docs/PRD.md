@@ -96,17 +96,17 @@ For the 240×135 ST7789v2 display, the Cockpit Dashboard (`Screen 3`) provides a
 
 ---
 
-## 4. User Interaction Matrix & Single-Screen Radar Controls
+## 4. User Interaction Matrix & Hardware-Simulator 1:1 Parity
 
-### 4.1. Single-Screen Radar Control Layout
-For the current operational radar screen, the physical and emulated buttons are bound to fast multi-day review:
+### 4.1. Unified Two-Button Control Layout (Variant 1 — Child-Friendly)
+To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the web emulator, all navigation is performed strictly via the two physical/emulated buttons (eliminating artificial keyboard shortcuts):
 
 | Input | Physical Device (M5StickC) | Web Emulator | Description |
 | :--- | :--- | :--- | :--- |
-| **Button A (Big Front M5)** | Front `M5` button | Click M5 Button or press `Space` / `A` | **Jump Between Days (1–24)**: Cycles through the 24 Advent days (`D01` → `D02` → ... → `D24` → `D01`), instantly loading that day's 12-stop itinerary. |
-| **Button B (Top Side Button)** | Small top edge button | Click Side Button or press `B` | **Jump Between Cities (1–12)**: Advances Santa to the next city on the active day, placing Santa landed at that city. |
-| **Screen Toggle** | Physical button / Web toggle | Keys `1` / `2` or header tabs | **Screen Selector**: Switch between Screen 1 (`Radar Lotu`) and Screen 3 (`Kokpit Mikołaja`). |
-| **Audio Toggle** | Top Header / Key | Audio Icon or press `M` | **Mute / Unmute**: Toggles synthesized retro buzzer chirps and chimes. |
+| **Button A Short Click (<0.6s)** | Front `M5` button (click) | Click `M5` Button | **Przełącz Ekran**: Cycles between operational screens (`Radar Lotu` ↔ `Kokpit Mikołaja`). Instant visual feedback. |
+| **Button A Long Hold (>0.6s)** | Front `M5` button (hold) | Hold `M5` Button (>0.6s) | **Następny Dzień (1–24)**: Cycles through the 24 Advent days (`D01` → `D02` → ... → `D24` → `D01`) with chime confirmation. |
+| **Button B Short Click (<0.6s)** | Top side button (click) | Click Top Side Button | **Następne Miasto (1–12)**: Advances Santa to the next city on the active day, placing Santa landed at that city. |
+| **Button B Long Hold (>0.6s)** | Top side button (hold) | Hold Top Side Button (>0.6s) | **Dźwięk Mute / Unmute**: Toggles synthesized retro buzzer chirps and chimes with audio chirp on unmute. |
 
 ### 4.2. Simulation Rhythm & Speed Ratio
 * **Real-World Itinerary**: 1 hour in transit (flight) + 1 hour in city (stop) = 2 hours per waypoint (12 stops = 24 hours).
