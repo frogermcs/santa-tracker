@@ -6,56 +6,37 @@ import Link from "next/link";
 import { Compass, Wifi, Volume2, VolumeX, RefreshCw, Map, Calendar, Gauge, Layers, Sparkles } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
 import { SnowEffect } from "@/components/SnowEffect";
-import { renderSharedRadar, RadarWaypoint, SEC_PER_CITY } from "@/lib/canvas/shared-radar";
-import { renderDashboardScreen } from "@/lib/canvas/dashboard-screen";
 import { computeSantaMetrics, SantaCockpitMetrics } from "@/lib/telemetry/santa-metrics";
 import { buzzer } from "@/lib/audio/buzzer";
 import { getDaySchedule, DEFAULT_ADVENT_DAY } from "@/lib/advent-schedule";
-
-interface JourneyApiResponse {
-  version: number;
-  updatedAt: string;
-  secPerCity: number;
-  speedMultiplier: number;
-  route: RadarWaypoint[];
-}
-
-const FALLBACK_ROUTE: RadarWaypoint[] = [
-  { name: "GISBORNE",          lon: 178.0,  lat: -38.7, country: "Nowa Zelandia", continent: "Oceania" },
-  { name: "BETHLEHEM",         lon: 35.2,   lat: 31.7,  country: "Palestyna",     continent: "Azja" },
-  { name: "NICOSIA",           lon: 33.4,   lat: 35.2,  country: "Cypr",          continent: "Azja" },
-  { name: "KHARTOUM",          lon: 32.5,   lat: 15.5,  country: "Sudan",         continent: "Afryka" },
-  { name: "NOUAKCHOTT",        lon: -16.0,  lat: 18.1,  country: "Mauretania",    continent: "Afryka" },
-  { name: "CAYENNE",           lon: -52.3,  lat: 4.9,   country: "Gujana Fr.",    continent: "Ameryki" },
-  { name: "WYSPA WIELKANOCNA", lon: -109.3, lat: -27.1, country: "Chile",         continent: "Ameryki" },
-  { name: "KIRITIMATI",        lon: -157.4, lat: 1.9,   country: "Kiribati",      continent: "Pacyfik" },
-  { name: "HONOLULU",          lon: -157.8, lat: 21.3,  country: "USA",           continent: "Ameryki" },
-  { name: "NUUK",              lon: -51.7,  lat: 64.2,  country: "Grenlandia",    continent: "Ameryki" },
-  { name: "BIEGUN POLNOCNY",   lon: 0.0,    lat: 90.0,  country: "Arktyka",       continent: "Biegun" },
-  { name: "KRAKOW",            lon: 19.9,   lat: 50.1,  country: "Polska",        continent: "Europa" }
-];
+import { M5CanvasSim } from "@/lib/simulator/M5CanvasSim";
+import {
+  setup as setupSimulator,
+  update as updateSimulator,
+  render as renderSimulator,
+  getTelemetry,
+  setDay,
+  setCityIndex,
+  setActiveScreen as setSimActiveScreen,
+  SimulatorAppState,
+  ButtonEventState,
+} from "@/lib/simulator/iotAppLogic";
 
 export default function RadarPage() {
   const [selectedDay, setSelectedDay] = useState<number>(DEFAULT_ADVENT_DAY);
-  const [route, setRoute] = useState<RadarWaypoint[]>(FALLBACK_ROUTE);
-  const [isLiveApi, setIsLiveApi] = useState<boolean>(false);
-  const [apiTimestamp, setApiTimestamp] = useState<string>("");
+  const [isLiveApi, setIsLiveApi] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [scanlines, setScanlines] = useState<boolean>(true);
 
   // Screen Selection (Screen 1: Radar, Screen 2: Kokpit Mikołaja)
-  const [activeScreen, setActiveScreen] = useState<"radar" | "cockpit">("cockpit");
+  const [activeScreen, setActiveScreen] = useState<"radar" | "cockpit">("radar");
   const [liveMetrics, setLiveMetrics] = useState<SantaCockpitMetrics | null>(null);
-
-  // Timing: 12s journey + 12s stop = 24s per city (hardcoded 1x scale matching 1hr flight + 1hr stop)
-  const secPerCity = SEC_PER_CITY; // 24 seconds
-  const speedMultiplier = 1;
 
   // Active telemetry states
   const [currentCityName, setCurrentCityName] = useState<string>("GISBORNE");
   const [nextCityName, setNextCityName] = useState<string>("BETHLEHEM");
   const [activeStopIndex, setActiveStopIndex] = useState<number>(0);
-  const [eta, setEta] = useState<number>(24);
+  const [eta, setEta] = useState<number>(12);
   const [coords, setCoords] = useState<{ lat: string; lon: string }>({ lat: "-38.7", lon: "178.0" });
   const [isFlightPhase, setIsFlightPhase] = useState<boolean>(false);
 
@@ -63,58 +44,42 @@ export default function RadarPage() {
   const [isBtnAPressed, setIsBtnAPressed] = useState<boolean>(false);
   const [isBtnBPressed, setIsBtnBPressed] = useState<boolean>(false);
 
+  // 1:1 Hardware Simulator Core
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const animFrameRef = useRef<number | null>(null);
-  const simTimeRef = useRef<number>(12); // Start landed at Stop 1 (after 12s flight)
-  const lastTimeRef = useRef<number>(0);
+  const canvasSimRef = useRef<M5CanvasSim | null>(null);
+  const simStateRef = useRef<SimulatorAppState>(setupSimulator(0));
+  const pendingButtonsRef = useRef<ButtonEventState>({
+    wasPressedA: false,
+    wasHoldA: false,
+    wasPressedB: false,
+    wasHoldB: false,
+    wasPressedPWR: false,
+  });
+  const lastReactUpdateRef = useRef<number>(0);
 
-  // Helper to load route for any day
-  const applyDayRoute = useCallback((dayNum: number) => {
-    const schedule = getDaySchedule(dayNum);
-    const newRoute: RadarWaypoint[] = schedule.stops.map((s) => ({
-      name: s.radarName,
-      localName: s.name,
-      lon: s.lon,
-      lat: s.lat,
-      country: s.country,
-      continent: s.continent,
-      arrivalWindow: s.arrivalWindow,
-      transitWindow: s.transitWindow,
-      activity: s.activity,
-      stopOfDay: s.stopOfDay,
-      stopTotal: s.stopTotal,
-    }));
-    setRoute(newRoute);
-    simTimeRef.current = 12; // Start landed at first city
+  // Current day stops for sidebar
+  const currentStops = getDaySchedule(selectedDay).stops;
+
+  // Initialize Canvas and M5CanvasSim
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    canvas.width = 240;
+    canvas.height = 135;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) return;
+
+    ctx.imageSmoothingEnabled = false;
+    canvasSimRef.current = new M5CanvasSim(ctx, canvas);
+    canvasSimRef.current.setRotation(1); // Exact 240x135 Landscape LCD
   }, []);
 
-  // 1. Fetch live journey from API endpoint on mount
-  const fetchJourney = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/journey?day=${selectedDay}`);
-      if (res.ok) {
-        const data: JourneyApiResponse = await res.json();
-        if (data.route && data.route.length > 0) {
-          setRoute(data.route);
-          setIsLiveApi(true);
-          setApiTimestamp(data.updatedAt || new Date().toISOString());
-        }
-      }
-    } catch {
-      setIsLiveApi(false);
-    }
-  }, [selectedDay]);
-
-  useEffect(() => {
-    fetchJourney();
-  }, [fetchJourney]);
-
-  // 2. Interactive Handlers (Matching M5StickC-Plus SE Physical Hardware 1:1)
+  // 1. Button Handlers (1:1 Hardware Parity with M5StickC-Plus firmware)
   // Button A Short Press (Front M5): Cycle screen (Radar <-> Kokpit)
   const handleButtonAShortPress = useCallback(() => {
     setIsBtnAPressed(true);
     setTimeout(() => setIsBtnAPressed(false), 200);
-    setActiveScreen((prev) => (prev === "radar" ? "cockpit" : "radar"));
+    pendingButtonsRef.current.wasPressedA = true;
     if (!isMuted) buzzer.playTone(1600, 35);
   }, [isMuted]);
 
@@ -122,159 +87,118 @@ export default function RadarPage() {
   const handleButtonALongPress = useCallback(() => {
     setIsBtnAPressed(true);
     setTimeout(() => setIsBtnAPressed(false), 300);
+    pendingButtonsRef.current.wasHoldA = true;
     if (!isMuted) buzzer.playTone(1900, 70);
-
-    setSelectedDay((prevDay) => {
-      const nextDay = (prevDay % 24) + 1;
-      applyDayRoute(nextDay);
-      return nextDay;
-    });
-  }, [applyDayRoute, isMuted]);
+  }, [isMuted]);
 
   // Button B Short Press (Top Side): Advance to next city on active day (0 -> 11 -> 0)
   const handleButtonBShortPress = useCallback(() => {
     setIsBtnBPressed(true);
     setTimeout(() => setIsBtnBPressed(false), 200);
+    pendingButtonsRef.current.wasPressedB = true;
     if (!isMuted) buzzer.playTone(1400, 35);
-
-    if (!route || route.length === 0) return;
-    const curIdx = Math.floor(simTimeRef.current / secPerCity);
-    const nextIdx = ((curIdx + 1) % route.length + route.length) % route.length;
-    // +12 seconds lands Santa directly at that city (12s stop begins)
-    simTimeRef.current = nextIdx * secPerCity + 12;
-  }, [route, secPerCity, isMuted]);
+  }, [isMuted]);
 
   // Button B Long Press (Top Side, >0.6s): Toggle Sound (Mute / Unmute)
   const handleButtonBLongPress = useCallback(() => {
     setIsBtnBPressed(true);
     setTimeout(() => setIsBtnBPressed(false), 300);
+    pendingButtonsRef.current.wasHoldB = true;
     setIsMuted((prev) => {
       const next = !prev;
-      if (!next) {
-        buzzer.playTone(2200, 80);
-      }
+      if (!next) buzzer.playTone(2200, 80);
       return next;
     });
   }, []);
 
+  // Day Selector Click
   const handleSelectDay = useCallback((dayNum: number) => {
     const validDay = Math.max(1, Math.min(24, dayNum));
+    setDay(simStateRef.current, validDay);
     setSelectedDay(validDay);
-    applyDayRoute(validDay);
     if (!isMuted) buzzer.playTone(1700, 40);
-  }, [applyDayRoute, isMuted]);
+  }, [isMuted]);
 
+  // City Selector Click (Jump to city on current day)
   const handleSelectCity = useCallback((targetIdx: number) => {
-    if (!route || route.length === 0) return;
-    const safeTarget = Math.max(0, Math.min(route.length - 1, targetIdx));
-    simTimeRef.current = safeTarget * secPerCity + 12;
-    if (!isMuted) buzzer.playTone(1300 + safeTarget * 50, 40);
-  }, [route, secPerCity, isMuted]);
+    setCityIndex(simStateRef.current, targetIdx);
+    if (!isMuted) buzzer.playTone(1300 + targetIdx * 50, 40);
+  }, [isMuted]);
 
-  // 3. Render Loop matching firmware exactly
+  // Screen Switcher Tabs
+  const handleSwitchScreen = useCallback((screen: "radar" | "cockpit") => {
+    setActiveScreen(screen);
+    setSimActiveScreen(simStateRef.current, screen === "radar" ? 0 : 1);
+    if (!isMuted) buzzer.playTone(screen === "radar" ? 1500 : 1700, 30);
+  }, [isMuted]);
+
+  // 2. 1:1 Hardware Simulation Loop (Driven by LovyanGFX M5CanvasSim)
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    let animId: number;
+    let lastTime = performance.now();
 
-    if (!route || route.length === 0 || secPerCity <= 0) return;
+    const tick = (now: number) => {
+      const dtMs = Math.min(now - lastTime, 100);
+      lastTime = now;
+      const nowSec = now / 1000;
 
-    lastTimeRef.current = performance.now();
+      // Extract pending button events
+      const buttons: ButtonEventState = { ...pendingButtonsRef.current };
+      pendingButtonsRef.current = {
+        wasPressedA: false,
+        wasHoldA: false,
+        wasPressedB: false,
+        wasHoldB: false,
+        wasPressedPWR: false,
+      };
 
-    const render = (now: number) => {
-      if (!route || route.length === 0) return;
+      // 1. Advance firmware logic state
+      updateSimulator(simStateRef.current, buttons, dtMs, now);
 
-      const rawDt = (now - lastTimeRef.current) / 1000;
-      lastTimeRef.current = now;
-      const clampedDt = Math.max(0, Math.min(rawDt, 0.1));
-
-      simTimeRef.current += clampedDt * speedMultiplier;
-      const totalSimTime = route.length * secPerCity;
-      if (totalSimTime <= 0) return;
-
-      // Give a celebration hold at the final city (Kraków on Day 24) before looping
-      const holdDuration = selectedDay === 24 ? 32 : 0;
-      const cycleTotal = totalSimTime + holdDuration;
-      if (simTimeRef.current >= cycleTotal || simTimeRef.current < 0) {
-        simTimeRef.current = 0;
+      // 2. Render frame via M5CanvasSim (1:1 with screen_radar.cpp)
+      if (canvasSimRef.current) {
+        renderSimulator(canvasSimRef.current, simStateRef.current, now);
       }
 
-      // Clamp simulation time during the grand finale hold
-      const effectiveSimTime = Math.min(simTimeRef.current, totalSimTime - 0.001);
-      const cityIdx = Math.floor(effectiveSimTime / secPerCity);
-      const u = Math.max(0, effectiveSimTime - cityIdx * secPerCity);
-      const safeIdx = ((cityIdx % route.length) + route.length) % route.length;
-      const prevIdx = safeIdx > 0 ? safeIdx - 1 : 0;
+      // 3. Decouple high-frequency 60 FPS canvas rendering from React DOM tree reconciliation
+      // Throttle React state updates to ~6 Hz (every 150ms) to eliminate React re-render thrashing
+      if (now - lastReactUpdateRef.current >= 150) {
+        lastReactUpdateRef.current = now;
+        const t = getTelemetry(simStateRef.current);
+        setSelectedDay((prev) => (prev !== t.activeDay ? t.activeDay : prev));
+        setActiveScreen((prev) => {
+          const next = simStateRef.current.activeScreen === 0 ? "radar" : "cockpit";
+          return prev !== next ? next : prev;
+        });
+        setActiveStopIndex((prev) => (prev !== t.safeIdx ? t.safeIdx : prev));
+        const curCity = simStateRef.current.cities[t.safeIdx]?.name || "";
+        setCurrentCityName((prev) => (prev !== curCity ? curCity : prev));
+        setNextCityName((prev) => (prev !== t.nextCityName ? t.nextCityName : prev));
+        setEta((prev) => (prev !== t.etaSeconds ? t.etaSeconds : prev));
+        setIsFlightPhase((prev) => (prev !== t.isFlightPhase ? t.isFlightPhase : prev));
 
-      const isLastCity = safeIdx === route.length - 1;
-      const isDay24Finale = selectedDay === 24 && isLastCity && (u >= 12 || simTimeRef.current >= totalSimTime);
+        const newLat = t.santaLat.toFixed(1);
+        const newLon = t.santaLon.toFixed(1);
+        setCoords((prev) => (prev.lat !== newLat || prev.lon !== newLon ? { lat: newLat, lon: newLon } : prev));
 
-      const isFlight = !isDay24Finale && u < 12;
-      const uFlight = u / 12;
-      const p = isFlight ? (uFlight < 0.5 ? 2 * uFlight ** 2 : 1 - (-2 * uFlight + 2) ** 2 / 2) : 1;
-
-      const curr = route[safeIdx] ?? route[0];
-      const prev = route[prevIdx] ?? curr;
-      if (!curr || !prev) return;
-
-      const sLon = prev.lon + (curr.lon - prev.lon) * p;
-      const sLat = prev.lat + (curr.lat - prev.lat) * p;
-
-      const nextIdx = (safeIdx + 1) % route.length;
-      const nextName = isDay24Finale
-        ? curr.name
-        : u < 12
-        ? curr.name
-        : (route[nextIdx]?.name || curr.name);
-
-      const etaSec = isDay24Finale ? 0 : Math.ceil(u < 12 ? 12 - u : secPerCity - u);
-
-      setCurrentCityName(curr.name);
-      setNextCityName(nextName);
-      setActiveStopIndex(safeIdx);
-      setIsFlightPhase(isFlight);
-      setEta(etaSec);
-      setCoords({ lat: sLat.toFixed(1), lon: sLon.toFixed(1) });
-
-      // Compute telemetry metrics for cockpit and HUD
-      const metrics = computeSantaMetrics(
-        selectedDay,
-        safeIdx,
-        u,
-        now / 1000,
-        nextName,
-        isDay24Finale
-      );
-      setLiveMetrics(metrics);
-
-      // Render Active Screen (Screen 1: Radar or Screen 2: Kokpit Mikołaja)
-      if (activeScreen === "radar") {
-        renderSharedRadar(
-          ctx,
-          now / 1000,
-          route,
-          safeIdx,
-          sLon,
-          sLat,
-          nextName,
-          etaSec,
-          isFlight,
-          selectedDay === 24,
-          selectedDay
+        // Compute festive cockpit metrics for the right panel
+        const metrics = computeSantaMetrics(
+          t.activeDay,
+          t.safeIdx,
+          t.u,
+          nowSec,
+          t.nextCityName,
+          t.isDay24Finale
         );
-      } else {
-        renderDashboardScreen(ctx, metrics, selectedDay, now / 1000);
+        setLiveMetrics(metrics);
       }
 
-      animFrameRef.current = requestAnimationFrame(render);
+      animId = requestAnimationFrame(tick);
     };
 
-    animFrameRef.current = requestAnimationFrame(render);
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [route, secPerCity, speedMultiplier, selectedDay, activeScreen]);
+    animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#060a16] text-slate-100 flex flex-col selection:bg-rose-900 selection:text-amber-100 relative overflow-x-hidden">
@@ -298,6 +222,9 @@ export default function RadarPage() {
             <h1 className="text-sm font-bold font-mono tracking-tight text-white">
               SANTA-OS
             </h1>
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-semibold">
+              1:1 LOVYANGFX FIRMWARE SIMULATOR
+            </span>
           </div>
         </div>
 
@@ -311,17 +238,8 @@ export default function RadarPage() {
           </Link>
 
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900/80 border border-white/10 text-slate-300">
-            <Wifi className={`w-3.5 h-3.5 ${isLiveApi ? "text-emerald-400" : "text-amber-400"}`} />
-            <span className="hidden md:inline">{isLiveApi ? "Synced: /api/journey" : "Demo Mode"}</span>
-            {isLiveApi && (
-              <button
-                onClick={fetchJourney}
-                className="ml-1 p-0.5 rounded text-slate-400 hover:text-white transition cursor-pointer"
-                title="Przeładuj trasę"
-              >
-                <RefreshCw className="w-3 h-3 hover:rotate-180 transition-transform duration-300" />
-              </button>
-            )}
+            <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden md:inline">1:1 M5StickC-Plus</span>
           </div>
 
           <button
@@ -375,10 +293,7 @@ export default function RadarPage() {
           {/* Tactical Screen Selector Bar */}
           <div className="flex items-center justify-center gap-2 bg-[#081224]/80 border border-white/10 rounded-2xl p-1.5 px-2.5 shadow-lg">
             <button
-              onClick={() => {
-                setActiveScreen("radar");
-                if (!isMuted) buzzer.playTone(1500, 30);
-              }}
+              onClick={() => handleSwitchScreen("radar")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer ${
                 activeScreen === "radar"
                   ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-sm"
@@ -390,10 +305,7 @@ export default function RadarPage() {
             </button>
 
             <button
-              onClick={() => {
-                setActiveScreen("cockpit");
-                if (!isMuted) buzzer.playTone(1700, 30);
-              }}
+              onClick={() => handleSwitchScreen("cockpit")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer ${
                 activeScreen === "cockpit"
                   ? "bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm ring-1 ring-amber-400/30"
@@ -405,7 +317,7 @@ export default function RadarPage() {
             </button>
           </div>
 
-          {/* Interactive Hardware Shell */}
+          {/* Interactive Hardware Shell (Scale 1x native 240x135 display) */}
           <div className="pt-2 sm:pt-4">
             <M5StickDevice
               canvasRef={canvasRef}
@@ -437,8 +349,9 @@ export default function RadarPage() {
           </div>
         </div>
 
-        {/* Right Column: Mission Control & Telemetry Panel (5 cols) */}
-        <div className="lg:col-span-5 bg-[#091122]/75 border border-white/10 rounded-3xl p-6 flex flex-col gap-5 shadow-2xl shadow-black/50 backdrop-blur-md">
+        {/* Right Column: Mission Telemetry & Waypoints List (5 cols) */}
+        <div className="lg:col-span-5 w-full space-y-4">
+          {/* Header Card */}
           <div className="flex items-center justify-between border-b border-white/10 pb-3">
             <div>
               <h2 className="text-base font-bold font-mono text-white flex items-center gap-2">
@@ -455,14 +368,14 @@ export default function RadarPage() {
           <div className="grid grid-cols-2 gap-3 text-xs font-mono">
             <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
               <span className="text-slate-400 text-[10px] block">
-                {selectedDay === 24 && activeStopIndex === route.length - 1
+                {selectedDay === 24 && activeStopIndex === currentStops.length - 1
                   ? "FINAŁ WIGILII 🎁"
                   : isFlightPhase
                   ? "AKTUALNY CEL"
                   : "AKTUALNY POSTÓJ"}
               </span>
               <span className="text-white font-bold text-sm block mt-0.5 truncate">
-                {selectedDay === 24 && activeStopIndex === route.length - 1
+                {selectedDay === 24 && activeStopIndex === currentStops.length - 1
                   ? "KRAKÓW (PL)"
                   : isFlightPhase
                   ? nextCityName
@@ -472,7 +385,7 @@ export default function RadarPage() {
             <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
               <span className="text-slate-400 text-[10px] block">ODLICZANIE ETA</span>
               <span className="text-amber-400 font-bold text-sm block mt-0.5">
-                {selectedDay === 24 && activeStopIndex === route.length - 1 && eta === 0
+                {selectedDay === 24 && activeStopIndex === currentStops.length - 1 && eta === 0
                   ? "WIGILIA!"
                   : `0:${String(eta).padStart(2, "0")}`}
               </span>
@@ -500,7 +413,7 @@ export default function RadarPage() {
                   Parametry Kokpitu Mikołaja:
                 </span>
                 <span className="text-[10px] text-amber-300 font-bold">
-                  Przystanek {activeStopIndex + 1}/{route.length}
+                  Przystanek {activeStopIndex + 1}/{currentStops.length}
                 </span>
               </div>
 
@@ -538,13 +451,13 @@ export default function RadarPage() {
                 Trasa Dnia {selectedDay}
               </span>
               <span className="text-[11px] text-amber-300 font-bold">
-                {activeStopIndex + 1}/{route.length}
+                {activeStopIndex + 1}/{currentStops.length}
               </span>
             </div>
             <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
-              {route.map((wp, idx) => {
+              {currentStops.map((wp, idx) => {
                 const isActive = activeStopIndex === idx;
-                const isFinal = idx === route.length - 1 && selectedDay === 24;
+                const isFinal = idx === currentStops.length - 1 && selectedDay === 24;
                 const isFirst = idx === 0;
 
                 return (
@@ -572,7 +485,7 @@ export default function RadarPage() {
                         {isFirst ? "⭐" : isFinal ? "🎁" : idx + 1}
                       </span>
                       <span className="truncate">
-                        {wp.localName || wp.name}
+                        {wp.name}
                         {isFinal && " (FINAŁ)"}
                       </span>
                     </div>
