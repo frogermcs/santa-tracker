@@ -8,8 +8,8 @@
 // Educational Notes:
 // - Deterministic memory model: operates strictly on static memory (PROGMEM).
 // - No heap allocation (malloc/new) inside update() or getTelemetry().
-// - Simulation cadence: SEC_PER_CITY = 12.0s (6s flight easing + 6s landed stop).
-// - Day 24 Grand Finale: Stop 12 (Kraków) holds celebration state for 16 seconds.
+// - Simulation cadence: SEC_PER_CITY = 24.0s (12s flight easing + 12s landed stop).
+// - Day 24 Grand Finale: Stop 12 (Kraków) arrival lock permanently celebrates in Kraków.
 // ============================================================================
 
 class JourneyEngine {

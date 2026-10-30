@@ -4,16 +4,24 @@
 #include "core/journey_engine.h"
 #include "network/journey_client.h"
 #include "ui/screen_radar.h"
+#include "ui/screen_cockpit.h"
 
 // ============================================================================
 // SANTA-OS - Main Application Entrypoint
-// Architecture: Core Engine (Advent Calendar) + Network Client + Radar Screen
+// Architecture: Core Engine (Advent Calendar) + Network Client + Dual UI Screens
 // Hardware: M5StickC-Plus SE (ESP32-PICO-D4, 240x135 ST7789v2 IPS Display)
 // ============================================================================
+
+enum ActiveScreen {
+  SCREEN_RADAR = 0,
+  SCREEN_COCKPIT = 1
+};
 
 M5Canvas canvas(&M5.Display);
 JourneyEngine engine;
 ScreenRadar radar;
+ScreenCockpit cockpit;
+ActiveScreen activeScreen = SCREEN_RADAR;
 
 bool soundEnabled = true;
 unsigned long lastFrameTime = 0;
@@ -41,8 +49,9 @@ void setup() {
   canvas.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT);
   canvas.setTextDatum(top_left);
 
-  // Initialize UI Renderer
+  // Initialize UI Renderers
   radar.init(&canvas);
+  cockpit.init(&canvas);
 
   // Initialize simulation engine with preloaded Day 24 Grand Finale itinerary
   // (All 24 days / 288 stops are compiled in PROGMEM, so no Wi-Fi is needed to boot!)
@@ -77,7 +86,7 @@ void loop() {
 
   // Button A (Front M5) Short Click: Cycle Active Screen
   if (M5.BtnA.wasClicked()) {
-    // Cycles active screen (Radar <-> Cockpit)
+    activeScreen = (activeScreen == SCREEN_RADAR) ? SCREEN_COCKPIT : SCREEN_RADAR;
     playChirp(1600, 35);
   }
 
@@ -102,8 +111,12 @@ void loop() {
   // Retrieve current calculated state
   TelemetryState telemetry = engine.getTelemetry();
 
-  // Render radar frame to double buffer (zero dynamic heap allocation)
-  radar.render(engine.getJourneyData(), telemetry, engine.getSpeedMultiplier(), now);
+  // Render active screen to double buffer (zero dynamic heap allocation)
+  if (activeScreen == SCREEN_RADAR) {
+    radar.render(engine.getJourneyData(), telemetry, engine.getSpeedMultiplier(), now);
+  } else {
+    cockpit.render(engine.getJourneyData(), telemetry, now);
+  }
 
   // Flush to screen (flicker-free ST7789v2 IPS push)
   canvas.pushSprite(0, 0);

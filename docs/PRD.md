@@ -143,7 +143,9 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 
 ---
 
-## 6. Milestone 1 Acceptance Criteria (Operational Radar End-to-End) (COMPLETE ✅)
+## 6. Milestone Acceptance Criteria
+
+### 6.1. Milestone 1: Operational Radar End-to-End (COMPLETE ✅)
 
 1. **City List Ingestion:** Schema and parser support 288 stops across 24 Advent days from `Harmonogram Santa Tracker 2026 - Harmonogram_Lotow.csv`.
 2. **December 24th Grand Finale Route:**
@@ -159,6 +161,27 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
    * Boots directly into December 24th Grand Finale route (Kraków arrival lock).
    * Button A cycles days (1–24); Button B advances through cities on active day.
    * 12 native desktop unit tests passing in 0.76s.
+
+### 6.2. Milestone 2: Cockpit Dashboard & Telemetry Screen (COMPLETE ✅)
+
+1. **Modern Aerospace Glass Cockpit Interface (`ScreenCockpit` / `dashboard-screen.ts`):**
+   * Pitch-black background (`0x0000`), titanium slate dividers (`0x2124`), electric ice cyan headers (`0x07ff`), pure white live telemetry, and aviation amber highlights (`0xfde0`).
+   * Top Header: Battery percentage, `KOKPIT MIKOLAJA` title, active Advent day badge (`DZIEN XX`).
+   * Flight Dynamics: Mach speed, 10-segment multi-color speed bar (Cyan $\rightarrow$ Amber $\rightarrow$ Red), stratospheric altitude (`PULAP 11.5k M` vs `65 M`).
+   * Gift Payload: Delivered count (`DOSTARCZONO:`), regional drop rate (`ZRZUT:` in flame gold on roofs, `0/s` in flight), 10-segment emerald progress bar.
+   * Sustenance ("Paliwo Mikołaja"): 8×8 pixel-art chocolate chip cookie icon + counter (`CIASTKA: 330.0M`); 7×9 pixel-art milk bottle icon + counter (`MLEKO: 25.3M L`).
+   * Tactical Mission Phase: Panel with dynamic border (Ice Cyan in flight, Emerald Neon on roofs, flashing Gold/Red on finale) displaying current sub-phase headline.
+   * Navigation HUD Footer: Destination indicator (`CEL:`, `POSTOJ:`, `FINAL:`) + city name + countdown ETA (`CZAS 0:XX` or `WIGILIA!`).
+2. **Mathematical & Demographics Parity:**
+   * Global 2.20 Billion children demographic model across the 12 Day 24 stops.
+   * Cookie intake factor ($0.15 \times \text{gifts}$) and milk consumption ($0.0115 \text{ L} \times \text{gifts}$).
+   * 24s simulation cadence (`secPerCity = 24.0s`, 12s transit flight + 12s rooftop dwell).
+3. **M5StickC-Plus SE Firmware Delivery:**
+   * Zero dynamic heap allocations in frame render loop (`ScreenCockpit::render`).
+   * SRAM usage: 11.0% (35.9 KB / 320 KB), safely under 25% budget.
+   * Flash usage: 28.2% (885 KB / 3.0 MB).
+   * Button A short click cycles `SCREEN_RADAR` $\leftrightarrow$ `SCREEN_COCKPIT`.
+   * 16 desktop Unity tests passing in 2.4s (`pio test -e native`).
 
 ---
 
