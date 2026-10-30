@@ -29,7 +29,7 @@ export interface RadarWaypoint {
   stopTotal?: number;
 }
 
-export const SEC_PER_CITY = 12; // 6s flight + 6s stop (scaled 1:1 from 1hr flight + 1hr stop)
+export const SEC_PER_CITY = 24; // 12s flight + 12s stop (scaled 1:1 from 1hr flight + 1hr stop)
 
 export const JOURNEY_CITIES: RadarWaypoint[] = [
   { name: "GISBORNE",          lon: 178.0,  lat: -38.7, country: "Nowa Zelandia", continent: "Oceania" },
@@ -270,7 +270,7 @@ export function renderSharedRadar(
   rect("rgba(2,17,10,.85)", 0, 121, W, 14);
   rect("#073018", 0, 120, W, 1);
   const isFinalArrival = isGrandFinale && currentWaypointIndex >= waypoints.length - 1 && !isFlightPhase;
-  const targetLabel = isFinalArrival ? "FINAŁ: " + nextCityName : "CEL: " + nextCityName;
+  const targetLabel = isFinalArrival ? "FINAŁ: " + nextCityName : isFlightPhase ? "CEL: " + nextCityName : "POSTÓJ: " + nextCityName;
   text(targetLabel, 4, 124, isFinalArrival ? "#ffd54a" : "#7dff9b");
   text(
     isFinalArrival ? "WIGILIA!" : "CZAS 0:" + String(Math.max(0, etaSeconds)).padStart(2, "0"),

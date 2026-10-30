@@ -1,0 +1,99 @@
+import { describe, it, expect } from "vitest";
+import { computeSantaMetrics, formatCompact } from "@/lib/telemetry/santa-metrics";
+
+describe("Santa Telemetry Calculations (computeSantaMetrics)", () => {
+  describe("Transit Flight Phase (u < 12s)", () => {
+    it("reports Mach 4.8 and stratospheric altitude during transit flight", () => {
+      // Day 24, stop 3 (Khartoum), u = 5.0 seconds (in flight), nowSec = 100.0
+      const metrics = computeSantaMetrics(24, 3, 5.0, 100.0, "KHARTOUM", false);
+
+      expect(metrics.flightPhase).toBe("PRZELOT");
+      expect(metrics.machSpeed).toBeGreaterThan(4.0);
+      expect(metrics.machDisplay).toMatch(/^M \d+\.\d+$/);
+      expect(metrics.altitudeM).toBeGreaterThan(10000);
+      expect(metrics.altitudeDisplay).toMatch(/^\d+(\.\d+)?k M$/);
+    });
+
+    it("reports strictly 0 gift drop rate while in transit flight", () => {
+      const metrics = computeSantaMetrics(24, 3, 5.0, 100.0, "KHARTOUM", false);
+
+      expect(metrics.giftRatePerSec).toBe(0);
+      expect(metrics.giftRateDisplay).toBe("0/s");
+    });
+
+    it("displays hypersonic transit stage title", () => {
+      const metrics = computeSantaMetrics(24, 3, 5.0, 100.0, "KHARTOUM", false);
+
+      expect(metrics.stageTitle).toMatch(/^PRZELOT HIPERSONICZNY/);
+    });
+  });
+
+  describe("Rooftop Landed Phase (u >= 12s)", () => {
+    it("reports Mach 0.0 and rooftop altitude when landed", () => {
+      // Day 24, stop 3, u = 14.0 seconds (on rooftop)
+      const metrics = computeSantaMetrics(24, 3, 14.0, 100.0, "KHARTOUM", false);
+
+      expect(metrics.flightPhase).toBe("DACH");
+      expect(metrics.machSpeed).toBe(0.0);
+      expect(metrics.machDisplay).toBe("M 0.0");
+      expect(metrics.altitudeM).toBe(65);
+      expect(metrics.altitudeDisplay).toBe("65 M");
+    });
+
+    it("reports positive regional gift drop rate when landed", () => {
+      const metrics = computeSantaMetrics(24, 3, 14.0, 100.0, "KHARTOUM", false);
+
+      expect(metrics.giftRatePerSec).toBeGreaterThan(0);
+      expect(metrics.giftRateDisplay).toMatch(/^\+\d+(\.\d+)?[kM]\/s$/);
+    });
+
+    it("transitions rooftop stages accurately across the 12s stay", () => {
+      // Phase 1 (0..4s on roof: u = 12..16)
+      const phase1 = computeSantaMetrics(24, 3, 13.0, 100.0, "KHARTOUM", false);
+      expect(phase1.stageTitle).toBe("BEZPIECZNY DACH // ZRZUT PREZENTOW");
+
+      // Phase 2 (4..8s on roof: u = 16..20)
+      const phase2 = computeSantaMetrics(24, 3, 17.5, 100.0, "KHARTOUM", false);
+      expect(phase2.stageTitle).toBe("PRZERWA NA CIASTKA I MLEKO");
+
+      // Phase 3 (8..12s on roof: u = 20..24)
+      const phase3 = computeSantaMetrics(24, 3, 22.0, 100.0, "KHARTOUM", false);
+      expect(phase3.stageTitle).toBe("DACH ZALICZONY // START ZA CHWILE");
+    });
+  });
+
+  describe("December 24th Grand Finale Lock (Kraków)", () => {
+    it("locks in celebration mode when landed at final stop in Kraków", () => {
+      // Stop 11 is Kraków (last stop of 12)
+      const metrics = computeSantaMetrics(24, 11, 15.0, 100.0, "KRAKOW", true);
+
+      expect(metrics.flightPhase).toBe("FINAL");
+      expect(metrics.stageTitle).toBe("FINAL WIGILII: KRAKOW!");
+      expect(metrics.machSpeed).toBe(0.0);
+      expect(metrics.altitudeM).toBe(219);
+      // All 2.20B global gifts delivered
+      expect(metrics.giftsDeliveredDisplay).toBe("2.20B");
+      expect(metrics.giftRatePerSec).toBe(0);
+    });
+  });
+
+  describe("Cumulative Fuel & Progress", () => {
+    it("correctly tracks cumulative cookies and milk", () => {
+      const metrics = computeSantaMetrics(24, 6, 14.0, 100.0, "WYSPA WIELKANOCNA", false);
+
+      expect(metrics.cookiesEaten).toBeGreaterThan(0);
+      expect(metrics.milkLiters).toBeGreaterThan(0);
+      expect(metrics.cookiesEatenDisplay).toMatch(/^\d+(\.\d+)?[kMB]$/);
+      expect(metrics.milkLitersDisplay).toMatch(/^\d+(\.\d+)?[kMB] L$/);
+    });
+  });
+
+  describe("Compact Number Formatting (formatCompact)", () => {
+    it("formats thousands, millions, and billions cleanly", () => {
+      expect(formatCompact(500)).toBe("500");
+      expect(formatCompact(1500)).toBe("1.5k");
+      expect(formatCompact(12500000)).toBe("12.5M");
+      expect(formatCompact(2200000000)).toBe("2.20B");
+    });
+  });
+});

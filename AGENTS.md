@@ -33,6 +33,7 @@ Before declaring any task or feature complete, the following commands **must** e
 |---|---|---|
 | **TypeScript Typecheck** | `npm --prefix page run typecheck` (`tsc --noEmit`) | **0 errors**. Strict typing maintained; no `any` leaks. |
 | **Linting** | `npm --prefix page run lint` | **0 errors, 0 warnings**. |
+| **Unit Tests** | `npm --prefix page run test:unit` (`vitest run`) | **All unit tests passing 100%**. Validates telemetry, math, and contracts. |
 | **Schedule & Data Tests** | `npm --prefix page run test:schedule` | **All tests passing 100%**. Validates 288 stops, 24 days, and Day 24 finale. |
 | **Combined Test Suite** | `npm --prefix page test` | Clean exit code `0`. |
 
