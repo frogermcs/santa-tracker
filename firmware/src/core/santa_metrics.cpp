@@ -46,7 +46,7 @@ void computeSantaMetrics(
   bool isDay24Finale,
   SantaCockpitMetrics& outMetrics
 ) {
-  bool isFlight = !isDay24Finale && (u < 12.0f);
+  bool isFlight = !isDay24Finale && (u < 15.0f);
 
   // 1. Flight dynamics (Mach speed and altitude)
   float machSpeed = 0.0f;
@@ -58,10 +58,10 @@ void computeSantaMetrics(
     altitudeM = 219; // Kraków Main Square elevation above sea level
     flightPhase = PHASE_FINAL;
   } else if (isFlight) {
-    float flightProgress = u / 12.0f; // 0.0 .. 1.0
-    if (flightProgress < 0.2f) {
+    float flightProgress = u / 15.0f; // 0.0 .. 1.0 (0..30% Warp, 30..80% Przelot, 80..100% Zniżanie)
+    if (flightProgress < 0.3f) {
       flightPhase = PHASE_START;
-      float p = flightProgress / 0.2f;
+      float p = flightProgress / 0.3f;
       machSpeed = p * 4.2f;
       altitudeM = (int)(65.0f + p * 10500.0f);
     } else if (flightProgress < 0.8f) {
@@ -115,7 +115,7 @@ void computeSantaMetrics(
       giftsDelivered = previousStopsGifts;
       giftRatePerSec = 0;
     } else {
-      float progress = (u - 12.0f) / 12.0f;
+      float progress = (u - 15.0f) / 15.0f;
       if (progress < 0.0f) progress = 0.0f;
       if (progress > 1.0f) progress = 1.0f;
       giftsDelivered = previousStopsGifts + (uint64_t)(currentStopGifts * progress);
@@ -132,7 +132,7 @@ void computeSantaMetrics(
       giftsDelivered = previousStopsGifts;
       giftRatePerSec = 0;
     } else {
-      float progress = (u - 12.0f) / 12.0f;
+      float progress = (u - 15.0f) / 15.0f;
       if (progress < 0.0f) progress = 0.0f;
       if (progress > 1.0f) progress = 1.0f;
       giftsDelivered = previousStopsGifts + (uint64_t)(currentStopGifts * progress);
@@ -153,7 +153,7 @@ void computeSantaMetrics(
   }
 
   // Payload progress percentage (1..10 segments)
-  float stopFraction = isFlight ? 0.0f : ((u - 12.0f) / 12.0f);
+  float stopFraction = isFlight ? 0.0f : ((u - 15.0f) / 15.0f);
   if (stopFraction > 1.0f) stopFraction = 1.0f;
   int dayProgressPct = isDay24Finale
     ? 100
@@ -183,8 +183,9 @@ void computeSantaMetrics(
   } else if (flightPhase == PHASE_ZNIZANIE) {
     strncpy(outMetrics.stageTitle, "HAMOWANIE I ZNIZANIE", sizeof(outMetrics.stageTitle));
   } else {
-    // Rooftop stay (u >= 12.0f)
-    int subPhase = (int)((u - 12.0f) / 4.0f);
+    // Rooftop stay (u >= 15.0f: 40% zrzut, 40% ciastka, 20% wznoszenie)
+    float landedU = u - 15.0f;
+    int subPhase = landedU < 6.0f ? 0 : landedU < 12.0f ? 1 : 2;
     if (subPhase == 0) {
       strncpy(outMetrics.stageTitle, "BEZPIECZNY DACH // ZRZUT PREZENTOW", sizeof(outMetrics.stageTitle));
     } else if (subPhase == 1) {
@@ -209,8 +210,8 @@ void computeSantaMetrics(
   if (isDay24Finale) {
     outMetrics.etaSeconds = 0;
   } else if (isFlight) {
-    outMetrics.etaSeconds = (int)ceilf(12.0f - u);
+    outMetrics.etaSeconds = (int)ceilf(15.0f - u);
   } else {
-    outMetrics.etaSeconds = (int)ceilf(24.0f - u);
+    outMetrics.etaSeconds = (int)ceilf(30.0f - u);
   }
 }

@@ -85,9 +85,9 @@ For the 240×135 ST7789v2 IPS display, the Cockpit Dashboard provides a high-con
   * Header: `AKTUALNA FAZA MISJI:` in cool slate.
   * Single concise status headline with dynamic contextual text:
     * In transit: `PRZELOT HIPERSONICZNY (M4.8)` in bright flame amber.
-    * Rooftop phase 1 (0–4s): `BEZPIECZNY DACH // ZRZUT PREZENTOW` in vivid emerald neon.
-    * Rooftop phase 2 (4–8s): `PRZERWA NA CIASTKA I MLEKO` in vivid emerald neon.
-    * Rooftop phase 3 (8–12s): `DACH ZALICZONY // START ZA CHWILE` in vivid emerald neon.
+    * Rooftop phase 1 (0–6s): `BEZPIECZNY DACH // ZRZUT PREZENTOW` in vivid emerald neon.
+    * Rooftop phase 2 (6–12s): `PRZERWA NA CIASTKA I MLEKO` in vivid emerald neon.
+    * Rooftop phase 3 (12–15s): `DACH ZALICZONY // START ZA CHWILE` in vivid emerald neon.
     * Grand Finale: `FINAL WIGILII: KRAKOW!` in pure white on flashing border.
 * **Telemetry Navigation Footer (Bottom)**:
   * Dynamic destination indicator: `CEL:` in Electric Cyan during flight vs `POSTOJ:` in Vivid Emerald on rooftops (or `FINAL:` in Amber Gold on Dec 24 finale), followed by target city name in pure white (`0xffff`).
@@ -115,7 +115,7 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 
 ### 4.2. Simulation Rhythm & Speed Ratio
 * **Real-World Itinerary**: 1 hour in transit (flight) + 1 hour in city (stop) = 2 hours per waypoint (12 stops = 24 hours).
-* **Hardcoded Web Simulation**: Scaled to **12 seconds in transit + 12 seconds landed in city** (**24 seconds total per waypoint**, `secPerCity = 24`).
+* **Hardcoded Web Simulation**: Scaled to **15 seconds in transit + 15 seconds landed in city** (**30 seconds total per waypoint**, `secPerCity = 30`).
 * **Day 24 Grand Finale Hold**: Once Santa lands in Kraków (#288), Santa remains landed in Kraków for an extended celebration hold (`FINAŁ: KRAKOW 🎁`).
 
 ---
@@ -175,23 +175,23 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 2. **Mathematical & Demographics Parity:**
    * Global 2.20 Billion children demographic model across the 12 Day 24 stops.
    * Cookie intake factor ($0.15 \times \text{gifts}$) and milk consumption ($0.0115 \text{ L} \times \text{gifts}$).
-   * 24s simulation cadence (`secPerCity = 24.0s`, 12s transit flight + 12s rooftop dwell).
+   * 30s simulation cadence (`secPerCity = 30.0s`, 15s transit flight + 15s rooftop dwell).
 3. **M5StickC-Plus SE Firmware Delivery:**
    * Zero dynamic heap allocations in frame render loop (`ScreenCockpit::render`).
    * SRAM usage: 11.0% (35.9 KB / 320 KB), safely under 25% budget.
    * Flash usage: 28.2% (885 KB / 3.0 MB).
    * Button A short click cycles `SCREEN_RADAR` $\leftrightarrow$ `SCREEN_COCKPIT`.
-   * 16 desktop Unity tests passing in 2.4s (`pio test -e native`).
+   * 18 desktop Unity tests passing in 4.2s (`pio test -e native`).
 
 ### 6.3. Milestone 2 Expansion: Side-View Santa Cam (Screen 3) (COMPLETE ✅)
 
 1. **Context-Aware Pixel-Art Cinematic Engine (`ScreenCam` / `camScreen.ts`):**
-   * Mode 1: *Hyper-Warp* (`u < 2.4s`, Flight 0–20%): Rapid horizontal speed streaks, sleigh micro-vibrations, supersonic dual-stage exhaust flames, and Rudolph clean nose indicator.
-   * Mode 2: *Cruising Sky / Przelot Stratosferyczny* (`2.4s <= u < 9.6s`, Flight 20–80%): Stratospheric cruise over the curved Earth globe, glowing cyan atmospheric limb, nocturnal continents with twinkling city lights, wispy clouds, and golden stardust particle trails.
-   * Mode 3: *Gliding Descent / Zniżanie* (`9.6s <= u < 12.0s`, Flight 80–100%): Santa floats down from upper sky toward snowy rolling ridges with pine trees growing in perspective, decorated with multi-colored twinkling Christmas fairy lights.
-   * Mode 4: *City Rooftop Chimney Cruise & Active Gift Drops* (`12.0s <= u < 16.0s`, Landed 0–4s): Sleigh cruising low over distinct separate townhouses, cottages, and chalets separated by snowy alleys with lampposts and pine trees; precision chimney-targeted present drops with parachutes landing directly into chimney mouths with delivery sparkle bursts.
-   * Mode 5: *Big Santa Cookie Break* (`16.0s <= u < 20.0s`, Landed 4–8s): Dedicated cozy fireplace close-up with cross-stacked dark oak logs, bed of glowing embers, organic licking flame tongues with thermal gradients, rising sparks, big jolly Santa Claus eating chocolate chip cookies, crumbs falling, cold glass of milk with striped straw, and `MNIAM! *` speech bubble.
-   * Mode 6: *Takeoff Climb / Wznoszenie* (`20.0s <= u < 24.0s`, Landed 8–12s): Sleigh ascending from ground altitude into the night sky, pine trees shrinking in reverse perspective with twinkling Christmas lights, Rudolph navigation beacon strobe, and trailing golden stardust.
+   * Mode 1: *Hyper-Warp* (`u < 4.5s`, Flight 0–30%): Rapid horizontal speed streaks, sleigh micro-vibrations, supersonic dual-stage exhaust flames, and Rudolph clean nose indicator.
+   * Mode 2: *Cruising Sky / Przelot Stratosferyczny* (`4.5s <= u < 12.0s`, Flight 30–80%): Stratospheric cruise over the curved Earth globe, glowing cyan atmospheric limb, nocturnal continents with twinkling city lights, wispy clouds, and golden stardust particle trails.
+   * Mode 3: *Gliding Descent / Zniżanie* (`12.0s <= u < 15.0s`, Flight 80–100%): Santa floats down from upper sky toward snowy rolling ridges with pine trees growing in perspective, decorated with multi-colored twinkling Christmas fairy lights.
+   * Mode 4: *City Rooftop Chimney Cruise & Active Gift Drops* (`15.0s <= u < 21.0s`, Landed 0–6s / 40%): Sleigh cruising low over distinct separate townhouses, cottages, and chalets separated by snowy alleys with lampposts and pine trees; precision chimney-targeted present drops with parachutes landing directly into chimney mouths with delivery sparkle bursts.
+   * Mode 5: *Big Santa Cookie Break* (`21.0s <= u < 27.0s`, Landed 6–12s / 40%): Dedicated cozy fireplace close-up with cross-stacked dark oak logs, bed of glowing embers, organic licking flame tongues with thermal gradients, rising sparks, big jolly Santa Claus eating chocolate chip cookies, crumbs falling, cold glass of milk with striped straw, and `MNIAM! *` speech bubble.
+   * Mode 6: *Takeoff Climb / Wznoszenie* (`27.0s <= u < 30.0s`, Landed 12–15s / 20%): Sleigh ascending from ground altitude into the night sky, pine trees shrinking in reverse perspective with twinkling Christmas lights, Rudolph navigation beacon strobe, and trailing golden stardust.
    * Mode 7: *Kraków Grand Finale Hold* (Dec 24 Stop 12 Arrival Lock): Santa landed overlooking Bazylika Mariacka (St. Mary's Basilica) spires silhouette with celebratory multi-color fireworks and `WESOŁYCH ŚWIĄT!` banner.
 2. **Unified 3-Screen Carousel Navigation:**
    * Button A short click rotates `SCREEN_RADAR` (0) $\rightarrow$ `SCREEN_COCKPIT` (1) $\rightarrow$ `SCREEN_CAM` (2) $\rightarrow$ `SCREEN_RADAR` (0).

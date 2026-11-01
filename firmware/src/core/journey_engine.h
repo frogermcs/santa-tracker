@@ -8,7 +8,7 @@
 // Educational Notes:
 // - Deterministic memory model: operates strictly on static memory (PROGMEM).
 // - No heap allocation (malloc/new) inside update() or getTelemetry().
-// - Simulation cadence: SEC_PER_CITY = 24.0s (12s flight easing + 12s landed stop).
+// - Simulation cadence: SEC_PER_CITY = 30.0s (15s flight easing + 15s landed stop).
 // - Day 24 Grand Finale: Stop 12 (Kraków) arrival lock permanently celebrates in Kraków.
 // ============================================================================
 

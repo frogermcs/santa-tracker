@@ -868,7 +868,7 @@ void ScreenCam::render(
 
   bool isFlight = (metrics.flightPhase != PHASE_DACH && metrics.flightPhase != PHASE_FINAL);
   bool isFinale = (metrics.flightPhase == PHASE_FINAL);
-  float flightProgress = telemetry.u / 12.0f;
+  float flightProgress = telemetry.u / 15.0f;
 
   // 1. Clear Screen with Deep Night Polar Navy (y = 14..119)
   _canvas->fillScreen(COLOR_BG_DARK);
@@ -905,7 +905,7 @@ void ScreenCam::render(
 
   } else if (isFlight) {
     // IN TRANSIT: HIGH FLIGHT MODES
-    if (flightProgress < 0.2f) {
+    if (flightProgress < 0.3f) {
       // MODE 1: Hyper-Warp
       int wrapW = SCREEN_WIDTH + 60;
       for (int i = 0; i < 22; i++) {
@@ -995,7 +995,8 @@ void ScreenCam::render(
     // CITY STAY: ROOFTOP CHIMNEY CRUISE & BIG SANTA COOKIE BREAK
     // ========================================================================
     int legFrame = ((int)(nowMs / 120)) % 2;
-    int citySubPhase = (int)((telemetry.u - 12.0f) / 4.0f);
+    float landedU = telemetry.u - 15.0f;
+    int citySubPhase = landedU < 6.0f ? 0 : landedU < 12.0f ? 1 : 2; // 0: Drop (0-6s), 1: Cookie (6-12s), 2: Climb (12-15s)
 
     if (citySubPhase == 0) {
       // MODE 4: Rooftop Chimney Cruise & Active Gift Drops
@@ -1036,7 +1037,7 @@ void ScreenCam::render(
       // MODE 6: Takeoff Climb ("Wznoszenie")
       drawParallaxStars(nowSec * 0.3f);
 
-      float climbP = (telemetry.u - 20.0f) / 4.0f;
+      float climbP = (telemetry.u - 27.0f) / 3.0f;
       if (climbP < 0.0f) climbP = 0.0f;
       if (climbP > 1.0f) climbP = 1.0f;
 

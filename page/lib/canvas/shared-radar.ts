@@ -29,7 +29,7 @@ export interface RadarWaypoint {
   stopTotal?: number;
 }
 
-export const SEC_PER_CITY = 24; // 12s flight + 12s stop (scaled 1:1 from 1hr flight + 1hr stop)
+export const SEC_PER_CITY = 30; // 15s flight + 15s stop (scaled 1:1 from 1hr flight + 1hr stop)
 
 export const JOURNEY_CITIES: RadarWaypoint[] = [
   { name: "GISBORNE",          lon: 178.0,  lat: -38.7, country: "Nowa Zelandia", continent: "Oceania" },

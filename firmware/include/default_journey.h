@@ -10,7 +10,7 @@
 const char DEFAULT_JOURNEY_JSON[] PROGMEM = R"rawliteral({
   "version": 2,
   "activeDay": 24,
-  "secPerCity": 24,
+  "secPerCity": 30,
   "speedMultiplier": 1,
   "route": [
     { "name": "GISBORNE",          "lon": 178.0176, "lat": -38.6623 },

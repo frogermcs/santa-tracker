@@ -189,11 +189,11 @@ describe("M5Canvas Simulator Parity Tests", () => {
 
     it("jumps to next city on Button B click and lands immediately", () => {
       const state = setup(0);
-      expect(state.simTime).toBe(12.0); // Stop 1 landed (u = 12.0)
+      expect(state.simTime).toBe(15.0); // Stop 1 landed (u = 15.0)
 
       update(state, { ...noButtons, wasPressedB: true }, 16, 16);
-      // Stop 2 landed = 1 * 24 + 12 = 36.0
-      expect(state.simTime).toBe(36.0);
+      // Stop 2 landed = 1 * 30 + 15 = 45.0
+      expect(state.simTime).toBe(45.0);
     });
 
     it("toggles sound on Button B long hold", () => {
@@ -207,24 +207,24 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(state.soundEnabled).toBe(true);
     });
 
-    it("computes accurate telemetry for 12s transit flight (CEL) and 12s landed stay (POSTOJ)", () => {
+    it("computes accurate telemetry for 15s transit flight (CEL) and 15s landed stay (POSTOJ)", () => {
       const state = setup(0);
 
-      // At simTime = 5.0s, transit flight phase (u = 5.0 < 12.0s)
+      // At simTime = 5.0s, transit flight phase (u = 5.0 < 15.0s)
       state.simTime = 5.0;
       const tFlight = getTelemetry(state);
       expect(tFlight.isFlightPhase).toBe(true);
       expect(tFlight.nextCityName).toBe("GISBORNE");
-      expect(tFlight.etaSeconds).toBe(7); // 12 - 5 = 7s remaining in flight
+      expect(tFlight.etaSeconds).toBe(10); // 15 - 5 = 10s remaining in flight
       expect(tFlight.u).toBe(5.0);
 
-      // At simTime = 16.0s, landed stay phase (u = 16.0 >= 12.0s)
-      state.simTime = 16.0;
+      // At simTime = 18.0s, landed stay phase (u = 18.0 >= 15.0s)
+      state.simTime = 18.0;
       const tLanded = getTelemetry(state);
       expect(tLanded.isFlightPhase).toBe(false);
       expect(tLanded.nextCityName).toBe("GISBORNE");
-      expect(tLanded.etaSeconds).toBe(8); // 24 - 16 = 8s remaining on roof
-      expect(tLanded.u).toBe(16.0);
+      expect(tLanded.etaSeconds).toBe(12); // 30 - 18 = 12s remaining on roof
+      expect(tLanded.u).toBe(18.0);
     });
 
     it("renders Radar and Cockpit screens without throwing errors", () => {
@@ -322,8 +322,8 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(camFlightStrings).toContain("KAMERA MIKOLAJA");
       expect(camFlightStrings).not.toContain("POSTOJ: ");
 
-      // --- 2. Rooftop Landed Stay (u = 16.0s >= 12.0s) ---
-      state.simTime = 16.0;
+      // --- 2. Rooftop Landed Stay (u = 22.0s >= 15.0s) ---
+      state.simTime = 22.0;
 
       // Radar Screen (Screen 0)
       state.activeScreen = 0;
@@ -355,7 +355,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
 
       // --- 3. December 24th Kraków Grand Finale ---
       state.activeDay = 24;
-      state.simTime = 11 * 24.0 + 12.0; // Kraków arrival
+      state.simTime = 11 * 30.0 + 15.0; // Kraków arrival
 
       // Radar Screen (Screen 0)
       state.activeScreen = 0;
@@ -390,7 +390,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
     it("locks indefinitely on Day 24 at Kraków without wrapping back to the Pacific", () => {
       const state = setup(0);
       state.activeDay = 24;
-      const krakowArrivalTime = 11 * 24.0 + 12.0; // 276.0s (Stop 11 arrival)
+      const krakowArrivalTime = 11 * 30.0 + 15.0; // 345.0s (Stop 11 arrival)
       state.simTime = krakowArrivalTime;
 
       // Simulate 120 seconds of continuous clock advancement
@@ -410,10 +410,10 @@ describe("M5Canvas Simulator Parity Tests", () => {
     it("loops continuously through all 12 stops on Days 1 to 23", () => {
       const state = setup(0);
       state.activeDay = 1;
-      const totalDayTime = 12 * 24.0; // 288.0s
-      state.simTime = totalDayTime - 1.0; // 287.0s
+      const totalDayTime = 12 * 30.0; // 360.0s
+      state.simTime = totalDayTime - 1.0; // 359.0s
 
-      // Advance by 2.0s (20 frames of 100ms) -> crosses 288.0s boundary
+      // Advance by 2.0s (20 frames of 100ms) -> crosses 360.0s boundary
       for (let i = 0; i < 20; i++) {
         update(state, noButtons, 100, 100 * i);
       }

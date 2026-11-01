@@ -151,7 +151,7 @@ The shared contract between the cloud API and the embedded client:
   "version": 2,
   "updatedAt": "2026-10-29T18:00:00Z",
   "activeDay": 24,
-  "secPerCity": 12,
+  "secPerCity": 30,
   "speedMultiplier": 1,
   "route": [
     { "name": "GISBORNE",          "lon": 178.0176, "lat": -38.6623 },

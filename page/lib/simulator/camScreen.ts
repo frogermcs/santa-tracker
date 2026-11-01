@@ -1024,42 +1024,42 @@ export const CAM_SCENE_DEFINITIONS: CamSceneInfo[] = [
     name: "Tryb 1: Hyper-Warp",
     badge: "TRYB HYPER-WARP",
     description: "Naddźwiękowe przyspieszenie, poziome smugi prędkości, wibracje kadłuba i rozbłyski nosa Rudolfa.",
-    timing: "Lot 0% – 20% (0.0s – 2.4s)",
+    timing: "Lot 0% – 30% (0.0s – 4.5s)",
   },
   {
     mode: 2,
     name: "Tryb 2: Przelot Stratosferyczny",
     badge: "PRZELOT STRATOSFERYCZNY",
     description: "Lot ponad krzywizną kuli ziemskiej, świecąca linia atmosfery, nocne kontynenty i rozgwieżdżony kosmos.",
-    timing: "Lot 20% – 80% (2.4s – 9.6s)",
+    timing: "Lot 30% – 80% (4.5s – 12.0s)",
   },
   {
     mode: 3,
     name: "Tryb 3: Zniżanie",
     badge: "ZNIZANIE",
     description: "Łagodne opadanie z pułapu ku ośnieżonym choinkom rosnącym w perspektywie, rozświetlonym kolorowymi lampkami świątecznymi.",
-    timing: "Lot 80% – 100% (9.6s – 12.0s)",
+    timing: "Lot 80% – 100% (12.0s – 15.0s)",
   },
   {
     mode: 4,
     name: "Tryb 4: Zrzut Prezentów",
     badge: "ZRZUT PREZENTOW",
     description: "Sanie płyną nisko nad przesuwanymi dachami, aktywne zrzucanie prezentów na spadochronach do kominów.",
-    timing: "Postój 0s – 4s (12.0s – 16.0s)",
+    timing: "Postój 0s – 6s (15.0s – 21.0s)",
   },
   {
     mode: 5,
     name: "Tryb 5: Przerwa na Ciastka i Mleko",
     badge: "PRZERWA NA CIASTKA I MLEKO",
     description: "Zbliżenie: powiększony Mikołaj przy ciepłym kominku, jedzenie ciastka z czekoladą, szklanka mleka i okruchy.",
-    timing: "Postój 4s – 8s (16.0s – 20.0s)",
+    timing: "Postój 6s – 12s (21.0s – 27.0s)",
   },
   {
     mode: 6,
     name: "Tryb 6: Wznoszenie",
     badge: "WZNOSZENIE",
     description: "Start i wznoszenie ponad ośnieżone choinki, które maleją w perspektywie, ku rozgwieżdżonemu niebu.",
-    timing: "Postój 8s – 12s (20.0s – 24.0s)",
+    timing: "Postój 12s – 15s (27.0s – 30.0s)",
   },
   {
     mode: 7,
@@ -1096,38 +1096,38 @@ export function renderCamScreen(
   if (options?.forcedMode !== undefined) {
     const p = Math.max(0, Math.min(1, options.forcedProgress ?? 0.5));
     switch (options.forcedMode) {
-      case 1: // Hyper-Warp (0..2.4s)
-        u = p * 2.39;
+      case 1: // Hyper-Warp (0..4.5s)
+        u = p * 4.49;
         isFlight = true;
         isFinale = false;
         break;
-      case 2: // Cruising Sky (2.4..9.6s)
-        u = 2.4 + p * 7.19;
+      case 2: // Cruising Sky (4.5..12.0s)
+        u = 4.5 + p * 7.49;
         isFlight = true;
         isFinale = false;
         break;
-      case 3: // Gliding Descent (9.6..12.0s)
-        u = 9.6 + p * 2.39;
+      case 3: // Gliding Descent (12.0..15.0s)
+        u = 12.0 + p * 2.99;
         isFlight = true;
         isFinale = false;
         break;
-      case 4: // Rooftop Chimney Cruise (12.0..16.0s)
-        u = 12.0 + p * 3.99;
+      case 4: // Rooftop Chimney Cruise (15.0..21.0s)
+        u = 15.0 + p * 5.99;
         isFlight = false;
         isFinale = false;
         break;
-      case 5: // Big Santa Cookie Break (16.0..20.0s)
-        u = 16.0 + p * 3.99;
+      case 5: // Big Santa Cookie Break (21.0..27.0s)
+        u = 21.0 + p * 5.99;
         isFlight = false;
         isFinale = false;
         break;
-      case 6: // Takeoff Climb (20.0..24.0s)
-        u = 20.0 + p * 3.99;
+      case 6: // Takeoff Climb (27.0..30.0s)
+        u = 27.0 + p * 2.99;
         isFlight = false;
         isFinale = false;
         break;
       case 7: // Kraków Finale Hold
-        u = 23.9;
+        u = 29.9;
         isFlight = false;
         isFinale = true;
         break;
@@ -1154,7 +1154,7 @@ export function renderCamScreen(
     isFinale
   );
 
-  const flightProgress = u / 12.0;
+  const flightProgress = u / 15.0;
 
   // 1. Clear Screen with Deep Night Polar Navy (y = 14..119)
   canvas.fillScreen(COLOR_BG_DARK);
@@ -1197,7 +1197,7 @@ export function renderCamScreen(
     // IN TRANSIT: HIGH FLIGHT MODES (WARP / CRUISING / DESCENT)
     // ========================================================================
 
-    if (flightProgress < 0.2) {
+    if (flightProgress < 0.3) {
       // ----------------------------------------------------------------------
       // MODE 1: Hyper-Warp (Speed Streaks & Intense Rudolph Nose Aura)
       // ----------------------------------------------------------------------
@@ -1297,7 +1297,8 @@ export function renderCamScreen(
     // CITY STAY: ROOFTOP CHIMNEY CRUISE & BIG SANTA COOKIE BREAK
     // ========================================================================
     const legFrame = Math.floor(nowMs / 120) % 2;
-    const citySubPhase = Math.floor((u - 12.0) / 4.0); // 0: Drop, 1: Cookie Close-up, 2: Climb
+    const landedU = u - 15.0;
+    const citySubPhase = landedU < 6.0 ? 0 : landedU < 12.0 ? 1 : 2; // 0: Drop (0-6s), 1: Cookie (6-12s), 2: Climb (12-15s)
 
     if (citySubPhase === 0) {
       // ----------------------------------------------------------------------
@@ -1349,7 +1350,7 @@ export function renderCamScreen(
       const isDebuggerAuto = options?.forcedMode === 6 && options.forcedProgress === undefined;
       const climbP = isDebuggerAuto
         ? ((nowSec * 0.25) % 1.0)
-        : Math.max(0, Math.min(1, (u - 20.0) / 4.0));
+        : Math.max(0, Math.min(1, (u - 27.0) / 3.0));
 
       // As Santa climbs higher into the sky, trees and ground shrink in perspective (1.0 -> 0.0)
       drawDescendingWinterLandscape(canvas, nowSec, 1.0 - climbP);

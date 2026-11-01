@@ -86,9 +86,9 @@ const SCREEN_WIDTH = 240;
 const SCREEN_HEIGHT = 135;
 const RADAR_CENTER_X = 120;
 const RADAR_CENTER_Y = 68;
-export const SEC_PER_CITY = 24.0; // 12s transit flight + 12s rooftop stay = 24s total per city (1:1 with 1h flight + 1h stay)
-export const FLIGHT_DURATION = 12.0; // 12s transit flight
-export const LANDED_DURATION = 12.0; // 12s rooftop stay
+export const SEC_PER_CITY = 30.0; // 15s transit flight + 15s rooftop stay = 30s total per city (1:1 with 1h flight + 1h stay)
+export const FLIGHT_DURATION = 15.0; // 15s transit flight
+export const LANDED_DURATION = 15.0; // 15s rooftop stay
 
 /**
  * Loads the 12 stops for the active Advent Day from the master schedule.
@@ -109,7 +109,7 @@ export function setDay(state: SimulatorAppState, dayNum: number): void {
   state.activeDay = validDay;
   state.cities = loadAdventDay(validDay);
   state.cityCount = state.cities.length;
-  state.simTime = FLIGHT_DURATION; // Start landed at Stop 1 (u = 12.0)
+  state.simTime = FLIGHT_DURATION; // Start landed at Stop 1 (u = 15.0)
   state.lastAction = `DZIEN ${validDay}`;
 }
 

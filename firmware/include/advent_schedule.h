@@ -399,7 +399,7 @@ inline bool loadAdventDay(int dayNumber, JourneyData& outData) {
   int dayIdx = dayNumber - 1;
   outData.version = 2;
   outData.activeDay = dayNumber;
-  outData.secPerCity = 24.0f; // 12s flight + 12s landed
+  outData.secPerCity = 30.0f; // 15s flight + 15s landed
   outData.speedMultiplier = 1.0f;
   outData.cityCount = ADVENT_STOPS_PER_DAY;
 

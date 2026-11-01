@@ -49,13 +49,13 @@ describe("ScreenCam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)", () => {
   });
 
   describe("Dynamic Sub-Phase Scene Determination", () => {
-    it("Mode 1: renders Hyper-Warp during initial acceleration (u < 2.4s)", () => {
+    it("Mode 1: renders Hyper-Warp during initial acceleration (u < 4.5s)", () => {
       const { sim } = createMockCanvas();
       const drawStringSpy = vi.spyOn(sim, "drawString");
       const state = setup(0);
       state.activeScreen = 2;
       state.activeDay = 15;
-      state.simTime = 1.0; // u = 1.0s (0 < 2.4s)
+      state.simTime = 2.0; // u = 2.0s (0 < 4.5s)
       const telemetry = getTelemetry(state);
 
       renderCamScreen(sim, state, telemetry, 1000);
@@ -65,13 +65,13 @@ describe("ScreenCam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)", () => {
       expect(strings).toContain("CEL: ");
     });
 
-    it("Mode 2: renders Cruising Sky with parallax during steady flight (2.4s <= u < 9.6s)", () => {
+    it("Mode 2: renders Cruising Sky with parallax during steady flight (4.5s <= u < 12.0s)", () => {
       const { sim } = createMockCanvas();
       const drawStringSpy = vi.spyOn(sim, "drawString");
       const state = setup(0);
       state.activeScreen = 2;
       state.activeDay = 10;
-      state.simTime = 6.0; // u = 6.0s (steady cruise)
+      state.simTime = 8.0; // u = 8.0s (steady cruise)
       const telemetry = getTelemetry(state);
 
       renderCamScreen(sim, state, telemetry, 2000);
@@ -81,13 +81,13 @@ describe("ScreenCam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)", () => {
       expect(strings).toContain("CEL: ");
     });
 
-    it("Mode 3: renders Gliding Descent approaching rooftops (9.6s <= u < 12.0s)", () => {
+    it("Mode 3: renders Gliding Descent approaching rooftops (12.0s <= u < 15.0s)", () => {
       const { sim } = createMockCanvas();
       const drawStringSpy = vi.spyOn(sim, "drawString");
       const state = setup(0);
       state.activeScreen = 2;
       state.activeDay = 5;
-      state.simTime = 10.5; // u = 10.5s (descent)
+      state.simTime = 13.5; // u = 13.5s (descent)
       const telemetry = getTelemetry(state);
 
       renderCamScreen(sim, state, telemetry, 3000);
@@ -97,13 +97,13 @@ describe("ScreenCam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)", () => {
       expect(strings).toContain("CEL: ");
     });
 
-    it("Mode 4: renders City Rooftop Chimney Cruise with gift drops (12.0s <= u < 16.0s)", () => {
+    it("Mode 4: renders City Rooftop Chimney Cruise with gift drops (15.0s <= u < 21.0s)", () => {
       const { sim } = createMockCanvas();
       const drawStringSpy = vi.spyOn(sim, "drawString");
       const state = setup(0);
       state.activeScreen = 2;
       state.activeDay = 7;
-      state.simTime = 14.0; // u = 14.0s (drop)
+      state.simTime = 18.0; // u = 18.0s (drop)
       const telemetry = getTelemetry(state);
 
       renderCamScreen(sim, state, telemetry, 4000);
@@ -114,13 +114,13 @@ describe("ScreenCam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)", () => {
       expect(strings).not.toContain("CEL: ");
     });
 
-    it("Mode 5: renders Cookie Break during rooftop snack phase (16.0s <= u < 20.0s)", () => {
+    it("Mode 5: renders Cookie Break during rooftop snack phase (21.0s <= u < 27.0s)", () => {
       const { sim } = createMockCanvas();
       const drawStringSpy = vi.spyOn(sim, "drawString");
       const state = setup(0);
       state.activeScreen = 2;
       state.activeDay = 12;
-      state.simTime = 18.0; // u = 18.0s (cookie break)
+      state.simTime = 24.0; // u = 24.0s (cookie break)
       const telemetry = getTelemetry(state);
 
       renderCamScreen(sim, state, telemetry, 5000);
@@ -131,13 +131,13 @@ describe("ScreenCam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)", () => {
       expect(strings).toContain("POSTOJ: ");
     });
 
-    it("Mode 6: renders Takeoff Climb (Wznoszenie) above Christmas trees (20.0s <= u < 24.0s)", () => {
+    it("Mode 6: renders Takeoff Climb (Wznoszenie) above Christmas trees (27.0s <= u < 30.0s)", () => {
       const { sim } = createMockCanvas();
       const drawStringSpy = vi.spyOn(sim, "drawString");
       const state = setup(0);
       state.activeScreen = 2;
       state.activeDay = 18;
-      state.simTime = 22.0; // u = 22.0s (takeoff climb)
+      state.simTime = 28.5; // u = 28.5s (takeoff climb)
       const telemetry = getTelemetry(state);
 
       renderCamScreen(sim, state, telemetry, 6000);
@@ -153,7 +153,7 @@ describe("ScreenCam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)", () => {
       const state = setup(0);
       state.activeScreen = 2;
       state.activeDay = 24;
-      state.simTime = 11 * 24.0 + 12.0; // Stop 11 landed in Kraków
+      state.simTime = 11 * 30.0 + 15.0; // Stop 11 landed in Kraków
       const telemetry = getTelemetry(state);
 
       renderCamScreen(sim, state, telemetry, 7000);
