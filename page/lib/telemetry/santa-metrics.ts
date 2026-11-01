@@ -10,6 +10,8 @@
  * - Mleko: ~25.3 Mln litrów (1 szklanka 200ml na ~17 prezentów)
  */
 
+import { getMissionPhaseInfo } from "./stage-definitions";
+
 export interface SantaCockpitMetrics {
   // Dynamika lotu
   machSpeed: number;
@@ -31,8 +33,9 @@ export interface SantaCockpitMetrics {
   milkLiters: number;
   milkLitersDisplay: string;
 
-  // Faza misji i status (po polsku)
+  // Faza misji i status (po polsku — pojedyncze źródło prawdy ze stage-definitions)
   stageTitle: string;
+  stageDescription: string;
   stageDetail: string;
   targetCity: string;
   etaSeconds: number;
@@ -152,37 +155,11 @@ export function computeSantaMetrics(
   const cookiesEaten = Math.floor(giftsDelivered * 0.15);
   const milkLiters = Math.floor(giftsDelivered * 0.0115);
 
-  // 4. Aktualna faza misji (Teksty w języku polskim)
-  let stageTitle = "PRZELOT HIPERSONICZNY (M4.8)";
-  let stageDetail = "KORYTARZ STRATOSFERYCZNY";
-
-  if (isDay24Finale) {
-    stageTitle = "FINAL WIGILII: KRAKOW!";
-    stageDetail = "MISJA ZAKONCZONA // WESOLYCH SWIAT";
-  } else if (flightPhase === "START") {
-    stageTitle = "START // HYPER-ROZPEDZANIE";
-    stageDetail = "MOC CIAGU 100% // WZNOSZENIE";
-  } else if (flightPhase === "PRZELOT") {
-    stageTitle = "PRZELOT HIPERSONICZNY (M4.8)";
-    stageDetail = "KORYTARZ POLARNY // AUTOPILOT ON";
-  } else if (flightPhase === "ZNIZANIE") {
-    stageTitle = "HAMOWANIE I ZNIZANIE";
-    stageDetail = "PODEJSCIE DO LADOWANIA NA DACHU";
-  } else {
-    // Postój na dachu (u >= 15s, 15 sekund na dachu: 40% zrzut, 40% ciastka, 20% wznoszenie)
-    const landedU = u - 15.0;
-    const subPhase = landedU < 6.0 ? 0 : landedU < 12.0 ? 1 : 2;
-    if (subPhase === 0) {
-      stageTitle = "BEZPIECZNY DACH // ZRZUT PREZENTOW";
-      stageDetail = "KOMIN OTWARTY // ZRZUT W TOKU";
-    } else if (subPhase === 1) {
-      stageTitle = "PRZERWA NA CIASTKA I MLEKO";
-      stageDetail = "UZUPELNIANIE PALIWA MIKOLAJA";
-    } else {
-      stageTitle = "DACH ZALICZONY // START ZA CHWILE";
-      stageDetail = "SYNCHRONIZACJA ZAPRZEGU RENIFEROW";
-    }
-  }
+  // 4. Aktualna faza misji (Teksty w języku polskim ze wspólnego źródła wiedzy: stage-definitions)
+  const phaseInfo = getMissionPhaseInfo(u, isDay24Finale);
+  const stageTitle = phaseInfo.badge;
+  const stageDescription = phaseInfo.description;
+  const stageDetail = phaseInfo.timing;
 
   const etaSeconds = isDay24Finale ? 0 : Math.ceil(isFlight ? 15.0 - u : 30.0 - u);
 
@@ -202,6 +179,7 @@ export function computeSantaMetrics(
     milkLiters,
     milkLitersDisplay: `${formatCompact(milkLiters)} L`,
     stageTitle,
+    stageDescription,
     stageDetail,
     targetCity: targetName.toUpperCase(),
     etaSeconds,

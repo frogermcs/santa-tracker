@@ -374,19 +374,19 @@ void test_santa_metrics_flight_dynamics(void) {
   computeSantaMetrics(24, 0, 2.0f, 0.0f, "GISBORNE", false, m);
   TEST_ASSERT_EQUAL_INT(PHASE_START, m.flightPhase);
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 1.87f, m.machSpeed);
-  TEST_ASSERT_EQUAL_STRING("START // HYPER-ROZPEDZANIE", m.stageTitle);
+  TEST_ASSERT_EQUAL_STRING("TRYB HYPER-WARP", m.stageTitle);
 
   // PRZELOT phase: u = 7.5s (flightProgress = 0.5)
   computeSantaMetrics(24, 0, 7.5f, 0.0f, "GISBORNE", false, m);
   TEST_ASSERT_EQUAL_INT(PHASE_PRZELOT, m.flightPhase);
   TEST_ASSERT_FLOAT_WITHIN(0.4f, 4.8f, m.machSpeed);
-  TEST_ASSERT_EQUAL_STRING("PRZELOT HIPERSONICZNY (M4.8)", m.stageTitle);
+  TEST_ASSERT_EQUAL_STRING("PRZELOT STRATOSFERYCZNY", m.stageTitle);
 
   // ZNIZANIE phase: u = 13.5s (flightProgress = 0.9)
   computeSantaMetrics(24, 0, 13.5f, 0.0f, "GISBORNE", false, m);
   TEST_ASSERT_EQUAL_INT(PHASE_ZNIZANIE, m.flightPhase);
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 2.4f, m.machSpeed);
-  TEST_ASSERT_EQUAL_STRING("HAMOWANIE I ZNIZANIE", m.stageTitle);
+  TEST_ASSERT_EQUAL_STRING("ZNIZANIE", m.stageTitle);
 
   // DACH phase: u = 15.0s
   computeSantaMetrics(24, 0, 15.0f, 0.0f, "GISBORNE", false, m);
@@ -403,7 +403,7 @@ void test_santa_metrics_rooftop_subphases(void) {
 
   // Sub-phase 0 (0-6s rooftop -> u = 18.0s): Gift drop
   computeSantaMetrics(24, 1, 18.0f, 0.0f, "BETHLEHEM", false, m);
-  TEST_ASSERT_EQUAL_STRING("BEZPIECZNY DACH // ZRZUT PREZENTOW", m.stageTitle);
+  TEST_ASSERT_EQUAL_STRING("ZRZUT PREZENTOW", m.stageTitle);
   TEST_ASSERT_TRUE(m.giftRatePerSec > 0);
 
   // Sub-phase 1 (6-12s rooftop -> u = 24.0s): Cookie break
@@ -412,7 +412,7 @@ void test_santa_metrics_rooftop_subphases(void) {
 
   // Sub-phase 2 (12-15s rooftop -> u = 28.5s): Preparing for launch
   computeSantaMetrics(24, 1, 28.5f, 0.0f, "BETHLEHEM", false, m);
-  TEST_ASSERT_EQUAL_STRING("DACH ZALICZONY // START ZA CHWILE", m.stageTitle);
+  TEST_ASSERT_EQUAL_STRING("WZNOSZENIE", m.stageTitle);
 }
 
 // Test 16: Validate Day 24 Demographic Totals & Grand Finale Values
@@ -425,7 +425,7 @@ void test_santa_metrics_krakow_finale(void) {
   TEST_ASSERT_EQUAL_FLOAT(0.0f, m.machSpeed);
   TEST_ASSERT_EQUAL_INT(219, m.altitudeM); // Kraków altitude
   TEST_ASSERT_EQUAL_STRING("219 M", m.altitudeDisplay);
-  TEST_ASSERT_EQUAL_STRING("FINAL WIGILII: KRAKOW!", m.stageTitle);
+  TEST_ASSERT_EQUAL_STRING("WESOLYCH SWIAT!", m.stageTitle);
   TEST_ASSERT_EQUAL_INT(0, m.etaSeconds);
 
   // Exactly 2.20 Billion gifts delivered

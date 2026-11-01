@@ -1003,72 +1003,19 @@ function drawDescendingWinterLandscape(
   }
 }
 
-export type CamSceneMode = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+import {
+  CamSceneMode,
+  CamSceneInfo,
+  CAM_SCENE_DEFINITIONS,
+} from "../telemetry/stage-definitions";
+
+export type { CamSceneMode, CamSceneInfo };
+export { CAM_SCENE_DEFINITIONS };
 
 export interface CamRenderOptions {
   forcedMode?: CamSceneMode;
   forcedProgress?: number; // 0..1 progress within that phase
 }
-
-export interface CamSceneInfo {
-  mode: CamSceneMode;
-  name: string;
-  badge: string;
-  description: string;
-  timing: string;
-}
-
-export const CAM_SCENE_DEFINITIONS: CamSceneInfo[] = [
-  {
-    mode: 1,
-    name: "Tryb 1: Hyper-Warp",
-    badge: "TRYB HYPER-WARP",
-    description: "Naddźwiękowe przyspieszenie, poziome smugi prędkości, wibracje kadłuba i rozbłyski nosa Rudolfa.",
-    timing: "Lot 0% – 30% (0.0s – 4.5s)",
-  },
-  {
-    mode: 2,
-    name: "Tryb 2: Przelot Stratosferyczny",
-    badge: "PRZELOT STRATOSFERYCZNY",
-    description: "Lot ponad krzywizną kuli ziemskiej, świecąca linia atmosfery, nocne kontynenty i rozgwieżdżony kosmos.",
-    timing: "Lot 30% – 80% (4.5s – 12.0s)",
-  },
-  {
-    mode: 3,
-    name: "Tryb 3: Zniżanie",
-    badge: "ZNIZANIE",
-    description: "Łagodne opadanie z pułapu ku ośnieżonym choinkom rosnącym w perspektywie, rozświetlonym kolorowymi lampkami świątecznymi.",
-    timing: "Lot 80% – 100% (12.0s – 15.0s)",
-  },
-  {
-    mode: 4,
-    name: "Tryb 4: Zrzut Prezentów",
-    badge: "ZRZUT PREZENTOW",
-    description: "Sanie płyną nisko nad przesuwanymi dachami, aktywne zrzucanie prezentów na spadochronach do kominów.",
-    timing: "Postój 0s – 6s (15.0s – 21.0s)",
-  },
-  {
-    mode: 5,
-    name: "Tryb 5: Przerwa na Ciastka i Mleko",
-    badge: "PRZERWA NA CIASTKA I MLEKO",
-    description: "Zbliżenie: powiększony Mikołaj przy ciepłym kominku, jedzenie ciastka z czekoladą, szklanka mleka i okruchy.",
-    timing: "Postój 6s – 12s (21.0s – 27.0s)",
-  },
-  {
-    mode: 6,
-    name: "Tryb 6: Wznoszenie",
-    badge: "WZNOSZENIE",
-    description: "Start i wznoszenie ponad ośnieżone choinki, które maleją w perspektywie, ku rozgwieżdżonemu niebu.",
-    timing: "Postój 12s – 15s (27.0s – 30.0s)",
-  },
-  {
-    mode: 7,
-    name: "Tryb 7: Wesołych Świąt!",
-    badge: "WESOŁYCH ŚWIĄT!",
-    description: "Permanentna celebracja 24 grudnia: sanie na dachu z widokiem na wieże Bazyliki Mariackiej i fajerwerki.",
-    timing: "Dzień 24 / Stop 12 (Blokada Przybycia)",
-  },
-];
 
 // ============================================================================
 // SCREEN 3: Side-View Santa Cam (Kamera Mikołaja)

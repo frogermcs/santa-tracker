@@ -309,7 +309,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
       const cockpitFlightStrings = drawStringSpy.mock.calls.map((c) => c[0]);
       expect(cockpitFlightStrings).toContain("CEL: ");
       expect(cockpitFlightStrings).toContain("GISBORNE");
-      expect(cockpitFlightStrings).toContain("PRZELOT HIPERSONICZNY (M4.8)");
+      expect(cockpitFlightStrings).toContain("PRZELOT STRATOSFERYCZNY");
       expect(cockpitFlightStrings).not.toContain("POSTOJ: ");
 
       // Santa Cam Screen (Screen 2)
@@ -372,7 +372,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
       const cockpitFinaleStrings = drawStringSpy.mock.calls.map((c) => c[0]);
       expect(cockpitFinaleStrings).toContain("FINAL: ");
       expect(cockpitFinaleStrings).toContain("KRAKOW");
-      expect(cockpitFinaleStrings).toContain("FINAL WIGILII: KRAKOW!");
+      expect(cockpitFinaleStrings).toContain("WESOŁYCH ŚWIĄT!");
       expect(cockpitFinaleStrings).toContain("WIGILIA!");
 
       // Santa Cam Screen (Screen 2)

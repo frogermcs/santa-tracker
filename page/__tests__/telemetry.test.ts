@@ -21,10 +21,11 @@ describe("Santa Telemetry Calculations (computeSantaMetrics)", () => {
       expect(metrics.giftRateDisplay).toBe("0/s");
     });
 
-    it("displays hypersonic transit stage title", () => {
+    it("displays hypersonic transit stage title and description", () => {
       const metrics = computeSantaMetrics(24, 3, 7.5, 100.0, "KHARTOUM", false);
 
-      expect(metrics.stageTitle).toMatch(/^PRZELOT HIPERSONICZNY/);
+      expect(metrics.stageTitle).toBe("PRZELOT STRATOSFERYCZNY");
+      expect(metrics.stageDescription).toContain("krzywizną kuli ziemskiej");
     });
   });
 
@@ -50,15 +51,18 @@ describe("Santa Telemetry Calculations (computeSantaMetrics)", () => {
     it("transitions rooftop stages accurately across the 15s stay", () => {
       // Phase 1 (0..6s on roof: u = 15..21)
       const phase1 = computeSantaMetrics(24, 3, 17.0, 100.0, "KHARTOUM", false);
-      expect(phase1.stageTitle).toBe("BEZPIECZNY DACH // ZRZUT PREZENTOW");
+      expect(phase1.stageTitle).toBe("ZRZUT PREZENTOW");
+      expect(phase1.stageDescription).toContain("spadochronach");
 
       // Phase 2 (6..12s on roof: u = 21..27)
       const phase2 = computeSantaMetrics(24, 3, 23.0, 100.0, "KHARTOUM", false);
       expect(phase2.stageTitle).toBe("PRZERWA NA CIASTKA I MLEKO");
+      expect(phase2.stageDescription).toContain("kominku");
 
       // Phase 3 (12..15s on roof: u = 27..30)
       const phase3 = computeSantaMetrics(24, 3, 28.5, 100.0, "KHARTOUM", false);
-      expect(phase3.stageTitle).toBe("DACH ZALICZONY // START ZA CHWILE");
+      expect(phase3.stageTitle).toBe("WZNOSZENIE");
+      expect(phase3.stageDescription).toContain("choinki");
     });
   });
 
@@ -68,7 +72,8 @@ describe("Santa Telemetry Calculations (computeSantaMetrics)", () => {
       const metrics = computeSantaMetrics(24, 11, 15.0, 100.0, "KRAKOW", true);
 
       expect(metrics.flightPhase).toBe("FINAL");
-      expect(metrics.stageTitle).toBe("FINAL WIGILII: KRAKOW!");
+      expect(metrics.stageTitle).toBe("WESOŁYCH ŚWIĄT!");
+      expect(metrics.stageDescription).toContain("Bazyliki Mariackiej");
       expect(metrics.machSpeed).toBe(0.0);
       expect(metrics.altitudeM).toBe(219);
       // All 2.20B global gifts delivered

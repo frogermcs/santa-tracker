@@ -173,25 +173,25 @@ void computeSantaMetrics(
   formatCompact(outMetrics.milkLiters, milkCompact, sizeof(milkCompact));
   snprintf(outMetrics.milkLitersDisplay, sizeof(outMetrics.milkLitersDisplay), "%s L", milkCompact);
 
-  // 4. Mission Phase Tactical Title
+  // 4. Mission Phase Tactical Title (1:1 Parity with stage-definitions)
   if (isDay24Finale) {
-    strncpy(outMetrics.stageTitle, "FINAL WIGILII: KRAKOW!", sizeof(outMetrics.stageTitle));
+    strncpy(outMetrics.stageTitle, "WESOLYCH SWIAT!", sizeof(outMetrics.stageTitle));
   } else if (flightPhase == PHASE_START) {
-    strncpy(outMetrics.stageTitle, "START // HYPER-ROZPEDZANIE", sizeof(outMetrics.stageTitle));
+    strncpy(outMetrics.stageTitle, "TRYB HYPER-WARP", sizeof(outMetrics.stageTitle));
   } else if (flightPhase == PHASE_PRZELOT) {
-    strncpy(outMetrics.stageTitle, "PRZELOT HIPERSONICZNY (M4.8)", sizeof(outMetrics.stageTitle));
+    strncpy(outMetrics.stageTitle, "PRZELOT STRATOSFERYCZNY", sizeof(outMetrics.stageTitle));
   } else if (flightPhase == PHASE_ZNIZANIE) {
-    strncpy(outMetrics.stageTitle, "HAMOWANIE I ZNIZANIE", sizeof(outMetrics.stageTitle));
+    strncpy(outMetrics.stageTitle, "ZNIZANIE", sizeof(outMetrics.stageTitle));
   } else {
     // Rooftop stay (u >= 15.0f: 40% zrzut, 40% ciastka, 20% wznoszenie)
     float landedU = u - 15.0f;
     int subPhase = landedU < 6.0f ? 0 : landedU < 12.0f ? 1 : 2;
     if (subPhase == 0) {
-      strncpy(outMetrics.stageTitle, "BEZPIECZNY DACH // ZRZUT PREZENTOW", sizeof(outMetrics.stageTitle));
+      strncpy(outMetrics.stageTitle, "ZRZUT PREZENTOW", sizeof(outMetrics.stageTitle));
     } else if (subPhase == 1) {
       strncpy(outMetrics.stageTitle, "PRZERWA NA CIASTKA I MLEKO", sizeof(outMetrics.stageTitle));
     } else {
-      strncpy(outMetrics.stageTitle, "DACH ZALICZONY // START ZA CHWILE", sizeof(outMetrics.stageTitle));
+      strncpy(outMetrics.stageTitle, "WZNOSZENIE", sizeof(outMetrics.stageTitle));
     }
   }
 
