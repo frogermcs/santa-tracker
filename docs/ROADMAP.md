@@ -73,11 +73,7 @@ stateDiagram-v2
 
 ---
 
-## Milestone 2: Context-Aware Multi-Screen Visual Experience (ACTIVE 🎯)
-
-> [!NOTE]
-> **Why Multi-Screen Before Real-Time Clock?**
-> We are currently ~1 month before December. Connecting the hardware to the live real-time clock (NTP/RTC) now would freeze Santa until December 1st and prevent interactive visual development and testing. We remain on **simulated/demo clock mode** (`secPerCity = 12s`, Day & City button cycling) to build, animate, and evaluate all screens and states smoothly. Real-Time Clock progression will be delivered as the final milestone right before December.
+## Milestone 2: Context-Aware Multi-Screen Visual Experience (COMPLETE ✅)
 
 * **Objective:** Deliver the 2 remaining core screens on the web companion emulator first, then port them to the M5StickC firmware with strict 1:1 parity and zero dynamic heap allocation.
 * **Sequential Delivery Rule:** **Web Companion App First (`page/`), Firmware Second (`firmware/`)**.
@@ -85,20 +81,16 @@ stateDiagram-v2
   - [x] **Screen 2: Cockpit Dashboard (`ui/screen_cockpit`) (COMPLETE ✅):**
     * [x] **Web Living Specification:** 1:1 `renderCockpitScreen()` in `iotAppLogic.ts` with modern aerospace glass cockpit palette, multi-color Mach 4.8 gauge, demographic gift distribution, pixel-art cookies & milk, and dynamic tactical mission phase box.
     * [x] **C++ Firmware Port (`firmware/src/ui/screen_cockpit.cpp`):** Direct zero-heap port to LovyanGFX for ST7789v2 IPS display with 16 native Unity tests passing in 1.8s.
-  - [ ] **Screen 3: Side-View Santa Cam (`ui/screen_cam`) (NEXT 🎯):**
-    * **During Transit (Flight Phase):**
-      - Mode A: *Cruising Sky* — Rudolph & sleigh bobbing through parallax starry skies, falling snowflakes, and silhouetted mountain pines.
-      - Mode B: *Hyper-Warp* — Hyperspace star streaks, sleigh shake, glowing red Rudolph nose aura when speed accelerates.
-    * **During City Stay (Landed Gift Drop Phase):**
-      - Mode C: *Chimney Drop* — Parachuting wrapped gift boxes onto scrolling cozy rooftop chimneys.
-      - Mode D: *Cookie & Milk Break* — Santa eating cookies next to a fireplace with an animated cookie munch counter.
+  - [x] **Screen 3: Side-View Santa Cam (`ui/screen_cam`) (COMPLETE ✅):**
+    * [x] **Web Living Specification:** 1:1 `camScreen.ts` / `renderCamScreen()` in `iotAppLogic.ts` featuring 7 dynamic sub-phases (Hyper-Warp, Cruising Sky with 2-frame reindeer gallop, Gliding Descent, City Rooftop Chimney Cruise with active parachuting gift drops into scrolling chimneys, Flying Cookie Snack, Takeoff Climb, and Kraków Grand Finale with Bazylika Mariacka spires & fireworks).
+    * [x] **C++ Firmware Port (`firmware/src/ui/screen_cam.cpp`):** Direct zero-heap port to LovyanGFX for ST7789v2 IPS display with 18 native Unity tests passing in 2.0s.
   - [x] **Screen Cycling & Navigation:**
-    * [x] Carousel cycling on Button A: `Screen 1 (Radar)` $\leftrightarrow$ `Screen 2 (Cockpit)`.
+    * [x] Circular 3-screen carousel on Button A: `Screen 1 (Radar)` $\rightarrow$ `Screen 2 (Cockpit)` $\rightarrow$ `Screen 3 (Santa Cam)` $\rightarrow$ `Screen 1`.
     * [x] Hardware button parity (Button A: Screen Toggle, Button B: City Advance, Button B Hold: Sound Chirp Mute).
 
 ---
 
-## Milestone 3: Parent Customization & Wi-Fi Management
+## Milestone 3: Parent Customization & Wi-Fi Management (ACTIVE 🎯)
 
 * **Objective:** Enable parents to customize Santa's December 24th route (e.g. inject their hometown) and configure Wi-Fi.
 * **Key Deliverables:**

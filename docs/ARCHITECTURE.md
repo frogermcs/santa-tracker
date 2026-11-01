@@ -15,6 +15,7 @@ flowchart TD
         IoTLogic["iotAppLogic.ts<br/>(Zero-Allocation Portable C++ Logic)"]
         RootPage["/ Root Viewport<br/>(1x Physical ST7789v2 240x135 Enclosure)"]
         MapDebugger["/map-debugger<br/>(Vector Coordinates Inspector)"]
+        SceneDebugger["/scene-debugging<br/>(7-Scene Multi-Cam Matrix)"]
         
         IoTLogic --> M5CanvasSim
         M5CanvasSim --> RootPage
@@ -57,8 +58,27 @@ To eliminate bugs and compilation cycle delays on physical hardware, every firmw
 | **Simulation Kernel** | `iotAppLogic.ts` (`JourneyEngine`) | `core/journey_engine.cpp` | Identical easing curve (`easeInOut`), $O(1)$ time wrapping, and Kraków finale lock |
 | **Screen 1: Radar** | `renderRadarScreen()` in `iotAppLogic.ts` | `ui/screen_radar.cpp` | CRT phosphor palette, 360° sweep ray, pulsing red beacon, 912-dot land matrix |
 | **Screen 2: Cockpit**| `renderCockpitScreen()` in `iotAppLogic.ts` | `ui/screen_cockpit.cpp` (COMPLETE ✅) | Modern full-color glass cockpit, Mach gauge, pixel-art sustenance icons |
+| **Screen 3: Santa Cam**| `camScreen.ts` / `renderCamScreen()` in `iotAppLogic.ts` | `ui/screen_cam.cpp` (COMPLETE ✅) | 7-scene side-view animated pixel-art camera (Warp, Stratospheric flight with stars, Gliding descent, Rooftop gift drop, Fireplace cookie break, Takeoff climb, Kraków Grand Finale) |
 | **Coastline Matrix** | `landDots.ts` (912 coordinates) | `land_dots.h` (PROGMEM) | Byte-for-byte identical dot coordinates |
 | **Advent Schedule**  | `advent-schedule.ts` (288 stops) | `advent_schedule.h` (PROGMEM) | Exact 24-day itinerary, windows, and geographical coordinates |
+
+### 2.1. Simulation Cadence & Scene Timing Architecture
+
+Each city visit is structured on a deterministic parameter $u \in [0.0\text{s}, 30.0\text{s}]$ (`SEC_PER_CITY = 30.0s`), split evenly into a 15.0-second in-transit flight phase and a 15.0-second rooftop landed dwell phase:
+
+$$\text{City Cycle (30.0s)} = \text{Flight (15.0s)} + \text{Landed Dwell (15.0s)}$$
+
+#### Phase Partition & Timing Breakdown:
+
+| Sub-Phase | Mode / Scene | Parameter Window ($u$) | Duration | Share | Mathematical & Animation Formula |
+|---|---|:---:|:---:|:---:|---|
+| **Flight 1** | **Hyper-Warp Mode** (`TRYB HYPER-WARP`) | $0.0\text{s} \le u < 4.5\text{s}$ | **4.5s** | 30% | `flightProgress = u / 15.0 < 0.30`<br/>Mach acceleration ($M 0.0 \to 4.2$), dual jet flames, horizontal streaks |
+| **Flight 2** | **Stratospheric Flight** (`PRZELOT STRATOSFERYCZNY`) | $4.5\text{s} \le u < 12.0\text{s}$ | **7.5s** | 50% | `0.30 <= flightProgress < 0.80`<br/>Cruising speed ($M 4.8$), 48 cosmic stars, curved Earth globe & shooting star |
+| **Flight 3** | **Gliding Descent** (`ZNIZANIE`) | $12.0\text{s} \le u < 15.0\text{s}$ | **3.0s** | 20% | `descentP = (flightProgress - 0.80) / 0.20`<br/>Mach deceleration ($M 4.8 \to 0.0$), trees grow in perspective with fairy lights |
+| **Landed 1** | **Gift Drop** (`ZRZUT PREZENTOW`) | $15.0\text{s} \le u < 21.0\text{s}$ | **6.0s** | 40% | `landedU = u - 15.0 < 6.0`<br/>Rooftop cruise, parachuting presents drop directly into chimneys |
+| **Landed 2** | **Cookie & Milk Break** (`PRZERWA NA CIASTKA I MLEKO`) | $21.0\text{s} \le u < 27.0\text{s}$ | **6.0s** | 40% | `6.0 <= landedU < 12.0`<br/>Fireplace hearth, organic flame tongues, cookie snacking & milk sipping |
+| **Landed 3** | **Takeoff Climb** (`WZNOSZENIE`) | $27.0\text{s} \le u < 30.0\text{s}$ | **3.0s** | 20% | `climbP = (u - 27.0) / 3.0`<br/>Ascent into the stars, ground & trees shrink in reverse perspective |
+| **Grand Finale** | **Merry Christmas!** (`WESOŁYCH ŚWIĄT!`, Kraków) | $u \ge 15.0\text{s}$ *(Dec 24, Stop 12)* | **Permanent** | — | Arrival lock in Kraków: Bazylika Mariacka spires silhouette, fireworks & banner |
 
 ---
 
@@ -149,7 +169,7 @@ The shared contract between the cloud API and the embedded client:
   "version": 2,
   "updatedAt": "2026-10-29T18:00:00Z",
   "activeDay": 24,
-  "secPerCity": 12,
+  "secPerCity": 30,
   "speedMultiplier": 1,
   "route": [
     { "name": "GISBORNE",          "lon": 178.0176, "lat": -38.6623 },

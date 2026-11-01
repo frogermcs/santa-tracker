@@ -83,12 +83,14 @@ For the 240×135 ST7789v2 IPS display, the Cockpit Dashboard provides a high-con
 * **Mission Phase Tactical Box (Full Width, Lower Middle)**:
   * Sleek avionics console panel (`0x0842`) framed by dynamic status borders: Electric Cyan during flight, Vivid Emerald Neon on rooftops, and flashing Gold/Red during the Kraków finale.
   * Header: `AKTUALNA FAZA MISJI:` in cool slate.
-  * Single concise status headline with dynamic contextual text:
-    * In transit: `PRZELOT HIPERSONICZNY (M4.8)` in bright flame amber.
-    * Rooftop phase 1 (0–4s): `BEZPIECZNY DACH // ZRZUT PREZENTOW` in vivid emerald neon.
-    * Rooftop phase 2 (4–8s): `PRZERWA NA CIASTKA I MLEKO` in vivid emerald neon.
-    * Rooftop phase 3 (8–12s): `DACH ZALICZONY // START ZA CHWILE` in vivid emerald neon.
-    * Grand Finale: `FINAL WIGILII: KRAKOW!` in pure white on flashing border.
+  * Single concise status headline with dynamic contextual text (unified with canonical `stage-definitions.ts`):
+    * Flight mode 1 (0–4.5s): `TRYB HYPER-WARP` in bright flame amber.
+    * Flight mode 2 (4.5–12.0s): `PRZELOT STRATOSFERYCZNY` in bright flame amber.
+    * Flight mode 3 (12.0–15.0s): `ZNIZANIE` in bright flame amber.
+    * Rooftop mode 4 (0–6s): `ZRZUT PREZENTOW` in vivid emerald neon.
+    * Rooftop mode 5 (6–12s): `PRZERWA NA CIASTKA I MLEKO` in vivid emerald neon.
+    * Rooftop mode 6 (12–15s): `WZNOSZENIE` in vivid emerald neon.
+    * Grand Finale: `WESOŁYCH ŚWIĄT!` in pure white on flashing border.
 * **Telemetry Navigation Footer (Bottom)**:
   * Dynamic destination indicator: `CEL:` in Electric Cyan during flight vs `POSTOJ:` in Vivid Emerald on rooftops (or `FINAL:` in Amber Gold on Dec 24 finale), followed by target city name in pure white (`0xffff`).
   * Phase countdown timer: `CZAS 0:12` in high-visibility amber (or `WIGILIA!` on finale hold).
@@ -108,15 +110,27 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 
 | Input | Physical Device (M5StickC) | Web Emulator | Description |
 | :--- | :--- | :--- | :--- |
-| **Button A Short Click (<0.6s)** | Front `M5` button (click) | Click `M5` Button | **Przełącz Ekran**: Cycles between operational screens (`Radar Lotu` ↔ `Kokpit Mikołaja`). Instant visual feedback. |
-| **Button A Long Hold (>0.6s)** | Front `M5` button (hold) | Hold `M5` Button (>0.6s) | **Następny Dzień (1–24)**: Cycles through the 24 Advent days (`D01` → `D02` → ... → `D24` → `D01`) with chime confirmation. |
-| **Button B Short Click (<0.6s)** | Top side button (click) | Click Top Side Button | **Następne Miasto (1–12)**: Advances Santa to the next city on the active day, placing Santa landed at that city. |
-| **Button B Long Hold (>0.6s)** | Top side button (hold) | Hold Top Side Button (>0.6s) | **Dźwięk Mute / Unmute**: Toggles synthesized retro buzzer chirps and chimes with audio chirp on unmute. |
+| **Button A Short Click (<0.6s)** | Front `M5` button (click) | Click `M5` Button | **Switch Screen**: 3-screen carousel navigation (`Flight Radar` → `Santa Cockpit` → `Santa Cam` → `Flight Radar`). Instant visual feedback. |
+| **Button A Long Hold (>0.6s)** | Front `M5` button (hold) | Hold `M5` Button (>0.6s) | **Next Day (1–24)**: Cycles through the 24 Advent days (`D01` → `D02` → ... → `D24` → `D01`) with chime confirmation. |
+| **Button B Short Click (<0.6s)** | Top side button (click) | Click Top Side Button | **Next City (1–12)**: Advances Santa to the next city on the active day, placing Santa landed at that city. |
+| **Button B Long Hold (>0.6s)** | Top side button (hold) | Hold Top Side Button (>0.6s) | **Audio Mute / Unmute**: Toggles synthesized retro buzzer chirps and chimes with audio chirp on unmute. |
 
 ### 4.2. Simulation Rhythm & Speed Ratio
 * **Real-World Itinerary**: 1 hour in transit (flight) + 1 hour in city (stop) = 2 hours per waypoint (12 stops = 24 hours).
-* **Hardcoded Web Simulation**: Scaled to **12 seconds in transit + 12 seconds landed in city** (**24 seconds total per waypoint**, `secPerCity = 24`).
-* **Day 24 Grand Finale Hold**: Once Santa lands in Kraków (#288), Santa remains landed in Kraków for an extended celebration hold (`FINAŁ: KRAKOW 🎁`).
+* **Hardcoded Web Simulation**: Scaled to **15 seconds in transit + 15 seconds landed in city** (**30 seconds total per waypoint**, `secPerCity = 30.0`).
+* **Sub-Phase Timing Architecture (30s Cycle)**:
+
+| # | Phase | Scene (Mode) | Time Window ($u$) | Duration | Phase Share | Key Visual Elements |
+|---|---|---|:---:|:---:|:---:|---|
+| **1** | **Flight** | **Hyper-Warp Mode** (`TRYB HYPER-WARP`) | $0.0\text{s} - 4.5\text{s}$ | **4.5 s** | 30% of flight | Horizontal supersonic speed streaks, sleigh hull micro-vibration, dual jet exhaust flames |
+| **2** | **Flight** | **Stratospheric Flight** (`PRZELOT STRATOSFERYCZNY`) | $4.5\text{s} - 12.0\text{s}$ | **7.5 s** | 50% of flight | Curved Earth globe, glowing atmospheric limb, 48 cosmic stars, shooting star |
+| **3** | **Flight** | **Gliding Descent** (`ZNIZANIE`) | $12.0\text{s} - 15.0\text{s}$ | **3.0 s** | 20% of flight | Descending toward snowy pine trees growing in perspective, multi-colored fairy lights |
+| **4** | **Landed** | **Gift Drop** (`ZRZUT PREZENTOW`) | $15.0\text{s} - 21.0\text{s}$ | **6.0 s** | 40% of stay | Sleigh cruising over rooftops, parachuting presents landing into chimney pots |
+| **5** | **Landed** | **Cookie & Milk Break** (`PRZERWA NA CIASTKA I MLEKO`) | $21.0\text{s} - 27.0\text{s}$ | **6.0 s** | 40% of stay | Big Santa close-up, cozy fireplace with oak logs and licking flames, milk glass, cookie and crumbs |
+| **6** | **Landed** | **Takeoff Climb** (`WZNOSZENIE`) | $27.0\text{s} - 30.0\text{s}$ | **3.0 s** | 20% of stay | Upward takeoff, Christmas trees shrinking in reverse perspective, Rudolph strobe beacon |
+| **7** | **Finale** | **Merry Christmas!** (`WESOŁYCH ŚWIĄT!`, Kraków) | $u \ge 15.0\text{s}$ *(Dec 24)* | **Permanent** | — | Bazylika Mariacka spires silhouette, celebratory fireworks, banner `WESOŁYCH ŚWIĄT!` |
+
+* **Day 24 Grand Finale Hold**: Once Santa lands in Kraków (#288 at $u = 15.0\text{s}$ on Stop 12), Santa remains landed in Kraków indefinitely (`FINAŁ: KRAKOW 🎁`), never prematurely wrapping back to the Pacific.
 
 ---
 
@@ -175,13 +189,32 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 2. **Mathematical & Demographics Parity:**
    * Global 2.20 Billion children demographic model across the 12 Day 24 stops.
    * Cookie intake factor ($0.15 \times \text{gifts}$) and milk consumption ($0.0115 \text{ L} \times \text{gifts}$).
-   * 24s simulation cadence (`secPerCity = 24.0s`, 12s transit flight + 12s rooftop dwell).
+   * 30s simulation cadence (`secPerCity = 30.0s`, 15s transit flight + 15s rooftop dwell).
 3. **M5StickC-Plus SE Firmware Delivery:**
    * Zero dynamic heap allocations in frame render loop (`ScreenCockpit::render`).
    * SRAM usage: 11.0% (35.9 KB / 320 KB), safely under 25% budget.
    * Flash usage: 28.2% (885 KB / 3.0 MB).
    * Button A short click cycles `SCREEN_RADAR` $\leftrightarrow$ `SCREEN_COCKPIT`.
-   * 16 desktop Unity tests passing in 2.4s (`pio test -e native`).
+   * 18 desktop Unity tests passing in 4.2s (`pio test -e native`).
+
+### 6.3. Milestone 2 Expansion: Side-View Santa Cam (Screen 3) (COMPLETE ✅)
+
+1. **Context-Aware Pixel-Art Cinematic Engine (`ScreenCam` / `camScreen.ts`):**
+   * Mode 1: *Hyper-Warp* (`u < 4.5s`, Flight 0–30%): Rapid horizontal speed streaks, sleigh micro-vibrations, supersonic dual-stage exhaust flames, and Rudolph clean nose indicator.
+   * Mode 2: *Cruising Sky / Przelot Stratosferyczny* (`4.5s <= u < 12.0s`, Flight 30–80%): Stratospheric cruise over the curved Earth globe, glowing cyan atmospheric limb, nocturnal continents with twinkling city lights, wispy clouds, and golden stardust particle trails.
+   * Mode 3: *Gliding Descent / Zniżanie* (`12.0s <= u < 15.0s`, Flight 80–100%): Santa floats down from upper sky toward snowy rolling ridges with pine trees growing in perspective, decorated with multi-colored twinkling Christmas fairy lights.
+   * Mode 4: *City Rooftop Chimney Cruise & Active Gift Drops* (`15.0s <= u < 21.0s`, Landed 0–6s / 40%): Sleigh cruising low over distinct separate townhouses, cottages, and chalets separated by snowy alleys with lampposts and pine trees; precision chimney-targeted present drops with parachutes landing directly into chimney mouths with delivery sparkle bursts.
+   * Mode 5: *Big Santa Cookie Break* (`21.0s <= u < 27.0s`, Landed 6–12s / 40%): Dedicated cozy fireplace close-up with cross-stacked dark oak logs, bed of glowing embers, organic licking flame tongues with thermal gradients, rising sparks, big jolly Santa Claus eating chocolate chip cookies, crumbs falling, cold glass of milk with striped straw, and `MNIAM! *` speech bubble.
+   * Mode 6: *Takeoff Climb / Wznoszenie* (`27.0s <= u < 30.0s`, Landed 12–15s / 20%): Sleigh ascending from ground altitude into the night sky, pine trees shrinking in reverse perspective with twinkling Christmas lights, Rudolph navigation beacon strobe, and trailing golden stardust.
+   * Mode 7: *Kraków Grand Finale Hold* (Dec 24 Stop 12 Arrival Lock): Santa landed overlooking Bazylika Mariacka (St. Mary's Basilica) spires silhouette with celebratory multi-color fireworks and `WESOŁYCH ŚWIĄT!` banner.
+2. **Unified 3-Screen Carousel Navigation:**
+   * Button A short click rotates `SCREEN_RADAR` (0) $\rightarrow$ `SCREEN_COCKPIT` (1) $\rightarrow$ `SCREEN_CAM` (2) $\rightarrow$ `SCREEN_RADAR` (0).
+   * Tactical Screen Selector Bar in companion web app with 3 tabs.
+3. **M5StickC-Plus SE Firmware Delivery:**
+   * Zero dynamic heap allocations in `ScreenCam::render()`.
+   * SRAM: 11.0% (35.9 KB / 320 KB), safely under 25% safety budget.
+   * Flash: 30.9% (971 KB / 3.0 MB).
+   * 18 native Unity tests passing in 0.5s (`pio test -e native`).
 
 ---
 
@@ -190,11 +223,12 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 To ensure rich visual development and interactive verification outside of December, SANTA-OS operates on **simulated/demo time** (`secPerCity = 12s` or manual day/city jumping) through Milestones 2–4. Connecting live real-time clock (NTP/RTC) is reserved for the **very last milestone** before December 1st.
 
 * **Milestone 1 (COMPLETE ✅):** Fully Operational Aviation Radar End-to-End (Web & M5StickC hardware).
-* **Milestone 2 (ACTIVE 🎯):** Context-Aware Multi-Screen Expansion:
-  * Screen 2: Side-View Santa Cam (Cruising Sky, Hyper-Warp, Chimney Drop, Cookie Break).
-  * Screen 3: Flight Telemetry / Cockpit Dashboard (Mach Speed, KM counter, Gift Counter).
-  * 3-screen carousel navigation (Web first, Firmware second).
-* **Milestone 3:** Parent Customization & Wi-Fi Management (Bedtime arrival override, Burst & Sleep sync).
+* **Milestone 2 (COMPLETE ✅):** Context-Aware Multi-Screen Expansion:
+  * Screen 1: World Aviation Radar.
+  * Screen 2: Flight Telemetry / Cockpit Dashboard (Modern Glass Cockpit).
+  * Screen 3: Side-View Santa Cam (Cruising Sky, Hyper-Warp, Chimney Drop, Cookie Break, Kraków Finale).
+  * 3-screen circular carousel navigation across Web & Hardware.
+* **Milestone 3 (ACTIVE 🎯):** Parent Customization & Wi-Fi Management (Bedtime arrival override, Burst & Sleep sync).
 * **Milestone 4:** Hardware Polish & Festive Packaging (Audio jingles, 3D printed dock, kid's flight log).
 * **Milestone 5 (Final Milestone Before Dec 1st):** Live Real-Time Clock & Advent Launch (NTP & RTC synchronization, 1h flight + 1h stay, with interactive demo override toggle).
 

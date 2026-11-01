@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Compass, Wifi, Volume2, VolumeX, RefreshCw, Map, Calendar, Gauge, Layers, Sparkles } from "lucide-react";
+import { Compass, Volume2, VolumeX, RefreshCw, Map, Calendar, Gauge, Layers, Sparkles, Camera } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
 import { SnowEffect } from "@/components/SnowEffect";
 import { computeSantaMetrics, SantaCockpitMetrics } from "@/lib/telemetry/santa-metrics";
@@ -28,8 +28,8 @@ export default function RadarPage() {
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [scanlines, setScanlines] = useState<boolean>(true);
 
-  // Screen Selection (Screen 1: Radar, Screen 2: Kokpit Mikołaja)
-  const [activeScreen, setActiveScreen] = useState<"radar" | "cockpit">("radar");
+  // Screen Selection (Screen 1: Radar, Screen 2: Kokpit Mikołaja, Screen 3: Kamera Mikołaja)
+  const [activeScreen, setActiveScreen] = useState<"radar" | "cockpit" | "cam">("radar");
   const [liveMetrics, setLiveMetrics] = useState<SantaCockpitMetrics | null>(null);
 
   // Active telemetry states
@@ -126,10 +126,11 @@ export default function RadarPage() {
   }, [isMuted]);
 
   // Screen Switcher Tabs
-  const handleSwitchScreen = useCallback((screen: "radar" | "cockpit") => {
+  const handleSwitchScreen = useCallback((screen: "radar" | "cockpit" | "cam") => {
     setActiveScreen(screen);
-    setSimActiveScreen(simStateRef.current, screen === "radar" ? 0 : 1);
-    if (!isMuted) buzzer.playTone(screen === "radar" ? 1500 : 1700, 30);
+    const simScreen = screen === "radar" ? 0 : screen === "cockpit" ? 1 : 2;
+    setSimActiveScreen(simStateRef.current, simScreen);
+    if (!isMuted) buzzer.playTone(screen === "radar" ? 1500 : screen === "cockpit" ? 1700 : 1900, 30);
   }, [isMuted]);
 
   // 2. 1:1 Hardware Simulation Loop (Driven by LovyanGFX M5CanvasSim)
@@ -167,7 +168,9 @@ export default function RadarPage() {
         const t = getTelemetry(simStateRef.current);
         setSelectedDay((prev) => (prev !== t.activeDay ? t.activeDay : prev));
         setActiveScreen((prev) => {
-          const next = simStateRef.current.activeScreen === 0 ? "radar" : "cockpit";
+          const scr = simStateRef.current.activeScreen;
+          const next: "radar" | "cockpit" | "cam" =
+            scr === 0 ? "radar" : scr === 1 ? "cockpit" : "cam";
           return prev !== next ? next : prev;
         });
         setActiveStopIndex((prev) => (prev !== t.safeIdx ? t.safeIdx : prev));
@@ -222,13 +225,18 @@ export default function RadarPage() {
             <h1 className="text-sm font-bold font-mono tracking-tight text-white">
               SANTA-OS
             </h1>
-            <span className="hidden sm:inline-block px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-semibold">
-              1:1 LOVYANGFX FIRMWARE SIMULATOR
-            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2.5 text-xs font-mono">
+          <Link
+            href="/scene-debugging"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 transition font-bold cursor-pointer"
+          >
+            <Camera className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Scene Debugger</span>
+          </Link>
+
           <Link
             href="/map-debugger"
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 transition font-bold cursor-pointer"
@@ -236,11 +244,6 @@ export default function RadarPage() {
             <Map className="w-3.5 h-3.5 text-sky-400" />
             <span>Map Debugger</span>
           </Link>
-
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900/80 border border-white/10 text-slate-300">
-            <Wifi className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden md:inline">1:1 M5StickC-Plus</span>
-          </div>
 
           <button
             onClick={() => setIsMuted((prev) => !prev)}
@@ -314,6 +317,18 @@ export default function RadarPage() {
             >
               <Gauge className="w-3.5 h-3.5 text-amber-400" />
               <span>2: Kokpit Mikołaja</span>
+            </button>
+
+            <button
+              onClick={() => handleSwitchScreen("cam")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer ${
+                activeScreen === "cam"
+                  ? "bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-sm ring-1 ring-rose-400/30"
+                  : "bg-slate-900/50 text-slate-400 border-white/5 hover:bg-slate-800/70"
+              }`}
+            >
+              <Camera className="w-3.5 h-3.5 text-rose-400" />
+              <span>3: Kamera Mikołaja</span>
             </button>
           </div>
 
@@ -418,9 +433,14 @@ export default function RadarPage() {
               </div>
 
               {/* Faza Misji Box */}
-              <div className="bg-black/40 border border-sky-500/30 rounded-xl p-2.5 text-center space-y-0.5">
+              <div className="bg-black/40 border border-sky-500/30 rounded-xl p-2.5 text-center space-y-1">
                 <div className="text-[10px] text-sky-400 font-bold uppercase tracking-wider">Aktualna Faza Misji:</div>
                 <div className="text-amber-300 font-bold text-xs">{liveMetrics.stageTitle}</div>
+                {liveMetrics.stageDescription && (
+                  <div className="text-[11px] text-slate-300 leading-relaxed font-normal">
+                    {liveMetrics.stageDescription}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-[11px]">

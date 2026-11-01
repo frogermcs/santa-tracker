@@ -10,6 +10,8 @@
  * - Mleko: ~25.3 Mln litrów (1 szklanka 200ml na ~17 prezentów)
  */
 
+import { getMissionPhaseInfo } from "./stage-definitions";
+
 export interface SantaCockpitMetrics {
   // Dynamika lotu
   machSpeed: number;
@@ -31,8 +33,9 @@ export interface SantaCockpitMetrics {
   milkLiters: number;
   milkLitersDisplay: string;
 
-  // Faza misji i status (po polsku)
+  // Faza misji i status (po polsku — pojedyncze źródło prawdy ze stage-definitions)
   stageTitle: string;
+  stageDescription: string;
   stageDetail: string;
   targetCity: string;
   etaSeconds: number;
@@ -57,12 +60,12 @@ const REGIONAL_GIFTS_DAY24 = [
 export function computeSantaMetrics(
   dayNum: number,
   activeIdx: number,
-  u: number, // cykl 0..24s (0..12s przelot, 12..24s pobyt w mieście)
+  u: number, // cykl 0..30s (0..15s przelot, 15..30s pobyt w mieście)
   nowSec: number,
   targetName: string,
   isDay24Finale: boolean
 ): SantaCockpitMetrics {
-  const isFlight = !isDay24Finale && u < 12.0;
+  const isFlight = !isDay24Finale && u < 15.0;
 
   // 1. Dynamika lotu (Prędkość Mach i Pułap w metrach)
   let machSpeed = 0.0;
@@ -74,10 +77,10 @@ export function computeSantaMetrics(
     altitudeM = 219; // Wysokość n.p.m. krakowskiego Rynku
     flightPhase = "FINAL";
   } else if (isFlight) {
-    const flightProgress = u / 12.0; // 0..1
-    if (flightProgress < 0.2) {
+    const flightProgress = u / 15.0; // 0..1 (0..30% Warp, 30..80% Przelot, 80..100% Zniżanie)
+    if (flightProgress < 0.3) {
       flightPhase = "START";
-      const p = flightProgress / 0.2;
+      const p = flightProgress / 0.3;
       machSpeed = p * 4.2;
       altitudeM = Math.round(65 + p * 10500);
     } else if (flightProgress < 0.8) {
@@ -118,7 +121,7 @@ export function computeSantaMetrics(
       giftRatePerSec = 0;
     } else {
       // Podczas postoju na dachu: zrzut paczek dla bieżącego regionu
-      const progress = Math.min(1.0, (u - 12.0) / 12.0);
+      const progress = Math.min(1.0, (u - 15.0) / 15.0);
       giftsDelivered = previousStopsGifts + Math.floor(currentStopGifts * progress);
       // Rzeczywiste tempo: liczba paczek regionu podzielona przez 1 godzinę (3600 sekund)
       giftRatePerSec = Math.round(currentStopGifts / 3600);
@@ -133,14 +136,14 @@ export function computeSantaMetrics(
       giftsDelivered = previousStopsGifts;
       giftRatePerSec = 0;
     } else {
-      const progress = Math.min(1.0, (u - 12.0) / 12.0);
+      const progress = Math.min(1.0, (u - 15.0) / 15.0);
       giftsDelivered = previousStopsGifts + Math.floor(currentStopGifts * progress);
       giftRatePerSec = Math.round(currentStopGifts / 3600);
     }
   }
 
   // Pasek postępu dostaw danego dnia (1..10 segmentów)
-  const stopFraction = isFlight ? 0 : Math.min(1.0, (u - 12.0) / 12.0);
+  const stopFraction = isFlight ? 0 : Math.min(1.0, (u - 15.0) / 15.0);
   const dayProgressPct = isDay24Finale
     ? 100
     : Math.min(100, Math.round(((activeIdx + stopFraction) / 12.0) * 100));
@@ -152,38 +155,13 @@ export function computeSantaMetrics(
   const cookiesEaten = Math.floor(giftsDelivered * 0.15);
   const milkLiters = Math.floor(giftsDelivered * 0.0115);
 
-  // 4. Aktualna faza misji (Teksty w języku polskim)
-  let stageTitle = "PRZELOT HIPERSONICZNY (M4.8)";
-  let stageDetail = "KORYTARZ STRATOSFERYCZNY";
+  // 4. Aktualna faza misji (Teksty w języku polskim ze wspólnego źródła wiedzy: stage-definitions)
+  const phaseInfo = getMissionPhaseInfo(u, isDay24Finale);
+  const stageTitle = phaseInfo.badge;
+  const stageDescription = phaseInfo.description;
+  const stageDetail = phaseInfo.timing;
 
-  if (isDay24Finale) {
-    stageTitle = "FINAL WIGILII: KRAKOW!";
-    stageDetail = "MISJA ZAKONCZONA // WESOLYCH SWIAT";
-  } else if (flightPhase === "START") {
-    stageTitle = "START // HYPER-ROZPEDZANIE";
-    stageDetail = "MOC CIAGU 100% // WZNOSZENIE";
-  } else if (flightPhase === "PRZELOT") {
-    stageTitle = "PRZELOT HIPERSONICZNY (M4.8)";
-    stageDetail = "KORYTARZ POLARNY // AUTOPILOT ON";
-  } else if (flightPhase === "ZNIZANIE") {
-    stageTitle = "HAMOWANIE I ZNIZANIE";
-    stageDetail = "PODEJSCIE DO LADOWANIA NA DACHU";
-  } else {
-    // Postój na dachu (u >= 12s, 12 sekund na dachu)
-    const subPhase = Math.floor((u - 12.0) / 4.0);
-    if (subPhase === 0) {
-      stageTitle = "BEZPIECZNY DACH // ZRZUT PREZENTOW";
-      stageDetail = "KOMIN OTWARTY // ZRZUT W TOKU";
-    } else if (subPhase === 1) {
-      stageTitle = "PRZERWA NA CIASTKA I MLEKO";
-      stageDetail = "UZUPELNIANIE PALIWA MIKOLAJA";
-    } else {
-      stageTitle = "DACH ZALICZONY // START ZA CHWILE";
-      stageDetail = "SYNCHRONIZACJA ZAPRZEGU RENIFEROW";
-    }
-  }
-
-  const etaSeconds = isDay24Finale ? 0 : Math.ceil(isFlight ? 12.0 - u : 24.0 - u);
+  const etaSeconds = isDay24Finale ? 0 : Math.ceil(isFlight ? 15.0 - u : 30.0 - u);
 
   return {
     machSpeed,
@@ -201,6 +179,7 @@ export function computeSantaMetrics(
     milkLiters,
     milkLitersDisplay: `${formatCompact(milkLiters)} L`,
     stageTitle,
+    stageDescription,
     stageDetail,
     targetCity: targetName.toUpperCase(),
     etaSeconds,

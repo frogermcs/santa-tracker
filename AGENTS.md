@@ -16,9 +16,12 @@ The companion web application (`page/`) serves as the definitive functional, vis
 **Every screen, state, and interaction on the IoT device must have an exact 1:1 corresponding screen on the web app:**
 - The web app operates an exact 240×135 pixel canvas emulator matching the ST7789v2 IPS display.
 - **Screen 1 (Global Aviation Radar)**: 912-dot phosphor map, sweeping radar ray, pulsing Santa contact, gold stardust breadcrumbs, top/bottom telemetry HUDs.
-- **Screen 2 (Side-View Santa Cam)**: Pixel-art sleigh animation with 4 dynamic flight/ground states (Cruising Sky, Chimney Drop, Cookie Break, Hyper-Warp).
-- **Screen 3 (Flight Telemetry / Cockpit Dashboard)**: Mach flight speed, real-time gift counter, cumulative kilometers, and next destination ETA.
-- **Algorithm Parity**: Trajectory interpolation (`ease()`), coordinates projection, and transit/landed time slots (`u < 6` in-flight, `u >= 6` landed) must be identical across TypeScript and C++.
+- **Screen 2 (Flight Telemetry / Cockpit Dashboard)**: Modern aerospace glass cockpit, multi-color Mach 4.8 gauge, demographic gift delivery, pixel-art cookies & milk, and tactical mission phase box.
+- **Screen 3 (Side-View Santa Cam)**: 7 contextual sub-phase pixel-art scenes:
+  * In-transit (15.0s): *Hyper-Warp* (30% / 4.5s), *Przelot Stratosferyczny* (50% / 7.5s), *Zniżanie* (20% / 3.0s).
+  * Rooftop stay (15.0s): *Zrzut Prezentów* (40% / 6.0s), *Przerwa na Ciastka i Mleko* (40% / 6.0s), *Wznoszenie* (20% / 3.0s).
+  * Finale: *Wesołych Świąt!* (permanent Kraków arrival lock with Bazylika Mariacka spires & fireworks).
+- **Algorithm Parity**: Trajectory interpolation (`easeInOut()`), coordinates projection, and 30-second simulation cadence (`secPerCity = 30.0s`: `u < 15.0s` in-flight transit, `u >= 15.0s` rooftop stay) must be mathematically identical across TypeScript and C++.
 
 ---
 
@@ -121,6 +124,10 @@ Whenever requirements change:
 - If milestone scope or acceptance criteria changes $\rightarrow$ update **Section 6**.
 
 No feature is considered delivered unless the PRD accurately describes its latest behavior.
+
+### 4.1. Language Requirement (Always English)
+- **`PRD.md`, `docs/PRD.md`, `docs/ARCHITECTURE.md`, and all markdown specifications must ALWAYS be written strictly in English.**
+- In-app Polish UI labels (e.g. `KOKPIT MIKOLAJA`, `TRYB HYPER-WARP`, `WESOŁYCH ŚWIĄT!`) may be quoted in code blocks or parentheses as the exact on-screen visual strings, but all section content, explanatory prose, table headers, columns, and descriptions must be authored in English.
 
 ---
 

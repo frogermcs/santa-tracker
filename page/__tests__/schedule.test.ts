@@ -53,8 +53,8 @@ describe("Advent Schedule & Route Validation", () => {
   });
 
   describe("API Journey Contract (journey.json)", () => {
-    it("matches the 24s cycle timing per city", () => {
-      expect(journeyJson.secPerCity).toBe(24);
+    it("matches the 30s cycle timing per city", () => {
+      expect(journeyJson.secPerCity).toBe(30);
     });
 
     it("has 12 route stops and 24 days in the master payload", () => {

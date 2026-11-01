@@ -19,7 +19,7 @@ void test_default_journey_parsing(void) {
   TEST_ASSERT_EQUAL_INT(2, data.version);
   TEST_ASSERT_EQUAL_INT(24, data.activeDay);
   TEST_ASSERT_EQUAL_INT(12, data.cityCount);
-  TEST_ASSERT_EQUAL_FLOAT(24.0f, data.secPerCity);
+  TEST_ASSERT_EQUAL_FLOAT(30.0f, data.secPerCity);
   TEST_ASSERT_EQUAL_STRING("GISBORNE", data.cities[0].name);
   TEST_ASSERT_EQUAL_STRING("KRAKOW", data.cities[11].name);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 19.9450f, data.cities[11].lon);
@@ -36,7 +36,7 @@ void test_advent_schedule_integrity(void) {
     TEST_ASSERT_TRUE_MESSAGE(ok, "Day failed to load from PROGMEM");
     TEST_ASSERT_EQUAL_INT(day, dayData.activeDay);
     TEST_ASSERT_EQUAL_INT(12, dayData.cityCount);
-    TEST_ASSERT_EQUAL_FLOAT(24.0f, dayData.secPerCity);
+    TEST_ASSERT_EQUAL_FLOAT(30.0f, dayData.secPerCity);
 
     for (int s = 0; s < 12; s++) {
       totalStopsCounted++;
@@ -188,8 +188,8 @@ void test_trajectory_ease_interpolation(void) {
   const JourneyData& jd = engine.getJourneyData();
 
   // Jump to stop 1 so we have a distinct prev (stop 0: Gisborne) and curr (stop 1: Bethlehem)
-  // At landed phase (u = 12.0s), advance 12.0s to complete stop 0, entering stop 1 flight at t = 24.0s
-  engine.update(12.0f); // t = 24.0s: leg 1 flight begins (u = 0.0s)
+  // At landed phase (u = 15.0s), advance 15.0s to complete stop 0, entering stop 1 flight at t = 30.0s
+  engine.update(15.0f); // t = 30.0s: leg 1 flight begins (u = 0.0s)
 
   TelemetryState t0 = engine.getTelemetry();
   TEST_ASSERT_EQUAL_INT(1, t0.safeIdx);
@@ -198,9 +198,9 @@ void test_trajectory_ease_interpolation(void) {
   TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[0].lon, t0.santaLon);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[0].lat, t0.santaLat);
 
-  // Advance 6.0 seconds (halfway through 12.0s flight phase, u = 6.0s, u/12 = 0.5)
+  // Advance 7.5 seconds (halfway through 15.0s flight phase, u = 7.5s, u/15 = 0.5)
   // easeInOut(0.5) = 2 * (0.5)^2 = 0.5 (exact halfway point!)
-  engine.update(6.0f);
+  engine.update(7.5f);
   TelemetryState tMid = engine.getTelemetry();
   TEST_ASSERT_TRUE(tMid.isFlightPhase);
   float expectedMidLon = jd.cities[0].lon + (jd.cities[1].lon - jd.cities[0].lon) * 0.5f;
@@ -208,8 +208,8 @@ void test_trajectory_ease_interpolation(void) {
   TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedMidLon, tMid.santaLon);
   TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedMidLat, tMid.santaLat);
 
-  // Advance 6.0 seconds to finish flight phase (u = 12.0s, landed at stop 1)
-  engine.update(6.0f);
+  // Advance 7.5 seconds to finish flight phase (u = 15.0s, landed at stop 1)
+  engine.update(7.5f);
   TelemetryState tLand = engine.getTelemetry();
   TEST_ASSERT_FALSE(tLand.isFlightPhase);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[1].lon, tLand.santaLon);
@@ -221,26 +221,26 @@ void test_eta_countdown_progression(void) {
   JourneyEngine engine;
   engine.init(1); // Day 1
 
-  // Start landed at stop 0: ETA to takeoff is 24 - 12 = 12s
+  // Start landed at stop 0: ETA to takeoff is 30 - 15 = 15s
   TelemetryState sStart = engine.getTelemetry();
-  TEST_ASSERT_EQUAL_INT(12, sStart.etaSeconds);
+  TEST_ASSERT_EQUAL_INT(15, sStart.etaSeconds);
 
-  // Advance 4s in landed phase -> ETA should decrease to 8s
-  engine.update(4.0f);
-  TelemetryState sLanded4 = engine.getTelemetry();
-  TEST_ASSERT_EQUAL_INT(8, sLanded4.etaSeconds);
+  // Advance 5s in landed phase -> ETA should decrease to 10s
+  engine.update(5.0f);
+  TelemetryState sLanded5 = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(10, sLanded5.etaSeconds);
 
-  // Advance 8s -> completes stop 0, enters stop 1 flight (u = 0s) -> ETA is flight duration (12s)
-  engine.update(8.0f);
+  // Advance 10s -> completes stop 0, enters stop 1 flight (u = 0s) -> ETA is flight duration (15s)
+  engine.update(10.0f);
   TelemetryState sFlight0 = engine.getTelemetry();
   TEST_ASSERT_TRUE(sFlight0.isFlightPhase);
-  TEST_ASSERT_EQUAL_INT(12, sFlight0.etaSeconds);
+  TEST_ASSERT_EQUAL_INT(15, sFlight0.etaSeconds);
 
-  // Advance 7.0s in flight -> ETA should be ceil(12 - 7.0) = 5s
-  engine.update(7.0f);
-  TelemetryState sFlight7 = engine.getTelemetry();
-  TEST_ASSERT_TRUE(sFlight7.isFlightPhase);
-  TEST_ASSERT_EQUAL_INT(5, sFlight7.etaSeconds);
+  // Advance 9.0s in flight -> ETA should be ceil(15 - 9.0) = 6s
+  engine.update(9.0f);
+  TelemetryState sFlight9 = engine.getTelemetry();
+  TEST_ASSERT_TRUE(sFlight9.isFlightPhase);
+  TEST_ASSERT_EQUAL_INT(6, sFlight9.etaSeconds);
 }
 
 // Test 9: Validate Regular Day Looping (Days 1 to 23)
@@ -249,7 +249,7 @@ void test_normal_day_looping_without_hold(void) {
   engine.init(6); // Mikołajki (Day 6) - loops smoothly
   TEST_ASSERT_EQUAL_INT(6, engine.getActiveDay());
 
-  // Jump to last stop (index 11) landed at t = 11 * 24 + 12 = 276.0s
+  // Jump to last stop (index 11) landed at t = 11 * 30 + 15 = 345.0s
   for (int i = 0; i < 11; i++) {
     engine.nextCity();
   }
@@ -257,9 +257,9 @@ void test_normal_day_looping_without_hold(void) {
   TEST_ASSERT_EQUAL_INT(11, s11.safeIdx);
   TEST_ASSERT_FALSE(s11.isDay24Finale);
 
-  // Advance 15.0s: 276.0 + 15.0 = 291.0s, which cleanly exceeds totalSimTime 288.0s (12 * 24s)
-  // Day 6 must wrap to stop 0 (291.0 % 288.0 = 3.0s, which is flight phase of stop 0)
-  engine.update(15.0f);
+  // Advance 20.0s: 345.0 + 20.0 = 365.0s, which cleanly exceeds totalSimTime 360.0s (12 * 30s)
+  // Day 6 must wrap to stop 0 (365.0 % 360.0 = 5.0s, which is flight phase of stop 0)
+  engine.update(20.0f);
   TelemetryState sWrapped = engine.getTelemetry();
   TEST_ASSERT_EQUAL_INT(0, sWrapped.safeIdx);
   TEST_ASSERT_FALSE(sWrapped.isDay24Finale);
@@ -370,26 +370,26 @@ void test_format_compact(void) {
 void test_santa_metrics_flight_dynamics(void) {
   SantaCockpitMetrics m;
 
-  // START phase: u = 1.2s (flightProgress = 0.1)
-  computeSantaMetrics(24, 0, 1.2f, 0.0f, "GISBORNE", false, m);
+  // START phase: u = 2.0s (flightProgress = 2.0 / 15.0 = 0.133 < 0.3)
+  computeSantaMetrics(24, 0, 2.0f, 0.0f, "GISBORNE", false, m);
   TEST_ASSERT_EQUAL_INT(PHASE_START, m.flightPhase);
-  TEST_ASSERT_FLOAT_WITHIN(0.1f, 2.1f, m.machSpeed);
-  TEST_ASSERT_EQUAL_STRING("START // HYPER-ROZPEDZANIE", m.stageTitle);
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 1.87f, m.machSpeed);
+  TEST_ASSERT_EQUAL_STRING("TRYB HYPER-WARP", m.stageTitle);
 
-  // PRZELOT phase: u = 6.0s (flightProgress = 0.5)
-  computeSantaMetrics(24, 0, 6.0f, 0.0f, "GISBORNE", false, m);
+  // PRZELOT phase: u = 7.5s (flightProgress = 0.5)
+  computeSantaMetrics(24, 0, 7.5f, 0.0f, "GISBORNE", false, m);
   TEST_ASSERT_EQUAL_INT(PHASE_PRZELOT, m.flightPhase);
   TEST_ASSERT_FLOAT_WITHIN(0.4f, 4.8f, m.machSpeed);
-  TEST_ASSERT_EQUAL_STRING("PRZELOT HIPERSONICZNY (M4.8)", m.stageTitle);
+  TEST_ASSERT_EQUAL_STRING("PRZELOT STRATOSFERYCZNY", m.stageTitle);
 
-  // ZNIZANIE phase: u = 10.8s (flightProgress = 0.9)
-  computeSantaMetrics(24, 0, 10.8f, 0.0f, "GISBORNE", false, m);
+  // ZNIZANIE phase: u = 13.5s (flightProgress = 0.9)
+  computeSantaMetrics(24, 0, 13.5f, 0.0f, "GISBORNE", false, m);
   TEST_ASSERT_EQUAL_INT(PHASE_ZNIZANIE, m.flightPhase);
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 2.4f, m.machSpeed);
-  TEST_ASSERT_EQUAL_STRING("HAMOWANIE I ZNIZANIE", m.stageTitle);
+  TEST_ASSERT_EQUAL_STRING("ZNIZANIE", m.stageTitle);
 
-  // DACH phase: u = 12.0s
-  computeSantaMetrics(24, 0, 12.0f, 0.0f, "GISBORNE", false, m);
+  // DACH phase: u = 15.0s
+  computeSantaMetrics(24, 0, 15.0f, 0.0f, "GISBORNE", false, m);
   TEST_ASSERT_EQUAL_INT(PHASE_DACH, m.flightPhase);
   TEST_ASSERT_EQUAL_FLOAT(0.0f, m.machSpeed);
   TEST_ASSERT_EQUAL_STRING("M 0.0", m.machDisplay);
@@ -401,18 +401,18 @@ void test_santa_metrics_flight_dynamics(void) {
 void test_santa_metrics_rooftop_subphases(void) {
   SantaCockpitMetrics m;
 
-  // Sub-phase 0 (0-4s rooftop -> u = 13.0s): Gift drop
-  computeSantaMetrics(24, 1, 13.0f, 0.0f, "BETHLEHEM", false, m);
-  TEST_ASSERT_EQUAL_STRING("BEZPIECZNY DACH // ZRZUT PREZENTOW", m.stageTitle);
+  // Sub-phase 0 (0-6s rooftop -> u = 18.0s): Gift drop
+  computeSantaMetrics(24, 1, 18.0f, 0.0f, "BETHLEHEM", false, m);
+  TEST_ASSERT_EQUAL_STRING("ZRZUT PREZENTOW", m.stageTitle);
   TEST_ASSERT_TRUE(m.giftRatePerSec > 0);
 
-  // Sub-phase 1 (4-8s rooftop -> u = 17.0s): Cookie break
-  computeSantaMetrics(24, 1, 17.0f, 0.0f, "BETHLEHEM", false, m);
+  // Sub-phase 1 (6-12s rooftop -> u = 24.0s): Cookie break
+  computeSantaMetrics(24, 1, 24.0f, 0.0f, "BETHLEHEM", false, m);
   TEST_ASSERT_EQUAL_STRING("PRZERWA NA CIASTKA I MLEKO", m.stageTitle);
 
-  // Sub-phase 2 (8-12s rooftop -> u = 21.0s): Preparing for launch
-  computeSantaMetrics(24, 1, 21.0f, 0.0f, "BETHLEHEM", false, m);
-  TEST_ASSERT_EQUAL_STRING("DACH ZALICZONY // START ZA CHWILE", m.stageTitle);
+  // Sub-phase 2 (12-15s rooftop -> u = 28.5s): Preparing for launch
+  computeSantaMetrics(24, 1, 28.5f, 0.0f, "BETHLEHEM", false, m);
+  TEST_ASSERT_EQUAL_STRING("WZNOSZENIE", m.stageTitle);
 }
 
 // Test 16: Validate Day 24 Demographic Totals & Grand Finale Values
@@ -420,12 +420,12 @@ void test_santa_metrics_krakow_finale(void) {
   SantaCockpitMetrics m;
 
   // Kraków Grand Finale reached
-  computeSantaMetrics(24, 11, 12.0f, 0.0f, "KRAKOW", true, m);
+  computeSantaMetrics(24, 11, 15.0f, 0.0f, "KRAKOW", true, m);
   TEST_ASSERT_EQUAL_INT(PHASE_FINAL, m.flightPhase);
   TEST_ASSERT_EQUAL_FLOAT(0.0f, m.machSpeed);
   TEST_ASSERT_EQUAL_INT(219, m.altitudeM); // Kraków altitude
   TEST_ASSERT_EQUAL_STRING("219 M", m.altitudeDisplay);
-  TEST_ASSERT_EQUAL_STRING("FINAL WIGILII: KRAKOW!", m.stageTitle);
+  TEST_ASSERT_EQUAL_STRING("WESOLYCH SWIAT!", m.stageTitle);
   TEST_ASSERT_EQUAL_INT(0, m.etaSeconds);
 
   // Exactly 2.20 Billion gifts delivered
@@ -439,6 +439,74 @@ void test_santa_metrics_krakow_finale(void) {
   // Milk: 2.20B * 0.0115 = 25,300,000 L (25.3M L)
   TEST_ASSERT_EQUAL_UINT64(25300000ULL, m.milkLiters);
   TEST_ASSERT_EQUAL_STRING("25.3M L", m.milkLitersDisplay);
+}
+
+// Test 17: Validate 3-Screen Carousel Navigation (Radar -> Cockpit -> Cam -> Radar)
+void test_screen_carousel_navigation(void) {
+  enum TestScreen {
+    T_RADAR = 0,
+    T_COCKPIT = 1,
+    T_CAM = 2
+  };
+
+  TestScreen active = T_RADAR;
+  TEST_ASSERT_EQUAL_INT(0, active);
+
+  // Button A Short Press 1: Radar -> Cockpit
+  active = (TestScreen)((active + 1) % 3);
+  TEST_ASSERT_EQUAL_INT(1, active);
+
+  // Button A Short Press 2: Cockpit -> Cam
+  active = (TestScreen)((active + 1) % 3);
+  TEST_ASSERT_EQUAL_INT(2, active);
+
+  // Button A Short Press 3: Cam -> Radar
+  active = (TestScreen)((active + 1) % 3);
+  TEST_ASSERT_EQUAL_INT(0, active);
+}
+
+// Test 18: Validate Santa Cam Sub-Phase Timing and Metrics Mapping
+void test_santa_cam_subphase_resolution(void) {
+  SantaCockpitMetrics m;
+
+  // 1. Hyper-Warp (Flight 0-30% -> u = 2.0s)
+  computeSantaMetrics(24, 0, 2.0f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_START, m.flightPhase);
+  TEST_ASSERT_TRUE(m.machSpeed > 0.0f);
+
+  // 2. Cruising Sky (Flight 30-80% -> u = 7.5s)
+  computeSantaMetrics(24, 0, 7.5f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_PRZELOT, m.flightPhase);
+  TEST_ASSERT_TRUE(m.altitudeM > 10000);
+
+  // 3. Gliding Descent (Flight 80-100% -> u = 13.5s)
+  computeSantaMetrics(24, 0, 13.5f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_ZNIZANIE, m.flightPhase);
+
+  // 4. Chimney Drop (Landed 0-6s -> u = 18.0s)
+  computeSantaMetrics(24, 0, 18.0f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_DACH, m.flightPhase);
+  float landedU_Drop = 18.0f - 15.0f;
+  int subPhaseDrop = landedU_Drop < 6.0f ? 0 : 1;
+  TEST_ASSERT_EQUAL_INT(0, subPhaseDrop);
+
+  // 5. Cookie & Milk Break (Landed 6-12s -> u = 24.0s)
+  computeSantaMetrics(24, 0, 24.0f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_DACH, m.flightPhase);
+  float landedU_Cookie = 24.0f - 15.0f;
+  int subPhaseCookie = landedU_Cookie < 12.0f ? 1 : 2;
+  TEST_ASSERT_EQUAL_INT(1, subPhaseCookie);
+
+  // 6. Takeoff Prep (Landed 12-15s -> u = 28.5s)
+  computeSantaMetrics(24, 0, 28.5f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_DACH, m.flightPhase);
+  float landedU_Takeoff = 28.5f - 15.0f;
+  int subPhaseTakeoff = landedU_Takeoff >= 12.0f ? 2 : 1;
+  TEST_ASSERT_EQUAL_INT(2, subPhaseTakeoff);
+
+  // 7. Kraków Finale Hold (Arrival Lock)
+  computeSantaMetrics(24, 11, 15.0f, 0.0f, "KRAKOW", true, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_FINAL, m.flightPhase);
 }
 
 int main(void) {
@@ -459,5 +527,7 @@ int main(void) {
   RUN_TEST(test_santa_metrics_flight_dynamics);
   RUN_TEST(test_santa_metrics_rooftop_subphases);
   RUN_TEST(test_santa_metrics_krakow_finale);
+  RUN_TEST(test_screen_carousel_navigation);
+  RUN_TEST(test_santa_cam_subphase_resolution);
   return UNITY_END();
 }
