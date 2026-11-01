@@ -72,11 +72,11 @@ pio run -e m5stick-c --target upload
 The simulation runs a deterministic **30.0-second cycle per city** (`SEC_PER_CITY = 30.0s`), split into **15.0s in-transit flight** and **15.0s rooftop dwell**:
 
 * **In-Transit Flight (15.0s)**:
-  * **Tryb Hyper-Warp** ($0.0\text{s} - 4.5\text{s}$, 30%): Supersonic acceleration, speed streaks, twin jet flames.
-  * **Przelot Stratosferyczny** ($4.5\text{s} - 12.0\text{s}$, 50%): Curved Earth globe, glowing atmosphere, 48 stars, shooting star.
-  * **Zniżanie** ($12.0\text{s} - 15.0\text{s}$, 20%): Approaching snowy pine trees decorated with Christmas fairy lights.
+  * **Hyper-Warp Mode** (`TRYB HYPER-WARP`, $0.0\text{s} - 4.5\text{s}$, 30%): Supersonic acceleration, speed streaks, twin jet flames.
+  * **Stratospheric Flight** (`PRZELOT STRATOSFERYCZNY`, $4.5\text{s} - 12.0\text{s}$, 50%): Curved Earth globe, glowing atmosphere, 48 stars, shooting star.
+  * **Gliding Descent** (`ZNIZANIE`, $12.0\text{s} - 15.0\text{s}$, 20%): Approaching snowy pine trees decorated with Christmas fairy lights.
 * **Rooftop Landed Dwell (15.0s)**:
-  * **Zrzut Prezentów** ($15.0\text{s} - 21.0\text{s}$, 40%): Parachuting presents dropped directly into chimneys.
-  * **Przerwa na Ciastka i Mleko** ($21.0\text{s} - 27.0\text{s}$, 40%): Big Santa by the fireplace, dancing flames, cookies & milk.
-  * **Wznoszenie** ($27.0\text{s} - 30.0\text{s}$, 20%): Takeoff climb, ground & trees shrink in reverse perspective.
-* **Grand Finale (Dec 24 Kraków)**: Permanent arrival lock celebrating at Bazylika Mariacka spires with fireworks.
+  * **Gift Drop** (`ZRZUT PREZENTOW`, $15.0\text{s} - 21.0\text{s}$, 40%): Parachuting presents dropped directly into chimneys.
+  * **Cookie & Milk Break** (`PRZERWA NA CIASTKA I MLEKO`, $21.0\text{s} - 27.0\text{s}$, 40%): Big Santa by the fireplace, dancing flames, cookies & milk.
+  * **Takeoff Climb** (`WZNOSZENIE`, $27.0\text{s} - 30.0\text{s}$, 20%): Takeoff climb, ground & trees shrink in reverse perspective.
+* **Grand Finale (Dec 24 Kraków)**: Permanent arrival lock celebrating at Bazylika Mariacka spires with fireworks (`WESOŁYCH ŚWIĄT!`).

@@ -83,12 +83,14 @@ For the 240×135 ST7789v2 IPS display, the Cockpit Dashboard provides a high-con
 * **Mission Phase Tactical Box (Full Width, Lower Middle)**:
   * Sleek avionics console panel (`0x0842`) framed by dynamic status borders: Electric Cyan during flight, Vivid Emerald Neon on rooftops, and flashing Gold/Red during the Kraków finale.
   * Header: `AKTUALNA FAZA MISJI:` in cool slate.
-  * Single concise status headline with dynamic contextual text:
-    * In transit: `PRZELOT HIPERSONICZNY (M4.8)` in bright flame amber.
-    * Rooftop phase 1 (0–6s): `BEZPIECZNY DACH // ZRZUT PREZENTOW` in vivid emerald neon.
-    * Rooftop phase 2 (6–12s): `PRZERWA NA CIASTKA I MLEKO` in vivid emerald neon.
-    * Rooftop phase 3 (12–15s): `DACH ZALICZONY // START ZA CHWILE` in vivid emerald neon.
-    * Grand Finale: `FINAL WIGILII: KRAKOW!` in pure white on flashing border.
+  * Single concise status headline with dynamic contextual text (unified with canonical `stage-definitions.ts`):
+    * Flight mode 1 (0–4.5s): `TRYB HYPER-WARP` in bright flame amber.
+    * Flight mode 2 (4.5–12.0s): `PRZELOT STRATOSFERYCZNY` in bright flame amber.
+    * Flight mode 3 (12.0–15.0s): `ZNIZANIE` in bright flame amber.
+    * Rooftop mode 4 (0–6s): `ZRZUT PREZENTOW` in vivid emerald neon.
+    * Rooftop mode 5 (6–12s): `PRZERWA NA CIASTKA I MLEKO` in vivid emerald neon.
+    * Rooftop mode 6 (12–15s): `WZNOSZENIE` in vivid emerald neon.
+    * Grand Finale: `WESOŁYCH ŚWIĄT!` in pure white on flashing border.
 * **Telemetry Navigation Footer (Bottom)**:
   * Dynamic destination indicator: `CEL:` in Electric Cyan during flight vs `POSTOJ:` in Vivid Emerald on rooftops (or `FINAL:` in Amber Gold on Dec 24 finale), followed by target city name in pure white (`0xffff`).
   * Phase countdown timer: `CZAS 0:12` in high-visibility amber (or `WIGILIA!` on finale hold).
@@ -108,25 +110,25 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 
 | Input | Physical Device (M5StickC) | Web Emulator | Description |
 | :--- | :--- | :--- | :--- |
-| **Button A Short Click (<0.6s)** | Front `M5` button (click) | Click `M5` Button | **Przełącz Ekran**: 3-screen carousel navigation (`Radar Lotu` → `Kokpit Mikołaja` → `Kamera Mikołaja` → `Radar Lotu`). Instant visual feedback. |
-| **Button A Long Hold (>0.6s)** | Front `M5` button (hold) | Hold `M5` Button (>0.6s) | **Następny Dzień (1–24)**: Cycles through the 24 Advent days (`D01` → `D02` → ... → `D24` → `D01`) with chime confirmation. |
-| **Button B Short Click (<0.6s)** | Top side button (click) | Click Top Side Button | **Następne Miasto (1–12)**: Advances Santa to the next city on the active day, placing Santa landed at that city. |
-| **Button B Long Hold (>0.6s)** | Top side button (hold) | Hold Top Side Button (>0.6s) | **Dźwięk Mute / Unmute**: Toggles synthesized retro buzzer chirps and chimes with audio chirp on unmute. |
+| **Button A Short Click (<0.6s)** | Front `M5` button (click) | Click `M5` Button | **Switch Screen**: 3-screen carousel navigation (`Flight Radar` → `Santa Cockpit` → `Santa Cam` → `Flight Radar`). Instant visual feedback. |
+| **Button A Long Hold (>0.6s)** | Front `M5` button (hold) | Hold `M5` Button (>0.6s) | **Next Day (1–24)**: Cycles through the 24 Advent days (`D01` → `D02` → ... → `D24` → `D01`) with chime confirmation. |
+| **Button B Short Click (<0.6s)** | Top side button (click) | Click Top Side Button | **Next City (1–12)**: Advances Santa to the next city on the active day, placing Santa landed at that city. |
+| **Button B Long Hold (>0.6s)** | Top side button (hold) | Hold Top Side Button (>0.6s) | **Audio Mute / Unmute**: Toggles synthesized retro buzzer chirps and chimes with audio chirp on unmute. |
 
 ### 4.2. Simulation Rhythm & Speed Ratio
 * **Real-World Itinerary**: 1 hour in transit (flight) + 1 hour in city (stop) = 2 hours per waypoint (12 stops = 24 hours).
 * **Hardcoded Web Simulation**: Scaled to **15 seconds in transit + 15 seconds landed in city** (**30 seconds total per waypoint**, `secPerCity = 30.0`).
 * **Sub-Phase Timing Architecture (30s Cycle)**:
 
-| # | Faza | Scena (Tryb) | Okno czasowe ($u$) | Czas trwania | Udział w fazie | Kluczowe elementy wizualne |
+| # | Phase | Scene (Mode) | Time Window ($u$) | Duration | Phase Share | Key Visual Elements |
 |---|---|---|:---:|:---:|:---:|---|
-| **1** | **Lot** | **Tryb Hyper-Warp** | $0.0\text{s} - 4.5\text{s}$ | **4.5 s** | 30% lotu | Poziome smugi naddźwiękowe, drgania sań, podwójne płomienie dysz |
-| **2** | **Lot** | **Przelot Stratosferyczny** | $4.5\text{s} - 12.0\text{s}$ | **7.5 s** | 50% lotu | Zakrzywiona Ziemia, poświata atmosfery, 48 gwiazd, spadająca gwiazda |
-| **3** | **Lot** | **Zniżanie** | $12.0\text{s} - 15.0\text{s}$ | **3.0 s** | 20% lotu | Zbliżanie do ośnieżonych choinek rosnących w perspektywie, kolorowe lampki |
-| **4** | **Miasto** | **Zrzut Prezentów** | $15.0\text{s} - 21.0\text{s}$ | **6.0 s** | 40% miasta | Sanie nad dachami, paczki na spadochronach wpadające do kominów |
-| **5** | **Miasto** | **Przerwa na Ciastka i Mleko** | $21.0\text{s} - 27.0\text{s}$ | **6.0 s** | 40% miasta | Duży Mikołaj, kominek z polanami i płomieniami, mleko, ciastko i okruchy |
-| **6** | **Miasto** | **Wznoszenie** | $27.0\text{s} - 30.0\text{s}$ | **3.0 s** | 20% miasta | Start w górę, choinki malejące w perspektywie, stroboskop Rudolfa |
-| **7** | **Finał** | **Wesołych Świąt!** *(Kraków)* | $u \ge 15.0\text{s}$ *(24 XII)* | **Permanentna** | — | Wieże Bazyliki Mariackiej, fajerwerki, baner `WESOŁYCH ŚWIĄT!` |
+| **1** | **Flight** | **Hyper-Warp Mode** (`TRYB HYPER-WARP`) | $0.0\text{s} - 4.5\text{s}$ | **4.5 s** | 30% of flight | Horizontal supersonic speed streaks, sleigh hull micro-vibration, dual jet exhaust flames |
+| **2** | **Flight** | **Stratospheric Flight** (`PRZELOT STRATOSFERYCZNY`) | $4.5\text{s} - 12.0\text{s}$ | **7.5 s** | 50% of flight | Curved Earth globe, glowing atmospheric limb, 48 cosmic stars, shooting star |
+| **3** | **Flight** | **Gliding Descent** (`ZNIZANIE`) | $12.0\text{s} - 15.0\text{s}$ | **3.0 s** | 20% of flight | Descending toward snowy pine trees growing in perspective, multi-colored fairy lights |
+| **4** | **Landed** | **Gift Drop** (`ZRZUT PREZENTOW`) | $15.0\text{s} - 21.0\text{s}$ | **6.0 s** | 40% of stay | Sleigh cruising over rooftops, parachuting presents landing into chimney pots |
+| **5** | **Landed** | **Cookie & Milk Break** (`PRZERWA NA CIASTKA I MLEKO`) | $21.0\text{s} - 27.0\text{s}$ | **6.0 s** | 40% of stay | Big Santa close-up, cozy fireplace with oak logs and licking flames, milk glass, cookie and crumbs |
+| **6** | **Landed** | **Takeoff Climb** (`WZNOSZENIE`) | $27.0\text{s} - 30.0\text{s}$ | **3.0 s** | 20% of stay | Upward takeoff, Christmas trees shrinking in reverse perspective, Rudolph strobe beacon |
+| **7** | **Finale** | **Merry Christmas!** (`WESOŁYCH ŚWIĄT!`, Kraków) | $u \ge 15.0\text{s}$ *(Dec 24)* | **Permanent** | — | Bazylika Mariacka spires silhouette, celebratory fireworks, banner `WESOŁYCH ŚWIĄT!` |
 
 * **Day 24 Grand Finale Hold**: Once Santa lands in Kraków (#288 at $u = 15.0\text{s}$ on Stop 12), Santa remains landed in Kraków indefinitely (`FINAŁ: KRAKOW 🎁`), never prematurely wrapping back to the Pacific.
 

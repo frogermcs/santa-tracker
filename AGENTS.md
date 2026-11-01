@@ -125,6 +125,10 @@ Whenever requirements change:
 
 No feature is considered delivered unless the PRD accurately describes its latest behavior.
 
+### 4.1. Language Requirement (Always English)
+- **`PRD.md`, `docs/PRD.md`, `docs/ARCHITECTURE.md`, and all markdown specifications must ALWAYS be written strictly in English.**
+- In-app Polish UI labels (e.g. `KOKPIT MIKOLAJA`, `TRYB HYPER-WARP`, `WESOŁYCH ŚWIĄT!`) may be quoted in code blocks or parentheses as the exact on-screen visual strings, but all section content, explanatory prose, table headers, columns, and descriptions must be authored in English.
+
 ---
 
 ## 5. December 24th Christmas Eve Immutable Constraints

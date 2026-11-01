@@ -72,13 +72,13 @@ $$\text{City Cycle (30.0s)} = \text{Flight (15.0s)} + \text{Landed Dwell (15.0s)
 
 | Sub-Phase | Mode / Scene | Parameter Window ($u$) | Duration | Share | Mathematical & Animation Formula |
 |---|---|:---:|:---:|:---:|---|
-| **Flight 1** | **Tryb Hyper-Warp** | $0.0\text{s} \le u < 4.5\text{s}$ | **4.5s** | 30% | `flightProgress = u / 15.0 < 0.30`<br/>Mach acceleration ($M 0.0 \to 4.2$), dual jet flames, horizontal streaks |
-| **Flight 2** | **Przelot Stratosferyczny** | $4.5\text{s} \le u < 12.0\text{s}$ | **7.5s** | 50% | `0.30 <= flightProgress < 0.80`<br/>Cruising speed ($M 4.8$), 48 cosmic stars, curved Earth globe & shooting star |
-| **Flight 3** | **Zniżanie (Gliding Descent)** | $12.0\text{s} \le u < 15.0\text{s}$ | **3.0s** | 20% | `descentP = (flightProgress - 0.80) / 0.20`<br/>Mach deceleration ($M 4.8 \to 0.0$), trees grow in perspective with fairy lights |
-| **Landed 1** | **Zrzut Prezentów** | $15.0\text{s} \le u < 21.0\text{s}$ | **6.0s** | 40% | `landedU = u - 15.0 < 6.0`<br/>Rooftop cruise, parachuting presents drop directly into chimneys |
-| **Landed 2** | **Przerwa na Ciastka i Mleko** | $21.0\text{s} \le u < 27.0\text{s}$ | **6.0s** | 40% | `6.0 <= landedU < 12.0`<br/>Fireplace hearth, organic flame tongues, cookie snacking & milk sipping |
-| **Landed 3** | **Wznoszenie (Takeoff Climb)** | $27.0\text{s} \le u < 30.0\text{s}$ | **3.0s** | 20% | `climbP = (u - 27.0) / 3.0`<br/>Ascent into the stars, ground & trees shrink in reverse perspective |
-| **Grand Finale** | **Wesołych Świąt! (Kraków)** | $u \ge 15.0\text{s}$ *(Dec 24, Stop 12)* | **Permanent** | — | Arrival lock in Kraków: Bazylika Mariacka spires silhouette, fireworks & banner |
+| **Flight 1** | **Hyper-Warp Mode** (`TRYB HYPER-WARP`) | $0.0\text{s} \le u < 4.5\text{s}$ | **4.5s** | 30% | `flightProgress = u / 15.0 < 0.30`<br/>Mach acceleration ($M 0.0 \to 4.2$), dual jet flames, horizontal streaks |
+| **Flight 2** | **Stratospheric Flight** (`PRZELOT STRATOSFERYCZNY`) | $4.5\text{s} \le u < 12.0\text{s}$ | **7.5s** | 50% | `0.30 <= flightProgress < 0.80`<br/>Cruising speed ($M 4.8$), 48 cosmic stars, curved Earth globe & shooting star |
+| **Flight 3** | **Gliding Descent** (`ZNIZANIE`) | $12.0\text{s} \le u < 15.0\text{s}$ | **3.0s** | 20% | `descentP = (flightProgress - 0.80) / 0.20`<br/>Mach deceleration ($M 4.8 \to 0.0$), trees grow in perspective with fairy lights |
+| **Landed 1** | **Gift Drop** (`ZRZUT PREZENTOW`) | $15.0\text{s} \le u < 21.0\text{s}$ | **6.0s** | 40% | `landedU = u - 15.0 < 6.0`<br/>Rooftop cruise, parachuting presents drop directly into chimneys |
+| **Landed 2** | **Cookie & Milk Break** (`PRZERWA NA CIASTKA I MLEKO`) | $21.0\text{s} \le u < 27.0\text{s}$ | **6.0s** | 40% | `6.0 <= landedU < 12.0`<br/>Fireplace hearth, organic flame tongues, cookie snacking & milk sipping |
+| **Landed 3** | **Takeoff Climb** (`WZNOSZENIE`) | $27.0\text{s} \le u < 30.0\text{s}$ | **3.0s** | 20% | `climbP = (u - 27.0) / 3.0`<br/>Ascent into the stars, ground & trees shrink in reverse perspective |
+| **Grand Finale** | **Merry Christmas!** (`WESOŁYCH ŚWIĄT!`, Kraków) | $u \ge 15.0\text{s}$ *(Dec 24, Stop 12)* | **Permanent** | — | Arrival lock in Kraków: Bazylika Mariacka spires silhouette, fireworks & banner |
 
 ---
 
