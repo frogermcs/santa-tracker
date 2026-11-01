@@ -262,7 +262,7 @@ export function renderSharedRadar(
   rect("rgba(2,17,10,.85)", 0, 0, W, 12);
   rect("#073018", 0, 12, W, 1);
   text("BAT 98%", 4, 2, "#7dff9b", "left");
-  text("RADAR MIKOLAJA", RADAR_CX, 2, "#7dff9b", "center");
+  text("MIKORADAR", RADAR_CX, 2, "#7dff9b", "center");
   const dayText = "DZIEN " + dayNumber;
   text(dayText, W - 4, 2, isGrandFinale ? "#ffd54a" : "#7dff9b", "right");
 

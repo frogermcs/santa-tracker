@@ -1342,11 +1342,6 @@ export function renderCamScreen(
   canvas.setTextColor(TFT_WHITE, COLOR_HEADER_BG);
   canvas.drawString("98%", 18, 3);
 
-  // System Title
-  canvas.setTextDatum(top_center);
-  canvas.setTextColor(COLOR_CYAN_BRIGHT, COLOR_HEADER_BG);
-  canvas.drawString("KAMERA MIKOLAJA", RADAR_CENTER_X, 3);
-
   // Active Advent Day Badge
   canvas.setTextDatum(top_right);
   canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);

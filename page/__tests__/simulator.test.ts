@@ -300,6 +300,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
       render(sim, state, 1000);
       const radarFlightStrings = drawStringSpy.mock.calls.map((c) => c[0]);
       expect(radarFlightStrings).toContain("CEL: GISBORNE");
+      expect(radarFlightStrings).toContain("MIKORADAR");
       expect(radarFlightStrings.some((s) => s.startsWith("POSTOJ:"))).toBe(false);
 
       // Cockpit Screen (Screen 1)
@@ -309,6 +310,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
       const cockpitFlightStrings = drawStringSpy.mock.calls.map((c) => c[0]);
       expect(cockpitFlightStrings).toContain("CEL: ");
       expect(cockpitFlightStrings).toContain("GISBORNE");
+      expect(cockpitFlightStrings).toContain("KOKPIT MISJI");
       expect(cockpitFlightStrings).toContain("PRZELOT STRATOSFERYCZNY");
       expect(cockpitFlightStrings).not.toContain("POSTOJ: ");
 
@@ -319,7 +321,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
       const camFlightStrings = drawStringSpy.mock.calls.map((c) => c[0]);
       expect(camFlightStrings).toContain("CEL: ");
       expect(camFlightStrings).toContain("GISBORNE");
-      expect(camFlightStrings).toContain("KAMERA MIKOLAJA");
+      expect(camFlightStrings).not.toContain("KAMERA MIKOLAJA");
       expect(camFlightStrings).not.toContain("POSTOJ: ");
 
       // --- 2. Rooftop Landed Stay (u = 22.0s >= 15.0s) ---
@@ -350,7 +352,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
       const camLandedStrings = drawStringSpy.mock.calls.map((c) => c[0]);
       expect(camLandedStrings).toContain("POSTOJ: ");
       expect(camLandedStrings).toContain("GISBORNE");
-      expect(camLandedStrings).toContain("KAMERA MIKOLAJA");
+      expect(camLandedStrings).not.toContain("KAMERA MIKOLAJA");
       expect(camLandedStrings).not.toContain("CEL: ");
 
       // --- 3. December 24th Kraków Grand Finale ---
@@ -383,7 +385,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(camFinaleStrings).toContain("FINAL: ");
       expect(camFinaleStrings).toContain("KRAKOW");
       expect(camFinaleStrings).toContain("WESOLYCH SWIAT!");
-      expect(camFinaleStrings).toContain("KAMERA MIKOLAJA");
+      expect(camFinaleStrings).not.toContain("KAMERA MIKOLAJA");
       expect(camFinaleStrings).toContain("WIGILIA!");
     });
 

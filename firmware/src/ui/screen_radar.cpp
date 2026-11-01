@@ -128,10 +128,10 @@ void ScreenRadar::render(const JourneyData& journey, const TelemetryState& telem
   _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
   _canvas->drawString(batBuf, 4, 2);
 
-  // Center (x: 120, y: 2): RADAR MIKOLAJA
+  // Center (x: 120, y: 2): MIKORADAR
   _canvas->setTextDatum(top_center);
   _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
-  _canvas->drawString("RADAR MIKOLAJA", RADAR_CENTER_X, 2);
+  _canvas->drawString("MIKORADAR", RADAR_CENTER_X, 2);
 
   // Right (x: 236, y: 2): DZIEN <activeDay> (Gold on Day 24, Green on Days 1..23)
   char dayBuf[16];

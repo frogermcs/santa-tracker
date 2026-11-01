@@ -28,7 +28,7 @@ export default function RadarPage() {
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [scanlines, setScanlines] = useState<boolean>(true);
 
-  // Screen Selection (Screen 1: Radar, Screen 2: Kokpit Mikołaja, Screen 3: Kamera Mikołaja)
+  // Screen Selection (Screen 1: MikoRadar, Screen 2: Kokpit Misji, Screen 3: Santa Cam)
   const [activeScreen, setActiveScreen] = useState<"radar" | "cockpit" | "cam">("radar");
   const [liveMetrics, setLiveMetrics] = useState<SantaCockpitMetrics | null>(null);
 
@@ -304,7 +304,7 @@ export default function RadarPage() {
               }`}
             >
               <Compass className="w-3.5 h-3.5 text-emerald-400" />
-              <span>1: Radar Lotu</span>
+              <span>1: MikoRadar</span>
             </button>
 
             <button
@@ -316,7 +316,7 @@ export default function RadarPage() {
               }`}
             >
               <Gauge className="w-3.5 h-3.5 text-amber-400" />
-              <span>2: Kokpit Mikołaja</span>
+              <span>2: Kokpit Misji</span>
             </button>
 
             <button
@@ -328,7 +328,7 @@ export default function RadarPage() {
               }`}
             >
               <Camera className="w-3.5 h-3.5 text-rose-400" />
-              <span>3: Kamera Mikołaja</span>
+              <span>3: Santa Cam</span>
             </button>
           </div>
 
@@ -425,7 +425,7 @@ export default function RadarPage() {
               <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
                 <span className="text-amber-300 font-bold flex items-center gap-1.5 text-[11px]">
                   <Layers className="w-3.5 h-3.5 text-amber-400" />
-                  Parametry Kokpitu Mikołaja:
+                  Parametry Kokpitu Misji:
                 </span>
                 <span className="text-[10px] text-amber-300 font-bold">
                   Przystanek {activeStopIndex + 1}/{currentStops.length}
