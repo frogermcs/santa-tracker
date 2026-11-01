@@ -64,7 +64,7 @@ export function renderDashboardScreen(
   drawBitmapText(ctx, "98%", 18, 3, COLOR_EMERALD_BRIGHT);
 
   // Tytuł centralny (zbalansowany na szerokość ekranu)
-  drawBitmapText(ctx, "KOKPIT MIKOLAJA", 120, 3, COLOR_EMERALD, "center");
+  drawBitmapText(ctx, "KOKPIT MISJI", 120, 3, COLOR_EMERALD, "center");
 
   // Dzień grudnia (prawa strona)
   const dayStr = `DZIEN ${String(dayNum).padStart(2, "0")}`;

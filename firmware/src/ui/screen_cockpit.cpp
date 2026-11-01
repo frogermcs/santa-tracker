@@ -159,7 +159,7 @@ void ScreenCockpit::render(
   // System Title
   _canvas->setTextDatum(top_center);
   _canvas->setTextColor(COLOR_CYAN_BRIGHT, COLOR_HEADER_BG);
-  _canvas->drawString("KOKPIT MIKOLAJA", RADAR_CENTER_X, 3);
+  _canvas->drawString("KOKPIT MISJI", RADAR_CENTER_X, 3);
 
   // Active Advent Day
   char dayBuf[16];

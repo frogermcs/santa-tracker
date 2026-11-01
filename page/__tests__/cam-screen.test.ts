@@ -42,7 +42,7 @@ describe("ScreenCam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)", () => {
 
     const strings = drawStringSpy.mock.calls.map((c) => c[0]);
     expect(strings).toContain("98%");
-    expect(strings).toContain("KAMERA MIKOLAJA");
+    expect(strings).not.toContain("KAMERA MIKOLAJA");
     expect(strings).toContain("DZIEN 24");
     expect(strings).toContain("CEL: ");
     expect(strings).toContain("GISBORNE");

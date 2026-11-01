@@ -53,7 +53,7 @@ The physical gadget runs on the **M5StickC-Plus SE** (Special Edition, transluce
 * **Rotating Radar Beam:** 360° sweeping green ray (`#5aff8c`) with faint trailing ray.
 * **Santa Blip:** Pulsing red/white contact marker with radiating radar ping rings.
 * **Dotted Breadcrumbs:** Gold dotted flight trail (`#ffd54a`, 3px spacing) trailing Santa.
-* **HUD Readouts:** Header (`RADAR MIKOLAJA`, battery %, speed multiplier); Footer (`CEL: <CITY>`, `CZAS 0:<ETA>`).
+* **HUD Readouts:** Header (`MIKORADAR`, battery %, speed multiplier); Footer (`CEL: <CITY>`, `CZAS 0:<ETA>`).
 
 ### 3.2. Context-Aware Visuals Across Screens
 The app features 3 distinct views, where animations automatically reflect Santa's flight status:
@@ -66,7 +66,7 @@ The app features 3 distinct views, where animations automatically reflect Santa'
 
 ### 3.3. Cockpit Dashboard Specification (Milestone 2 — Screen 3 / Modern Glass Cockpit)
 For the 240×135 ST7789v2 IPS display, the Cockpit Dashboard provides a high-contrast, modern aerospace glass cockpit interface (pitch-black obsidian background, titanium slate dividers, electric ice cyan headers, pure white live telemetry, and full-color 16-bit iconography):
-* **Header Bar**: Sleek dark avionics glass (`0x0821`), battery level with green gauge and pure white readout (`98%`), electric cyan system title (`KOKPIT MIKOLAJA`), and active Advent day badge in high-visibility amber (`DZIEN 24` / `DZIEN XX`).
+* **Header Bar**: Sleek dark avionics glass (`0x0821`), battery level with green gauge and pure white readout (`98%`), electric cyan system title (`KOKPIT MISJI`), and active Advent day badge in high-visibility amber (`DZIEN 24` / `DZIEN XX`).
 * **Flight Dynamics Box (Left Column, Upper)**:
   * Speed meter: `PREDK.` with live readout in flame amber (`M 4.8` in flight) or muted slate (`M 0.0` landed).
   * Multi-color 10-segment speed bar: Segments 0–3 in Ice Cyan (`0x07ff`), 4–6 in Aviation Amber (`0xfde0`), and 7–9 in Hypersonic Flame/Red (`0xf800`) over dark graphite slots (`0x18e3`).
@@ -180,7 +180,7 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 
 1. **Modern Aerospace Glass Cockpit Interface (`ScreenCockpit` / `dashboard-screen.ts`):**
    * Pitch-black background (`0x0000`), titanium slate dividers (`0x2124`), electric ice cyan headers (`0x07ff`), pure white live telemetry, and aviation amber highlights (`0xfde0`).
-   * Top Header: Battery percentage, `KOKPIT MIKOLAJA` title, active Advent day badge (`DZIEN XX`).
+   * Top Header: Battery percentage, `KOKPIT MISJI` title, active Advent day badge (`DZIEN XX`).
    * Flight Dynamics: Mach speed, 10-segment multi-color speed bar (Cyan $\rightarrow$ Amber $\rightarrow$ Red), stratospheric altitude (`PULAP 11.5k M` vs `65 M`).
    * Gift Payload: Delivered count (`DOSTARCZONO:`), regional drop rate (`ZRZUT:` in flame gold on roofs, `0/s` in flight), 10-segment emerald progress bar.
    * Sustenance ("Paliwo Mikołaja"): 8×8 pixel-art chocolate chip cookie icon + counter (`CIASTKA: 330.0M`); 7×9 pixel-art milk bottle icon + counter (`MLEKO: 25.3M L`).

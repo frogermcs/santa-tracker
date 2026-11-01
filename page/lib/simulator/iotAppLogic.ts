@@ -466,10 +466,10 @@ function renderRadarScreen(
   canvas.setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
   canvas.drawString("BAT 98%", 4, 2);
 
-  // Center (x: 120, y: 2): RADAR MIKOLAJA
+  // Center (x: 120, y: 2): MIKORADAR
   canvas.setTextDatum(top_center);
   canvas.setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
-  canvas.drawString("RADAR MIKOLAJA", RADAR_CENTER_X, 2);
+  canvas.drawString("MIKORADAR", RADAR_CENTER_X, 2);
 
   // Right (x: 236, y: 2): DZIEN <activeDay>
   canvas.setTextDatum(top_right);
@@ -668,7 +668,7 @@ function renderCockpitScreen(
   // System Title
   canvas.setTextDatum(top_center);
   canvas.setTextColor(COLOR_CYAN_BRIGHT, COLOR_HEADER_BG);
-  canvas.drawString("KOKPIT MIKOLAJA", RADAR_CENTER_X, 3);
+  canvas.drawString("KOKPIT MISJI", RADAR_CENTER_X, 3);
 
   // Active Advent Day
   canvas.setTextDatum(top_right);

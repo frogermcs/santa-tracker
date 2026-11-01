@@ -1080,10 +1080,6 @@ void ScreenCam::render(
   _canvas->setTextColor(TFT_WHITE, COLOR_HEADER_BG);
   _canvas->drawString("98%", 18, 3);
 
-  _canvas->setTextDatum(top_center);
-  _canvas->setTextColor(COLOR_CYAN_BRIGHT, COLOR_HEADER_BG);
-  _canvas->drawString("KAMERA MIKOLAJA", 120, 3);
-
   char dayBuf[16];
   snprintf(dayBuf, sizeof(dayBuf), "DZIEN %02d", telemetry.activeDay);
   _canvas->setTextDatum(top_right);
