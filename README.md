@@ -64,3 +64,19 @@ pio run -e m5stick-c --target upload
 | **Button A (Hold >0.6s)** | **Next Advent Day**: Cycles through 24 Advent Days (`D01` → `D02` → ... → `D24` → `D01`) |
 | **Button B (Top Side)** | **Next City**: Advances to next city waypoint on active day (1 → 12 → 1) |
 | **Button B (Hold >0.6s)** | **Sound Mute/Unmute**: Toggles buzzer sound chirps and chimes |
+
+---
+
+## ⏱️ Simulation Cadence & Scene Timings
+
+The simulation runs a deterministic **30.0-second cycle per city** (`SEC_PER_CITY = 30.0s`), split into **15.0s in-transit flight** and **15.0s rooftop dwell**:
+
+* **In-Transit Flight (15.0s)**:
+  * **Tryb Hyper-Warp** ($0.0\text{s} - 4.5\text{s}$, 30%): Supersonic acceleration, speed streaks, twin jet flames.
+  * **Przelot Stratosferyczny** ($4.5\text{s} - 12.0\text{s}$, 50%): Curved Earth globe, glowing atmosphere, 48 stars, shooting star.
+  * **Zniżanie** ($12.0\text{s} - 15.0\text{s}$, 20%): Approaching snowy pine trees decorated with Christmas fairy lights.
+* **Rooftop Landed Dwell (15.0s)**:
+  * **Zrzut Prezentów** ($15.0\text{s} - 21.0\text{s}$, 40%): Parachuting presents dropped directly into chimneys.
+  * **Przerwa na Ciastka i Mleko** ($21.0\text{s} - 27.0\text{s}$, 40%): Big Santa by the fireplace, dancing flames, cookies & milk.
+  * **Wznoszenie** ($27.0\text{s} - 30.0\text{s}$, 20%): Takeoff climb, ground & trees shrink in reverse perspective.
+* **Grand Finale (Dec 24 Kraków)**: Permanent arrival lock celebrating at Bazylika Mariacka spires with fireworks.

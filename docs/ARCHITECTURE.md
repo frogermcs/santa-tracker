@@ -62,6 +62,24 @@ To eliminate bugs and compilation cycle delays on physical hardware, every firmw
 | **Coastline Matrix** | `landDots.ts` (912 coordinates) | `land_dots.h` (PROGMEM) | Byte-for-byte identical dot coordinates |
 | **Advent Schedule**  | `advent-schedule.ts` (288 stops) | `advent_schedule.h` (PROGMEM) | Exact 24-day itinerary, windows, and geographical coordinates |
 
+### 2.1. Simulation Cadence & Scene Timing Architecture
+
+Each city visit is structured on a deterministic parameter $u \in [0.0\text{s}, 30.0\text{s}]$ (`SEC_PER_CITY = 30.0s`), split evenly into a 15.0-second in-transit flight phase and a 15.0-second rooftop landed dwell phase:
+
+$$\text{City Cycle (30.0s)} = \text{Flight (15.0s)} + \text{Landed Dwell (15.0s)}$$
+
+#### Phase Partition & Timing Breakdown:
+
+| Sub-Phase | Mode / Scene | Parameter Window ($u$) | Duration | Share | Mathematical & Animation Formula |
+|---|---|:---:|:---:|:---:|---|
+| **Flight 1** | **Tryb Hyper-Warp** | $0.0\text{s} \le u < 4.5\text{s}$ | **4.5s** | 30% | `flightProgress = u / 15.0 < 0.30`<br/>Mach acceleration ($M 0.0 \to 4.2$), dual jet flames, horizontal streaks |
+| **Flight 2** | **Przelot Stratosferyczny** | $4.5\text{s} \le u < 12.0\text{s}$ | **7.5s** | 50% | `0.30 <= flightProgress < 0.80`<br/>Cruising speed ($M 4.8$), 48 cosmic stars, curved Earth globe & shooting star |
+| **Flight 3** | **Zniżanie (Gliding Descent)** | $12.0\text{s} \le u < 15.0\text{s}$ | **3.0s** | 20% | `descentP = (flightProgress - 0.80) / 0.20`<br/>Mach deceleration ($M 4.8 \to 0.0$), trees grow in perspective with fairy lights |
+| **Landed 1** | **Zrzut Prezentów** | $15.0\text{s} \le u < 21.0\text{s}$ | **6.0s** | 40% | `landedU = u - 15.0 < 6.0`<br/>Rooftop cruise, parachuting presents drop directly into chimneys |
+| **Landed 2** | **Przerwa na Ciastka i Mleko** | $21.0\text{s} \le u < 27.0\text{s}$ | **6.0s** | 40% | `6.0 <= landedU < 12.0`<br/>Fireplace hearth, organic flame tongues, cookie snacking & milk sipping |
+| **Landed 3** | **Wznoszenie (Takeoff Climb)** | $27.0\text{s} \le u < 30.0\text{s}$ | **3.0s** | 20% | `climbP = (u - 27.0) / 3.0`<br/>Ascent into the stars, ground & trees shrink in reverse perspective |
+| **Grand Finale** | **Wesołych Świąt! (Kraków)** | $u \ge 15.0\text{s}$ *(Dec 24, Stop 12)* | **Permanent** | — | Arrival lock in Kraków: Bazylika Mariacka spires silhouette, fireworks & banner |
+
 ---
 
 ## 3. Communication Scheme & Power Management

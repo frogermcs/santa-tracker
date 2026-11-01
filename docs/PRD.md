@@ -115,8 +115,20 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 
 ### 4.2. Simulation Rhythm & Speed Ratio
 * **Real-World Itinerary**: 1 hour in transit (flight) + 1 hour in city (stop) = 2 hours per waypoint (12 stops = 24 hours).
-* **Hardcoded Web Simulation**: Scaled to **15 seconds in transit + 15 seconds landed in city** (**30 seconds total per waypoint**, `secPerCity = 30`).
-* **Day 24 Grand Finale Hold**: Once Santa lands in Kraków (#288), Santa remains landed in Kraków for an extended celebration hold (`FINAŁ: KRAKOW 🎁`).
+* **Hardcoded Web Simulation**: Scaled to **15 seconds in transit + 15 seconds landed in city** (**30 seconds total per waypoint**, `secPerCity = 30.0`).
+* **Sub-Phase Timing Architecture (30s Cycle)**:
+
+| # | Faza | Scena (Tryb) | Okno czasowe ($u$) | Czas trwania | Udział w fazie | Kluczowe elementy wizualne |
+|---|---|---|:---:|:---:|:---:|---|
+| **1** | **Lot** | **Tryb Hyper-Warp** | $0.0\text{s} - 4.5\text{s}$ | **4.5 s** | 30% lotu | Poziome smugi naddźwiękowe, drgania sań, podwójne płomienie dysz |
+| **2** | **Lot** | **Przelot Stratosferyczny** | $4.5\text{s} - 12.0\text{s}$ | **7.5 s** | 50% lotu | Zakrzywiona Ziemia, poświata atmosfery, 48 gwiazd, spadająca gwiazda |
+| **3** | **Lot** | **Zniżanie** | $12.0\text{s} - 15.0\text{s}$ | **3.0 s** | 20% lotu | Zbliżanie do ośnieżonych choinek rosnących w perspektywie, kolorowe lampki |
+| **4** | **Miasto** | **Zrzut Prezentów** | $15.0\text{s} - 21.0\text{s}$ | **6.0 s** | 40% miasta | Sanie nad dachami, paczki na spadochronach wpadające do kominów |
+| **5** | **Miasto** | **Przerwa na Ciastka i Mleko** | $21.0\text{s} - 27.0\text{s}$ | **6.0 s** | 40% miasta | Duży Mikołaj, kominek z polanami i płomieniami, mleko, ciastko i okruchy |
+| **6** | **Miasto** | **Wznoszenie** | $27.0\text{s} - 30.0\text{s}$ | **3.0 s** | 20% miasta | Start w górę, choinki malejące w perspektywie, stroboskop Rudolfa |
+| **7** | **Finał** | **Wesołych Świąt!** *(Kraków)* | $u \ge 15.0\text{s}$ *(24 XII)* | **Permanentna** | — | Wieże Bazyliki Mariackiej, fajerwerki, baner `WESOŁYCH ŚWIĄT!` |
+
+* **Day 24 Grand Finale Hold**: Once Santa lands in Kraków (#288 at $u = 15.0\text{s}$ on Stop 12), Santa remains landed in Kraków indefinitely (`FINAŁ: KRAKOW 🎁`), never prematurely wrapping back to the Pacific.
 
 ---
 
