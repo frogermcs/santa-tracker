@@ -82,8 +82,17 @@ stateDiagram-v2
     * [x] **Web Living Specification:** 1:1 `renderCockpitScreen()` in `iotAppLogic.ts` with modern aerospace glass cockpit palette, multi-color Mach 4.8 gauge, demographic gift distribution, pixel-art cookies & milk, and dynamic tactical mission phase box.
     * [x] **C++ Firmware Port (`firmware/src/ui/screen_cockpit.cpp`):** Direct zero-heap port to LovyanGFX for ST7789v2 IPS display with 16 native Unity tests passing in 1.8s.
   - [x] **Screen 3: Side-View Santa Cam (`ui/screen_cam`) (COMPLETE ✅):**
-    * [x] **Web Living Specification:** 1:1 `camScreen.ts` / `renderCamScreen()` in `iotAppLogic.ts` featuring 7 dynamic sub-phases (Hyper-Warp, Cruising Sky with 2-frame reindeer gallop, Gliding Descent, City Rooftop Chimney Cruise with active parachuting gift drops into scrolling chimneys, Flying Cookie Snack, Takeoff Climb, and Kraków Grand Finale with Bazylika Mariacka spires & fireworks).
-    * [x] **C++ Firmware Port (`firmware/src/ui/screen_cam.cpp`):** Direct zero-heap port to LovyanGFX for ST7789v2 IPS display with 18 native Unity tests passing in 2.0s.
+    * [x] **Web Living Specification:** 1:1 `camScreen.ts` / `renderCamScreen()` in `iotAppLogic.ts` featuring 7 dynamic sub-phases matching the 30.0s cadence:
+      1. Hyper-Warp Mode (`TRYB HYPER-WARP`, 4.5s / 30%): Horizontal speed streaks, sleigh vibration, twin jet flames, Rudolph aura.
+      2. Stratospheric Flight (`PRZELOT STRATOSFERYCZNY`, 7.5s / 50%): Curved Earth globe, glowing atmosphere, 48 cosmic stars, shooting star.
+      3. Gliding Descent (`ZNIZANIE`, 3.0s / 20%): Sleigh descent toward snowy pine trees growing in perspective with twinkling fairy lights.
+      4. Rooftop Gift Drop (`ZRZUT PREZENTOW`, 6.0s / 40%): Sleigh cruising over townhouses, parachuting presents landing in chimneys.
+      5. Cookie & Milk Break (`PRZERWA NA CIASTKA I MLEKO`, 6.0s / 40%): Big Santa by the fireplace, dancing flames, cookies, milk & crumbs.
+      6. Takeoff Climb (`WZNOSZENIE`, 3.0s / 20%): Takeoff climb into starry sky, trees shrinking in reverse perspective.
+      7. Merry Christmas! (`WESOŁYCH ŚWIĄT!`, Kraków): Bazylika Mariacka spires silhouette, celebratory fireworks & banner.
+    * [x] **Dedicated Scene Debugger Studio (`/scene-debugging`):** Interactive gallery with speed controls (0.25x–4x), manual scene isolation, and multi-cam matrix.
+    * [x] **Single Source of Truth (`stage-definitions.ts`):** Canonical stage titles and story descriptions shared across web, cockpit, and C++ firmware.
+    * [x] **C++ Firmware Port (`firmware/src/ui/screen_cam.cpp`):** Direct zero-heap port to LovyanGFX for ST7789v2 IPS display with 18 native Unity tests passing in 0.43s.
   - [x] **Screen Cycling & Navigation:**
     * [x] Circular 3-screen carousel on Button A: `Screen 1 (Radar)` $\rightarrow$ `Screen 2 (Cockpit)` $\rightarrow$ `Screen 3 (Santa Cam)` $\rightarrow$ `Screen 1`.
     * [x] Hardware button parity (Button A: Screen Toggle, Button B: City Advance, Button B Hold: Sound Chirp Mute).
