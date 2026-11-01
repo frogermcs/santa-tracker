@@ -161,7 +161,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(state.cities[11].name).toBe("KRAKOW");
     });
 
-    it("toggles active screen between Radar and Cockpit on Button A click", () => {
+    it("cycles active screen through Radar, Cockpit, and Santa Cam on Button A click", () => {
       const state = setup(0);
       expect(state.activeScreen).toBe(0); // Radar
 
@@ -169,6 +169,9 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(state.activeScreen).toBe(1); // Cockpit
 
       update(state, { ...noButtons, wasPressedA: true }, 16, 32);
+      expect(state.activeScreen).toBe(2); // Santa Cam
+
+      update(state, { ...noButtons, wasPressedA: true }, 16, 48);
       expect(state.activeScreen).toBe(0); // Radar
     });
 
@@ -256,6 +259,10 @@ describe("M5Canvas Simulator Parity Tests", () => {
       // Render Cockpit (Screen 1)
       state.activeScreen = 1;
       expect(() => render(sim, state, 2000)).not.toThrow();
+
+      // Render Santa Cam (Screen 2)
+      state.activeScreen = 2;
+      expect(() => render(sim, state, 2500)).not.toThrow();
     });
 
     it("strictly verifies 'CEL:' in transit and 'POSTOJ:' on rooftop across both Radar and Cockpit screens", () => {
@@ -305,6 +312,16 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(cockpitFlightStrings).toContain("PRZELOT HIPERSONICZNY (M4.8)");
       expect(cockpitFlightStrings).not.toContain("POSTOJ: ");
 
+      // Santa Cam Screen (Screen 2)
+      state.activeScreen = 2;
+      drawStringSpy.mockClear();
+      render(sim, state, 1000);
+      const camFlightStrings = drawStringSpy.mock.calls.map((c) => c[0]);
+      expect(camFlightStrings).toContain("CEL: ");
+      expect(camFlightStrings).toContain("GISBORNE");
+      expect(camFlightStrings).toContain("KAMERA MIKOLAJA");
+      expect(camFlightStrings).not.toContain("POSTOJ: ");
+
       // --- 2. Rooftop Landed Stay (u = 16.0s >= 12.0s) ---
       state.simTime = 16.0;
 
@@ -325,6 +342,16 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(cockpitLandedStrings).toContain("GISBORNE");
       expect(cockpitLandedStrings).toContain("PRZERWA NA CIASTKA I MLEKO");
       expect(cockpitLandedStrings).not.toContain("CEL: ");
+
+      // Santa Cam Screen (Screen 2)
+      state.activeScreen = 2;
+      drawStringSpy.mockClear();
+      render(sim, state, 1000);
+      const camLandedStrings = drawStringSpy.mock.calls.map((c) => c[0]);
+      expect(camLandedStrings).toContain("POSTOJ: ");
+      expect(camLandedStrings).toContain("GISBORNE");
+      expect(camLandedStrings).toContain("KAMERA MIKOLAJA");
+      expect(camLandedStrings).not.toContain("CEL: ");
 
       // --- 3. December 24th Kraków Grand Finale ---
       state.activeDay = 24;
@@ -347,6 +374,17 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(cockpitFinaleStrings).toContain("KRAKOW");
       expect(cockpitFinaleStrings).toContain("FINAL WIGILII: KRAKOW!");
       expect(cockpitFinaleStrings).toContain("WIGILIA!");
+
+      // Santa Cam Screen (Screen 2)
+      state.activeScreen = 2;
+      drawStringSpy.mockClear();
+      render(sim, state, 1000);
+      const camFinaleStrings = drawStringSpy.mock.calls.map((c) => c[0]);
+      expect(camFinaleStrings).toContain("FINAL: ");
+      expect(camFinaleStrings).toContain("KRAKOW");
+      expect(camFinaleStrings).toContain("WESOLYCH SWIAT!");
+      expect(camFinaleStrings).toContain("KAMERA MIKOLAJA");
+      expect(camFinaleStrings).toContain("WIGILIA!");
     });
 
     it("locks indefinitely on Day 24 at Kraków without wrapping back to the Pacific", () => {

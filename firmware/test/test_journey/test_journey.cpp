@@ -441,6 +441,71 @@ void test_santa_metrics_krakow_finale(void) {
   TEST_ASSERT_EQUAL_STRING("25.3M L", m.milkLitersDisplay);
 }
 
+// Test 17: Validate 3-Screen Carousel Navigation (Radar -> Cockpit -> Cam -> Radar)
+void test_screen_carousel_navigation(void) {
+  enum TestScreen {
+    T_RADAR = 0,
+    T_COCKPIT = 1,
+    T_CAM = 2
+  };
+
+  TestScreen active = T_RADAR;
+  TEST_ASSERT_EQUAL_INT(0, active);
+
+  // Button A Short Press 1: Radar -> Cockpit
+  active = (TestScreen)((active + 1) % 3);
+  TEST_ASSERT_EQUAL_INT(1, active);
+
+  // Button A Short Press 2: Cockpit -> Cam
+  active = (TestScreen)((active + 1) % 3);
+  TEST_ASSERT_EQUAL_INT(2, active);
+
+  // Button A Short Press 3: Cam -> Radar
+  active = (TestScreen)((active + 1) % 3);
+  TEST_ASSERT_EQUAL_INT(0, active);
+}
+
+// Test 18: Validate Santa Cam Sub-Phase Timing and Metrics Mapping
+void test_santa_cam_subphase_resolution(void) {
+  SantaCockpitMetrics m;
+
+  // 1. Hyper-Warp (Flight 0-20% -> u = 1.0s)
+  computeSantaMetrics(24, 0, 1.0f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_START, m.flightPhase);
+  TEST_ASSERT_TRUE(m.machSpeed > 0.0f);
+
+  // 2. Cruising Sky (Flight 20-80% -> u = 6.0s)
+  computeSantaMetrics(24, 0, 6.0f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_PRZELOT, m.flightPhase);
+  TEST_ASSERT_TRUE(m.altitudeM > 10000);
+
+  // 3. Gliding Descent (Flight 80-100% -> u = 10.5s)
+  computeSantaMetrics(24, 0, 10.5f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_ZNIZANIE, m.flightPhase);
+
+  // 4. Chimney Drop (Landed 0-4s -> u = 13.0s)
+  computeSantaMetrics(24, 0, 13.0f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_DACH, m.flightPhase);
+  int subPhaseDrop = (int)((13.0f - 12.0f) / 4.0f);
+  TEST_ASSERT_EQUAL_INT(0, subPhaseDrop);
+
+  // 5. Cookie & Milk Break (Landed 4-8s -> u = 17.0s)
+  computeSantaMetrics(24, 0, 17.0f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_DACH, m.flightPhase);
+  int subPhaseCookie = (int)((17.0f - 12.0f) / 4.0f);
+  TEST_ASSERT_EQUAL_INT(1, subPhaseCookie);
+
+  // 6. Takeoff Prep (Landed 8-12s -> u = 21.0s)
+  computeSantaMetrics(24, 0, 21.0f, 0.0f, "GISBORNE", false, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_DACH, m.flightPhase);
+  int subPhaseTakeoff = (int)((21.0f - 12.0f) / 4.0f);
+  TEST_ASSERT_EQUAL_INT(2, subPhaseTakeoff);
+
+  // 7. Kraków Finale Hold (Arrival Lock)
+  computeSantaMetrics(24, 11, 12.0f, 0.0f, "KRAKOW", true, m);
+  TEST_ASSERT_EQUAL_INT(PHASE_FINAL, m.flightPhase);
+}
+
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_default_journey_parsing);
@@ -459,5 +524,7 @@ int main(void) {
   RUN_TEST(test_santa_metrics_flight_dynamics);
   RUN_TEST(test_santa_metrics_rooftop_subphases);
   RUN_TEST(test_santa_metrics_krakow_finale);
+  RUN_TEST(test_screen_carousel_navigation);
+  RUN_TEST(test_santa_cam_subphase_resolution);
   return UNITY_END();
 }

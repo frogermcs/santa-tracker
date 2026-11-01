@@ -12,6 +12,7 @@ import { M5CanvasSim } from "./M5CanvasSim";
 import { LAND_DOTS } from "./landDots";
 import { getDaySchedule } from "../advent-schedule";
 import { computeSantaMetrics } from "../telemetry/santa-metrics";
+import { renderCamScreen } from "./camScreen";
 import {
   TFT_BLACK,
   TFT_WHITE,
@@ -71,7 +72,7 @@ export interface TelemetryState {
 
 export interface SimulatorAppState {
   bootTimeMs: number;
-  activeScreen: 0 | 1; // 0: Radar (Screen 1), 1: Cockpit Dashboard (Screen 2)
+  activeScreen: 0 | 1 | 2; // 0: Radar (Screen 1), 1: Cockpit Dashboard (Screen 2), 2: Santa Cam (Screen 3)
   activeDay: number;   // Advent Day 1..24 (Defaults to Day 24 Grand Finale)
   simTime: number;     // Simulation clock in seconds
   soundEnabled: boolean;
@@ -119,9 +120,9 @@ export function setCityIndex(state: SimulatorAppState, cityIdx: number): void {
   state.lastAction = `MIASTO: ${state.cities[safe]?.name}`;
 }
 
-export function setActiveScreen(state: SimulatorAppState, screen: 0 | 1): void {
+export function setActiveScreen(state: SimulatorAppState, screen: 0 | 1 | 2): void {
   state.activeScreen = screen;
-  state.lastAction = screen === 0 ? "EKRAN: RADAR" : "EKRAN: KOKPIT";
+  state.lastAction = screen === 0 ? "EKRAN: RADAR" : screen === 1 ? "EKRAN: KOKPIT" : "EKRAN: KAMERA";
 }
 
 /**
@@ -267,10 +268,15 @@ export function update(
   // Unified Button Navigation (Variant 1 — 1:1 Hardware/Simulator Parity)
   // ==========================================================================
 
-  // Button A (Front M5) Short Click: Toggle Screen (Radar <-> Cockpit)
+  // Button A (Front M5) Short Click: Toggle Screen (Radar -> Cockpit -> Kamera -> Radar)
   if (buttons.wasPressedA) {
-    state.activeScreen = state.activeScreen === 0 ? 1 : 0;
-    state.lastAction = state.activeScreen === 0 ? "EKRAN: RADAR" : "EKRAN: KOKPIT";
+    state.activeScreen = ((state.activeScreen + 1) % 3) as 0 | 1 | 2;
+    state.lastAction =
+      state.activeScreen === 0
+        ? "EKRAN: RADAR"
+        : state.activeScreen === 1
+        ? "EKRAN: KOKPIT"
+        : "EKRAN: KAMERA";
   }
 
   // Button A (Front M5) Long Hold (>0.6s): Jump to next Advent Day (1 -> 24 -> 1)
@@ -321,8 +327,10 @@ export function render(
 
   if (state.activeScreen === 0) {
     renderRadarScreen(canvas, state, telemetry, nowMs);
-  } else {
+  } else if (state.activeScreen === 1) {
     renderCockpitScreen(canvas, state, telemetry, nowMs);
+  } else {
+    renderCamScreen(canvas, state, telemetry, nowMs);
   }
 }
 

@@ -15,6 +15,7 @@ flowchart TD
         IoTLogic["iotAppLogic.ts<br/>(Zero-Allocation Portable C++ Logic)"]
         RootPage["/ Root Viewport<br/>(1x Physical ST7789v2 240x135 Enclosure)"]
         MapDebugger["/map-debugger<br/>(Vector Coordinates Inspector)"]
+        SceneDebugger["/scene-debugging<br/>(7-Scene Multi-Cam Matrix)"]
         
         IoTLogic --> M5CanvasSim
         M5CanvasSim --> RootPage
@@ -57,6 +58,7 @@ To eliminate bugs and compilation cycle delays on physical hardware, every firmw
 | **Simulation Kernel** | `iotAppLogic.ts` (`JourneyEngine`) | `core/journey_engine.cpp` | Identical easing curve (`easeInOut`), $O(1)$ time wrapping, and Kraków finale lock |
 | **Screen 1: Radar** | `renderRadarScreen()` in `iotAppLogic.ts` | `ui/screen_radar.cpp` | CRT phosphor palette, 360° sweep ray, pulsing red beacon, 912-dot land matrix |
 | **Screen 2: Cockpit**| `renderCockpitScreen()` in `iotAppLogic.ts` | `ui/screen_cockpit.cpp` (COMPLETE ✅) | Modern full-color glass cockpit, Mach gauge, pixel-art sustenance icons |
+| **Screen 3: Santa Cam**| `camScreen.ts` / `renderCamScreen()` in `iotAppLogic.ts` | `ui/screen_cam.cpp` (COMPLETE ✅) | 7-scene side-view animated pixel-art camera (Warp, Stratospheric flight with stars, Gliding descent, Rooftop gift drop, Fireplace cookie break, Takeoff climb, Kraków Grand Finale) |
 | **Coastline Matrix** | `landDots.ts` (912 coordinates) | `land_dots.h` (PROGMEM) | Byte-for-byte identical dot coordinates |
 | **Advent Schedule**  | `advent-schedule.ts` (288 stops) | `advent_schedule.h` (PROGMEM) | Exact 24-day itinerary, windows, and geographical coordinates |
 
