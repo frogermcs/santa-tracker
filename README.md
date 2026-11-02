@@ -60,7 +60,7 @@ pio run -e m5stick-c --target upload
 
 | Input | Action |
 | :--- | :--- |
-| **Button A (Front M5)** | **Toggle Screen**: 3-screen carousel (`Radar Lotu` → `Kokpit Mikołaja` → `Kamera Mikołaja` → `Radar Lotu`) |
+| **Button A (Front M5)** | **Toggle Screen**: 3-screen carousel (`MikoRadar` → `Kokpit Misji` → `Santa Cam` → `MikoRadar`) |
 | **Button A (Hold >0.6s)** | **Next Advent Day**: Cycles through 24 Advent Days (`D01` → `D02` → ... → `D24` → `D01`) |
 | **Button B (Top Side)** | **Next City**: Advances to next city waypoint on active day (1 → 12 → 1) |
 | **Button B (Hold >0.6s)** | **Sound Mute/Unmute**: Toggles buzzer sound chirps and chimes |

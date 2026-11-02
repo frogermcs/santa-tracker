@@ -28,7 +28,7 @@ function createMockCanvas() {
   return { sim, mockCtx };
 }
 
-describe("ScreenCam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)", () => {
+describe("ScreenCam (Screen 3 / SCREEN_CAM)", () => {
   it("renders the static HUD header and footer reliably", () => {
     const { sim } = createMockCanvas();
     const drawStringSpy = vi.spyOn(sim, "drawString");
