@@ -5,7 +5,7 @@
 #include "core/santa_metrics.h"
 
 // ============================================================================
-// ScreenCam - Side-View Santa Cam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)
+// ScreenCam - Side-View Santa Cam (Screen 3 / SCREEN_CAM)
 // ============================================================================
 // Hardware: M5StickC-Plus SE (ST7789v2 240x135 IPS Display)
 // 1:1 Parity with page/lib/simulator/camScreen.ts

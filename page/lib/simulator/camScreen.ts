@@ -1,5 +1,5 @@
 // ============================================================================
-// camScreen.ts — Side-View Santa Cam (Kamera Mikołaja — Screen 3 / SCREEN_CAM)
+// camScreen.ts — Side-View Santa Cam (Screen 3 / SCREEN_CAM)
 // ============================================================================
 // 1:1 Specification for M5StickC-Plus SE (240x135 ST7789v2 IPS Display)
 //
@@ -1018,7 +1018,7 @@ export interface CamRenderOptions {
 }
 
 // ============================================================================
-// SCREEN 3: Side-View Santa Cam (Kamera Mikołaja)
+// SCREEN 3: Side-View Santa Cam
 // ============================================================================
 
 export function renderCamScreen(

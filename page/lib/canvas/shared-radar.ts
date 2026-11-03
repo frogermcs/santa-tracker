@@ -8,7 +8,7 @@
  * - World Dot Matrix: 912 green dots (2x2 px, step 3)
  * - Radar Center: (120, 68), concentric rings at r=32, 64, 96 px
  * - Sweep Ray: 3.2s period ((nowMs % 3200) * 2π / 3200), length 110 px
- * - Top HUD (y: 0..12): BAT (left, x: 4), "RADAR MIKOLAJA" (center, x: 120), "DZIEN <N>" (right, x: 236)
+ * - Top HUD (y: 0..12): BAT (left, x: 4), "MIKORADAR" (center, x: 120), "DZIEN <N>" (right, x: 236)
  * - Bottom HUD (y: 121..135): "CEL: <CITY>" / "FINAŁ: KRAKOW" (left, x: 4), "CZAS 0:<ETA>" / "WIGILIA!" (right, x: 236)
  * - Font: 5x7 ASCII GlcdFont (Font 0 from M5GFX) rendered pixel-by-pixel with no antialiasing
  */
