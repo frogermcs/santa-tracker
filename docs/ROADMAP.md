@@ -103,26 +103,45 @@ stateDiagram-v2
 
 ---
 
-## Milestone 3: Single-Journey Web Flasher & In-Browser Wi-Fi Setup (ACTIVE 🎯)
+## Milestone 3A: Pure Web Installer for IoT (Flashing & Packaging) (COMPLETE ✅)
 
-* **Objective:** Enable parents and kids to install Santa-OS onto the M5StickC-Plus SE and configure Wi-Fi directly from the Santa Tracker landing page in one uninterrupted, browser-native flow over USB. Zero external companion apps, zero terminal commands, zero phone captive portals.
-* **Core Technology:** Web Serial API (`navigator.serial`), **ESP Web Tools** (`esp-web-tools`), and **Improv Wi-Fi Serial**.
+## Milestone 3A: Pure Web Installer for IoT (Flashing & Packaging) (COMPLETE ✅)
+
+* **Objective:** Enable parents and makers to flash Santa-OS onto physical M5StickC-Plus / Plus SE hardware directly from the Santa Tracker web application in under 60 seconds over USB using the Web Serial API and ESP Web Tools.
+* **Core Technology:** Web Serial API (`navigator.serial`), **ESP Web Tools** (`esp-web-tools`), Next.js 15, and PlatformIO ESP32 toolchain.
 * **Key Deliverables:**
-  - [ ] **1. Automated Firmware Packaging Pipeline (`scripts/package-firmware.mjs`):**
-    * Compiles PlatformIO binary targets.
-    * Bundles `bootloader.bin`, `partitions.bin`, `boot_app0.bin`, and `firmware.bin` into `page/public/firmware/`.
-    * Generates `manifest.json` conforming to the ESP Web Tools specification.
-  - [ ] **2. Single-Journey Web Installer on Landing Page (`page/`):**
-    * Prominent "Install on M5Stick" button using `<esp-web-install-button>`.
-    * Clean step-by-step connection guide (USB-C plug-in, desktop Chrome/Edge/Brave check).
-    * Seamless post-flash transition: Once flashing completes, the dialog automatically prompts for Wi-Fi SSID and password via Improv Wi-Fi Serial.
-    * Returning user management: Plugging in an already-installed device allows updating Wi-Fi or viewing serial logs without reflashing.
-  - [ ] **3. Firmware Improv Wi-Fi & NVS Handler (`firmware/`):**
+  - [x] **1. Automated Firmware Packaging Pipeline (`scripts/package-firmware.mjs`):**
+    * Compiles PlatformIO `m5stick-c` binary target (`pio run -e m5stick-c`).
+    * Bundles `bootloader.bin` (0x1000), `partitions.bin` (0x8000), `boot_app0.bin` (0xe000), and `firmware.bin` (0x10000) into `page/public/firmware/`.
+    * Dynamically extracts application version from `page/package.json`.
+    * Generates `manifest.json` conforming to ESP Web Tools specification with MD5 checksum reporting.
+  - [x] **2. Dedicated `/install` Web Route (`page/app/install/page.tsx`):**
+    * Dedicated, festive installation hub with real-time browser capability detection (`checkWebSerialSupport()`).
+    * Clear 3-step preparation guide (USB-C data cable check, port selection, 40s automated flashing).
+    * Collapsible driver & troubleshooting guide with direct links for CP2104 (Silicon Labs) and CH9102 (WCH) USB-to-UART bridges.
+    * Client-side dynamic Web Serial flasher button using `<esp-web-install-button>`.
+  - [x] **3. Navigation Integration (`page/app/page.tsx`):**
+    * Top navigation bar CTA: `⚡ Instalator M5Stick`.
+    * Left-column hardware callout card under emulator inviting users to flash their real device.
+  - [x] **4. Automated Quality & Specification Tests:**
+    * `page/__tests__/web-installer.test.ts` verifying manifest schema, partition offsets, binary sizes, and browser detection matrix.
+
+---
+
+## Milestone 3B: In-Browser Wi-Fi Setup & NTP Provisioning (ACTIVE 🎯)
+
+* **Objective:** Enable parents and kids to configure Wi-Fi credentials in-browser via Improv Wi-Fi Serial immediately after flashing or upon reconnecting the device, persisting credentials to NVS and performing an initial NTP time sync.
+* **Core Technology:** **Improv Wi-Fi Serial** protocol, ESP32 NVS (`Preferences`), and SNTP time client.
+* **Key Deliverables:**
+  - [ ] **1. Firmware Improv Wi-Fi & NVS Handler (`firmware/`):**
     * Lightweight Improv Wi-Fi Serial protocol listener in `firmware/src/network/improv_handler.cpp`.
     * Emits Improv RPC state packets over UART (`Serial`).
     * On receiving credentials: tests Wi-Fi connection, saves valid credentials to ESP32 Flash NVS (`Preferences` namespace `"santa_cfg"`), and reports device IP to the browser.
     * On first successful Wi-Fi connection, immediately triggers an initial NTP time sync.
     * Retains 100% offline fallback: if no Wi-Fi is entered, Santa-OS boots immediately using ROM data.
+  - [ ] **2. Web UI In-Browser Wi-Fi Flow (`page/`):**
+    * Seamless post-flash transition: Once flashing completes, the ESP Web Tools dialog automatically prompts for Wi-Fi SSID and password via Improv Wi-Fi Serial.
+    * Returning user management: Plugging in an already-installed device allows updating Wi-Fi or viewing serial logs without reflashing.
 
 ---
 

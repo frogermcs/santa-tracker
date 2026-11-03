@@ -216,23 +216,28 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
    * Flash: 30.9% (971 KB / 3.0 MB).
    * 18 native Unity tests passing in 0.5s (`pio test -e native`).
 
-### 6.4. Milestone 3: Single-Journey Web Flasher & In-Browser Wi-Fi Setup (ACTIVE 🎯)
+### 6.4. Milestone 3A: Pure Web Installer for IoT (COMPLETE ✅)
 
-1. **Browser-Native Firmware Installation (`/` Landing Page):**
-   * One-click installation using **ESP Web Tools** (`<esp-web-install-button>`) directly on the Santa Tracker landing page.
+1. **Browser-Native Firmware Installation (`/install` Hub & Landing Page):**
+   * Dedicated `/install` route and landing page callouts using **ESP Web Tools** (`<esp-web-install-button>`).
    * Flashes ESP32 bootloader, partitions, and application binaries over USB via the Web Serial API (`navigator.serial`) at 1.5M baud without requiring local developer tools (no PlatformIO, Python, or terminal).
-   * Automated packaging pipeline (`scripts/package-firmware.mjs`) generating `public/firmware/manifest.json` and merged binary artifacts.
-2. **Unified Post-Flash Wi-Fi Onboarding (Improv Wi-Fi Serial):**
-   * Immediately upon flashing completion, the same dialog transitions to the Wi-Fi setup screen via Improv Wi-Fi Serial.
+   * Real-time browser support detection (`checkWebSerialSupport()`) with targeted guidance for unsupported platforms (iOS, desktop Safari, Firefox).
+   * 3-step visual onboarding guide with driver download links for CP2104 (Silicon Labs) and CH9102 (WCH).
+   * Automated packaging pipeline (`scripts/package-firmware.mjs`) extracting version from `page/package.json` and generating `public/firmware/manifest.json` with MD5 checksums.
+
+### 6.5. Milestone 3B: In-Browser Wi-Fi Setup & NTP Provisioning (ACTIVE 🎯)
+
+1. **Unified Post-Flash Wi-Fi Onboarding (Improv Wi-Fi Serial):**
+   * Immediately upon flashing completion, the dialog transitions to the Wi-Fi setup screen via Improv Wi-Fi Serial.
    * Users enter home Wi-Fi SSID and password directly in the browser; credentials are sent over USB UART.
    * Device connects, verifies internet connectivity, saves credentials to ESP32 Flash NVS (`Preferences`), and performs an initial NTP time synchronization.
    * Returning users can connect their M5Stick anytime via the same button to reconfigure Wi-Fi or inspect serial logs without reflashing.
-3. **Firmware Serial Protocol & NVS Storage:**
+2. **Firmware Serial Protocol & NVS Storage:**
    * Embedded Improv Wi-Fi Serial listener in `firmware/src/network/improv_handler.cpp`.
    * Dynamic NVS credential loading with zero-heap runtime parsing.
    * 100% offline resilience: if no Wi-Fi is configured, device continues to boot instantly using embedded ROM data.
 
-### 6.5. Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (UPCOMING 🎯)
+### 6.6. Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (UPCOMING 🎯)
 
 1. **Dual Operating Engine (`MODE_DEMO` vs `MODE_REAL`):**
    * **Interactive Demo Mode:** Fast-paced preview with 30s cadence (`secPerCity = 30.0s`, 15s flight + 15s stay) and manual Button A/B day/city jumping for demonstrations anytime.
@@ -257,7 +262,8 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
   * Screen 2: Flight Telemetry / Cockpit Dashboard (Modern Glass Cockpit).
   * Screen 3: Side-View Santa Cam (7-scene pixel art engine).
   * 3-screen circular carousel navigation across Web & Hardware.
-* **Milestone 3 (ACTIVE 🎯):** Single-Journey Web Flasher & In-Browser Wi-Fi Setup (ESP Web Tools & Improv Wi-Fi Serial on landing page).
+* **Milestone 3A (COMPLETE ✅):** Pure Web Installer for IoT (ESP Web Tools flashing on `/install` route, automated binary packaging pipeline, browser capability guard).
+* **Milestone 3B (ACTIVE 🎯):** In-Browser Wi-Fi Setup & NTP Provisioning (Improv Wi-Fi Serial & Flash NVS persistence).
 * **Milestone 4 (UPCOMING 🎯):** Dual-Mode Journey Engine & RTC / NTP Time Synchronization (Demo vs Real 2h cadence, BM8563 RTC, Burst & Sleep NTP).
 * **Milestone 5 (FUTURE 🎄):** Hardware Polish & Festive Packaging (Audio jingles, 3D-printed dock, kid's flight log).
 
