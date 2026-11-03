@@ -2,6 +2,9 @@
 
 **Mission:** A 24-day Advent journey (Dec 1 – Dec 24) where Santa visits 288 stops across all continents, spending ~1 hour in transit and ~1 hour delivering gifts, synchronized across a custom M5StickC-Plus SE gadget and a companion web experience.
 
+> [!NOTE]
+> This roadmap tracks macro milestone progression. Detailed execution specs and plans for active milestones are maintained Just-In-Time in `docs/features/<milestone-name>/`. Completed milestones are verified by their passing test suites and require no retroactive artifact backfilling.
+
 ---
 
 ## Master Architecture & Rhythm
@@ -102,6 +105,8 @@ stateDiagram-v2
 
 ## Milestone 3: Single-Journey Web Flasher & In-Browser Wi-Fi Setup (ACTIVE 🎯)
 
+* **Execution Artifacts**: [`docs/features/milestone-3-web-flasher/`](features/milestone-3-web-flasher/)
+  * [Intent](features/milestone-3-web-flasher/intent.md) | [Spec](features/milestone-3-web-flasher/spec.md) | [Plan](features/milestone-3-web-flasher/plan.md)
 * **Objective:** Enable parents and kids to install Santa-OS onto the M5StickC-Plus SE and configure Wi-Fi directly from the Santa Tracker landing page in one uninterrupted, browser-native flow over USB. Zero external companion apps, zero terminal commands, zero phone captive portals.
 * **Core Technology:** Web Serial API (`navigator.serial`), **ESP Web Tools** (`esp-web-tools`), and **Improv Wi-Fi Serial**.
 * **Key Deliverables:**

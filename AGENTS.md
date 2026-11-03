@@ -133,6 +133,15 @@ To prevent drift, scope explosion, and silent regressions during autonomous engi
    - Authored third before code execution. Outlines the precise ordered list of code changes (`[NEW]`, `[MODIFY]`, `[DELETE]`), verification commands, and delivery gates.
    - Template: `docs/templates/plan.md`.
 
+### 3.3. Documentation Architecture: PRD vs. ROADMAP vs. Feature Artifacts
+To maintain clear separation of concerns, prevent documentation bloat, and eliminate duplication:
+- **`PRD.md` (Product Source of Truth)**: Permanent product requirements, game rules, math models, continent progression, display layouts, and hardware limits.
+- **`docs/ROADMAP.md` (Macro Milestone Portfolio)**: Tracks multi-milestone progression, delivery order, and high-level completion status (`COMPLETE`, `ACTIVE`, `UPCOMING`). It links to feature packages but does not contain low-level specs, packet framing, or granular task checklists.
+- **`docs/features/<feature-name>/` (Micro Execution Packages)**:
+  * **Just-In-Time (JIT) Authoring**: Author `intent.md` $\rightarrow$ `spec.md` $\rightarrow$ `plan.md` only when a milestone transitions from `UPCOMING` to `ACTIVE`.
+  * **Zero Retroactive Backfilling**: Historical milestones already marked `COMPLETE` (Phase 1, Milestones 1 & 2) are validated by existing passing tests and code; they do not need backfilled intent/spec/plan artifacts.
+  * **Zero Premature Speculation**: Do not author specs/plans for future milestones until the current active milestone is complete.
+
 ---
 
 ## 4. Product Requirements Alignment (`PRD.md`)
