@@ -216,20 +216,49 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
    * Flash: 30.9% (971 KB / 3.0 MB).
    * 18 native Unity tests passing in 0.5s (`pio test -e native`).
 
+### 6.4. Milestone 3: Single-Journey Web Flasher & In-Browser Wi-Fi Setup (ACTIVE 🎯)
+
+1. **Browser-Native Firmware Installation (`/` Landing Page):**
+   * One-click installation using **ESP Web Tools** (`<esp-web-install-button>`) directly on the Santa Tracker landing page.
+   * Flashes ESP32 bootloader, partitions, and application binaries over USB via the Web Serial API (`navigator.serial`) at 1.5M baud without requiring local developer tools (no PlatformIO, Python, or terminal).
+   * Automated packaging pipeline (`scripts/package-firmware.mjs`) generating `public/firmware/manifest.json` and merged binary artifacts.
+2. **Unified Post-Flash Wi-Fi Onboarding (Improv Wi-Fi Serial):**
+   * Immediately upon flashing completion, the same dialog transitions to the Wi-Fi setup screen via Improv Wi-Fi Serial.
+   * Users enter home Wi-Fi SSID and password directly in the browser; credentials are sent over USB UART.
+   * Device connects, verifies internet connectivity, saves credentials to ESP32 Flash NVS (`Preferences`), and performs an initial NTP time synchronization.
+   * Returning users can connect their M5Stick anytime via the same button to reconfigure Wi-Fi or inspect serial logs without reflashing.
+3. **Firmware Serial Protocol & NVS Storage:**
+   * Embedded Improv Wi-Fi Serial listener in `firmware/src/network/improv_handler.cpp`.
+   * Dynamic NVS credential loading with zero-heap runtime parsing.
+   * 100% offline resilience: if no Wi-Fi is configured, device continues to boot instantly using embedded ROM data.
+
+### 6.5. Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (UPCOMING 🎯)
+
+1. **Dual Operating Engine (`MODE_DEMO` vs `MODE_REAL`):**
+   * **Interactive Demo Mode:** Fast-paced preview with 30s cadence (`secPerCity = 30.0s`, 15s flight + 15s stay) and manual Button A/B day/city jumping for demonstrations anytime.
+   * **Real Advent Mode:** Live clock-driven schedule from Dec 1 00:00 UTC through Dec 24 24:00 UTC with 2-hour cadence per stop (1 hour transit flight + 1 hour city stay) across all 12 daily stops.
+   * Proportional scaling of the 7 Santa Cam and Cockpit sub-phases (30%/50%/20% flight and 40%/40%/20% landed dwell).
+   * Pre-Advent countdown view displayed when powered on prior to December 1st.
+   * Day 24 Kraków Grand Finale permanent arrival lock after 22:00-23:00 UTC.
+2. **ESP32 Hardware RTC (BM8563) & "Burst & Sleep" NTP Daemon:**
+   * Uses onboard BM8563 I2C Real-Time Clock (`M5.Rtc`) backed by battery.
+   * Connects to Wi-Fi on boot and every 12–24h for a brief 2–4 second burst, syncs UTC time via NTP (`configTzTime`), writes to BM8563, and powers off the Wi-Fi radio (`WiFi.mode(WIFI_OFF)`) to drop power to ~40mA.
+3. **Hardware & Web Mode Switching:**
+   * Long-press Button A on boot toggles between Demo Mode and Real Advent Mode on-device without a computer.
+   * Web living specification emulator on `/` includes an interactive Advent Date/Time scrubber for rapid scenario verification.
+
 ---
 
 ## 7. Phased Roadmap Sequence
-
-To ensure rich visual development and interactive verification outside of December, SANTA-OS operates on **simulated/demo time** (`secPerCity = 12s` or manual day/city jumping) through Milestones 2–4. Connecting live real-time clock (NTP/RTC) is reserved for the **very last milestone** before December 1st.
 
 * **Milestone 1 (COMPLETE ✅):** Fully Operational Aviation Radar End-to-End (Web & M5StickC hardware).
 * **Milestone 2 (COMPLETE ✅):** Context-Aware Multi-Screen Expansion:
   * Screen 1: World Aviation Radar.
   * Screen 2: Flight Telemetry / Cockpit Dashboard (Modern Glass Cockpit).
-  * Screen 3: Side-View Santa Cam (Cruising Sky, Hyper-Warp, Chimney Drop, Cookie Break, Kraków Finale).
+  * Screen 3: Side-View Santa Cam (7-scene pixel art engine).
   * 3-screen circular carousel navigation across Web & Hardware.
-* **Milestone 3 (ACTIVE 🎯):** Parent Customization & Wi-Fi Management (Bedtime arrival override, Burst & Sleep sync).
-* **Milestone 4:** Hardware Polish & Festive Packaging (Audio jingles, 3D printed dock, kid's flight log).
-* **Milestone 5 (Final Milestone Before Dec 1st):** Live Real-Time Clock & Advent Launch (NTP & RTC synchronization, 1h flight + 1h stay, with interactive demo override toggle).
+* **Milestone 3 (ACTIVE 🎯):** Single-Journey Web Flasher & In-Browser Wi-Fi Setup (ESP Web Tools & Improv Wi-Fi Serial on landing page).
+* **Milestone 4 (UPCOMING 🎯):** Dual-Mode Journey Engine & RTC / NTP Time Synchronization (Demo vs Real 2h cadence, BM8563 RTC, Burst & Sleep NTP).
+* **Milestone 5 (FUTURE 🎄):** Hardware Polish & Festive Packaging (Audio jingles, 3D-printed dock, kid's flight log).
 
 

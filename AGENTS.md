@@ -112,6 +112,27 @@ All pull requests must undergo structured peer or agent review adhering to [Addy
 - **Optional**: Suggested improvement, refactoring, or defensive hardening.
 - **Nit**: Minor stylistic or non-functional polish.
 
+### 3.2. AI-Native SDLC Artifact Chain (Intent $\rightarrow$ Spec $\rightarrow$ Plan)
+To prevent drift, scope explosion, and silent regressions during autonomous engineering, all major features and milestones must adhere to the **AI-Native SDLC Playbook** (Anthropic Applied AI standard). Before modifying production code, agents and contributors maintain a version-controlled markdown artifact chain in `docs/features/<feature-name>/`:
+
+```
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│    intent.md    │  ───► │     spec.md     │  ───► │     plan.md     │
+│ (Why & Problem) │       │(Contracts & UX) │       │(Step-by-Step)   │
+└─────────────────┘       └─────────────────┘       └─────────────────┘
+```
+
+1. **`intent.md` (Capture & Alignment)**:
+   - Authored first. Defines the user problem, motivation, target user journey, and **explicit non-goals** (what we are NOT doing).
+   - Keeps humans and agents aligned on scope without getting bogged down in implementation details.
+   - Template: `docs/templates/intent.md`.
+2. **`spec.md` (Living Specification & Contracts)**:
+   - Authored second. Turns `intent.md` into concrete behavioral contracts, UI mockups/states, communication protocols (e.g. Improv Wi-Fi Serial framing, Web Serial JSON), memory budgets, and 1:1 Web-to-C++ parity definitions.
+   - Template: `docs/templates/spec.md`.
+3. **`plan.md` (Implementation Blueprint & Quality Gates)**:
+   - Authored third before code execution. Outlines the precise ordered list of code changes (`[NEW]`, `[MODIFY]`, `[DELETE]`), verification commands, and delivery gates.
+   - Template: `docs/templates/plan.md`.
+
 ---
 
 ## 4. Product Requirements Alignment (`PRD.md`)

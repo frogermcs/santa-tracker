@@ -1,6 +1,6 @@
 # SANTA-OS Master Development Roadmap
 
-**Mission:** A 24-day Advent journey (Dec 1 – Dec 24) where Santa visits >200 cities across all continents, spending ~1 hour in transit and ~1 hour delivering gifts, synchronized across a custom M5StickC-Plus SE gadget and a companion web experience.
+**Mission:** A 24-day Advent journey (Dec 1 – Dec 24) where Santa visits 288 stops across all continents, spending ~1 hour in transit and ~1 hour delivering gifts, synchronized across a custom M5StickC-Plus SE gadget and a companion web experience.
 
 ---
 
@@ -8,21 +8,22 @@
 
 ```
 December 01 ───────────────────────────────────────────────────► December 24 (Grand Finale)
-├── Cadence: ~1 hour FLIGHT  +  ~1 hour CITY STAY = 2 hours per waypoint
+├── Cadence (Real Advent Mode): 1 hour FLIGHT + 1 hour CITY STAY = 2 hours per stop
 ├── Throughput: 12 cities / day across all continents
-└── Total Itinerary: 288 worldwide cities (>200 global waypoints)
+├── Cadence (Demo Preview Mode): 15s FLIGHT + 15s CITY STAY = 30s per stop
+└── Total Itinerary: 288 worldwide cities preloaded in ROM (PROGMEM)
 ```
 
 ```mermaid
 stateDiagram-v2
     direction LR
-    [*] --> InTransit: Hour 1 (Flight)
-    InTransit --> InCity: Hour 2 (Stay)
+    [*] --> InTransit: Hour 1 (Flight: Warp -> Stratosphere -> Descent)
+    InTransit --> InCity: Hour 2 (Stay: Gift Drop -> Cookie Break -> Climb)
     InCity --> InTransit: Next Waypoint
 
     state InTransit {
         Radar1: World Radar (Sweeping Contact)
-        Cam1: Side Cam (Cruising / Hyper-Warp)
+        Cam1: Side Cam (Warp / Stratosphere / Descent)
         Dash1: Telemetry (Mach Speed Gauge)
     }
 
@@ -45,7 +46,7 @@ stateDiagram-v2
   * Red/white flashing Santa contact blip with expanding radar ping rings.
   * Golden dotted breadcrumb flight trail.
 * [x] **Single Source of Truth:** Shared JSON schema exposed at `/api/journey` and `public/journey.json`.
-* [x] **Offline Resilience & Battery Conservation:** Instant boot with embedded PROGMEM demo data; "Burst & Sleep" Wi-Fi mode.
+* [x] **Offline Resilience & Battery Conservation:** Instant boot with embedded PROGMEM demo data.
 * [x] **Native Desktop Testing:** PlatformIO native test suite passing in under 1 second without hardware flashing.
 * [x] **Clean Web Deployment:** Live on Vercel ([https://santa-tracker-five.vercel.app/](https://santa-tracker-five.vercel.app/)) with 1:1 hardware simulation.
 
@@ -82,13 +83,13 @@ stateDiagram-v2
     * [x] **Web Living Specification:** 1:1 `renderCockpitScreen()` in `iotAppLogic.ts` with modern aerospace glass cockpit palette, multi-color Mach 4.8 gauge, demographic gift distribution, pixel-art cookies & milk, and dynamic tactical mission phase box.
     * [x] **C++ Firmware Port (`firmware/src/ui/screen_cockpit.cpp`):** Direct zero-heap port to LovyanGFX for ST7789v2 IPS display with 16 native Unity tests passing in 1.8s.
   - [x] **Screen 3: Side-View Santa Cam (`ui/screen_cam`) (COMPLETE ✅):**
-    * [x] **Web Living Specification:** 1:1 `camScreen.ts` / `renderCamScreen()` in `iotAppLogic.ts` featuring 7 dynamic sub-phases matching the 30.0s cadence:
-      1. Hyper-Warp Mode (`TRYB HYPER-WARP`, 4.5s / 30%): Horizontal speed streaks, sleigh vibration, twin jet flames, Rudolph aura.
-      2. Stratospheric Flight (`PRZELOT STRATOSFERYCZNY`, 7.5s / 50%): Curved Earth globe, glowing atmosphere, 48 cosmic stars, shooting star.
-      3. Gliding Descent (`ZNIZANIE`, 3.0s / 20%): Sleigh descent toward snowy pine trees growing in perspective with twinkling fairy lights.
-      4. Rooftop Gift Drop (`ZRZUT PREZENTOW`, 6.0s / 40%): Sleigh cruising over townhouses, parachuting presents landing in chimneys.
-      5. Cookie & Milk Break (`PRZERWA NA CIASTKA I MLEKO`, 6.0s / 40%): Big Santa by the fireplace, dancing flames, cookies, milk & crumbs.
-      6. Takeoff Climb (`WZNOSZENIE`, 3.0s / 20%): Takeoff climb into starry sky, trees shrinking in reverse perspective.
+    * [x] **Web Living Specification:** 1:1 `camScreen.ts` / `renderCamScreen()` in `iotAppLogic.ts` featuring 7 dynamic sub-phases matching the cadence:
+      1. Hyper-Warp Mode (`TRYB HYPER-WARP`, 30% duration): Horizontal speed streaks, sleigh vibration, twin jet flames, Rudolph aura.
+      2. Stratospheric Flight (`PRZELOT STRATOSFERYCZNY`, 50% duration): Curved Earth globe, glowing atmosphere, 48 cosmic stars, shooting star.
+      3. Gliding Descent (`ZNIZANIE`, 20% duration): Sleigh descent toward snowy pine trees growing in perspective with twinkling fairy lights.
+      4. Rooftop Gift Drop (`ZRZUT PREZENTOW`, 40% duration): Sleigh cruising over townhouses, parachuting presents landing in chimneys.
+      5. Cookie & Milk Break (`PRZERWA NA CIASTKA I MLEKO`, 40% duration): Big Santa by the fireplace, dancing flames, cookies, milk & crumbs.
+      6. Takeoff Climb (`WZNOSZENIE`, 20% duration): Takeoff climb into starry sky, trees shrinking in reverse perspective.
       7. Merry Christmas! (`WESOŁYCH ŚWIĄT!`, Kraków): Bazylika Mariacka spires silhouette, celebratory fireworks & banner.
     * [x] **Dedicated Scene Debugger Studio (`/scene-debugging`):** Interactive gallery with speed controls (0.25x–4x), manual scene isolation, and multi-cam matrix.
     * [x] **Single Source of Truth (`stage-definitions.ts`):** Canonical stage titles and story descriptions shared across web, cockpit, and C++ firmware.
@@ -99,45 +100,63 @@ stateDiagram-v2
 
 ---
 
-## Milestone 3: Parent Customization & Wi-Fi Management (ACTIVE 🎯)
+## Milestone 3: Single-Journey Web Flasher & In-Browser Wi-Fi Setup (ACTIVE 🎯)
 
-* **Objective:** Enable parents to customize Santa's December 24th route (e.g. inject their hometown) and configure Wi-Fi.
+* **Objective:** Enable parents and kids to install Santa-OS onto the M5StickC-Plus SE and configure Wi-Fi directly from the Santa Tracker landing page in one uninterrupted, browser-native flow over USB. Zero external companion apps, zero terminal commands, zero phone captive portals.
+* **Core Technology:** Web Serial API (`navigator.serial`), **ESP Web Tools** (`esp-web-tools`), and **Improv Wi-Fi Serial**.
 * **Key Deliverables:**
-  - [ ] **Hometown Override in Itinerary:**
-    - Cloud API allows custom hometown injection for Dec 24 bedtime window.
-    - Santa's radar and ETA lock on the child's home city as the grand finale before returning to the North Pole.
-  - [ ] **Smart Wi-Fi Sync ("Burst & Sleep"):**
-    - Device periodically connects (e.g. once every 24h or on boot) to refresh the journey schedule via `/api/journey`.
-    - Shuts down Wi-Fi radio immediately after sync to preserve the 120mAh battery.
-  - [ ] **Fallback & Offline Safety:**
-    - Full 288-city schedule embedded in flash memory; works 100% offline if no Wi-Fi is configured.
-  - [ ] **Optional Captive Setup Portal:**
-    - If Wi-Fi fails, device can spawn a temporary AP (`Santa-Setup`) allowing parents to enter credentials via phone.
+  - [ ] **1. Automated Firmware Packaging Pipeline (`scripts/package-firmware.mjs`):**
+    * Compiles PlatformIO binary targets.
+    * Bundles `bootloader.bin`, `partitions.bin`, `boot_app0.bin`, and `firmware.bin` into `page/public/firmware/`.
+    * Generates `manifest.json` conforming to the ESP Web Tools specification.
+  - [ ] **2. Single-Journey Web Installer on Landing Page (`page/`):**
+    * Prominent "Install on M5Stick" button using `<esp-web-install-button>`.
+    * Clean step-by-step connection guide (USB-C plug-in, desktop Chrome/Edge/Brave check).
+    * Seamless post-flash transition: Once flashing completes, the dialog automatically prompts for Wi-Fi SSID and password via Improv Wi-Fi Serial.
+    * Returning user management: Plugging in an already-installed device allows updating Wi-Fi or viewing serial logs without reflashing.
+  - [ ] **3. Firmware Improv Wi-Fi & NVS Handler (`firmware/`):**
+    * Lightweight Improv Wi-Fi Serial protocol listener in `firmware/src/network/improv_handler.cpp`.
+    * Emits Improv RPC state packets over UART (`Serial`).
+    * On receiving credentials: tests Wi-Fi connection, saves valid credentials to ESP32 Flash NVS (`Preferences` namespace `"santa_cfg"`), and reports device IP to the browser.
+    * On first successful Wi-Fi connection, immediately triggers an initial NTP time sync.
+    * Retains 100% offline fallback: if no Wi-Fi is entered, Santa-OS boots immediately using ROM data.
 
 ---
 
-## Milestone 4: Hardware Polish & Festive Packaging
+## Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (UPCOMING 🎯)
+
+* **Objective:** Transition the simulation engine to support two distinct operating modes: an interactive fast-paced Demo Mode, and a real-world live Advent Calendar Mode (Dec 1 – Dec 24) driven by the ESP32 hardware RTC (BM8563) and periodic NTP synchronization.
+* **Key Deliverables:**
+  - [ ] **1. Web Living Specification for Dual Clock (`page/lib/simulator/`):**
+    * Update `iotAppLogic.ts` and `useSimulationClock` to support `MODE_DEMO` vs `MODE_REAL`.
+    * In `MODE_REAL`:
+      - City schedule driven by real UTC/CET date & time.
+      - 2-hour waypoint cadence: **1 hour in-flight transit** + **1 hour landed city dwell**.
+      - Scale the 7 sub-phase scenes proportionally (e.g. Warp 18m, Stratosphere 30m, Descent 12m; Gifts 24m, Cookies 24m, Climb 12m).
+      - Pre-Advent countdown screen displayed if current date < Dec 1st.
+      - December 24th Kraków Grand Finale lock after 22:00-23:00 UTC.
+    * Interactive time/date simulator slider on `/` to preview and test any minute of the 24-day Advent journey.
+    * Automated unit test suite (`vitest`) verifying 2-hour cadence, day rollover, and scene math.
+  - [ ] **2. Firmware Hardware RTC & "Burst & Sleep" NTP Client (`firmware/`):**
+    * Initialize onboard **BM8563 I2C RTC** via `M5.Rtc`.
+    * "Burst & Sleep" NTP daemon:
+      - Wakes Wi-Fi on boot and every 12–24h for a brief 2–4 second burst.
+      - Fetches NTP time via `configTzTime()` and writes to BM8563 RTC (`M5.Rtc.setDateTime()`).
+      - Immediately powers off Wi-Fi radio (`WiFi.mode(WIFI_OFF)`) to drop power to ~40mA and preserve battery.
+  - [ ] **3. Dual Journey Engine Port (`firmware/src/core/journey_engine.cpp`):**
+    * Engine reads BM8563 hardware RTC in Real Advent Mode.
+    * Deterministic mapping: Day of month (1..24) $\rightarrow$ Active Advent Day; Hour ($S \in [0..86400]$) $\rightarrow$ Waypoint ($\lfloor S / 7200 \rfloor$) and Phase ($u = S \pmod{7200}$).
+    * Intelligent Mode Selection: Defaults to Real Mode if Wi-Fi is configured and date is December 1–24; otherwise launches Demo Mode.
+    * Hardware Toggle: Hold Button A during boot to toggle between Demo Mode and Real Advent Mode on-device without a computer.
+  - [ ] **4. Desktop Native Unit Tests (`firmware/test/`):**
+    * 20+ Unity unit tests running under `pio test -e native` verifying RTC time decoding, 2-hour cadence boundaries, and mode switches.
+
+---
+
+## Milestone 5: Hardware Polish & Festive Packaging (FUTURE 🎄)
 
 * **Objective:** Package the gadget into an heirloom Christmas Eve maker toy.
 * **Key Deliverables:**
   - [ ] **3D-Printed Sleigh/Chimney Dock:** Snap-on display dock with USB-C power pass-through.
   - [ ] **Audio Jingle Engine:** Polyphonic 8-bit Christmas chimes on city arrival using `M5.Speaker`.
   - [ ] **Kid's Flight Manual:** Retro printable mission log card to track cities daily from Dec 1 to Dec 24.
-
----
-
-## Milestone 5: Live Real-Time Clock & Advent Launch (THE FINAL PRE-DECEMBER MILESTONE 🎄)
-
-* **Objective:** Transition the firmware and web platform from simulated/demo time to the live 24-day Advent calendar clock (Dec 1 – Dec 24) using ESP32 RTC (BM8563) and NTP synchronization.
-* **Key Deliverables:**
-  - [ ] **Dual Clock Engine (`journey_engine`):**
-    - **Live Advent Mode (Production):**
-      - Synchronized to real-world RTC/NTP time.
-      - Matches exact day (Dec 1–24) and exact 2-hour window (1h flight + 1h city stay).
-    - **Interactive Demo Override Mode (Preserved):**
-      - Dedicated hardware button hold during boot or web toggle allowing parents and kids to simulate any day/city anytime outside of December.
-  - [ ] **Pre-Advent Countdown Screen (Pre-December 1st):**
-    - If powered on before Dec 1st, displays a festive "North Pole Workshop — Sleigh Pre-Flight Prep" countdown until launch.
-  - [ ] **State Transition Cadence:**
-    - Exact 60-minute in-flight phase + 60-minute landed city phase.
-    - Day 24 22:00-23:00 UTC Kraków Grand Finale arrival lock.
