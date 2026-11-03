@@ -112,35 +112,21 @@ All pull requests must undergo structured peer or agent review adhering to [Addy
 - **Optional**: Suggested improvement, refactoring, or defensive hardening.
 - **Nit**: Minor stylistic or non-functional polish.
 
-### 3.2. AI-Native SDLC Artifact Chain (Intent $\rightarrow$ Spec $\rightarrow$ Plan)
-To prevent drift, scope explosion, and silent regressions during autonomous engineering, all major features and milestones must adhere to the **AI-Native SDLC Playbook** (Anthropic Applied AI standard). Before modifying production code, agents and contributors maintain a version-controlled markdown artifact chain in `docs/features/<feature-name>/`:
+### 3.2. Lean Documentation Architecture (PRD + ROADMAP + Native /plan)
+To maintain velocity, eliminate file clutter, and avoid token/context bloat in this maker codebase, documentation follows a streamlined two-document model paired with interactive planning:
 
-```
-┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│    intent.md    │  ───► │     spec.md     │  ───► │     plan.md     │
-│ (Why & Problem) │       │(Contracts & UX) │       │(Step-by-Step)   │
-└─────────────────┘       └─────────────────┘       └─────────────────┘
-```
-
-1. **`intent.md` (Capture & Alignment)**:
-   - Authored first. Defines the user problem, motivation, target user journey, and **explicit non-goals** (what we are NOT doing).
-   - Keeps humans and agents aligned on scope without getting bogged down in implementation details.
-   - Template: `docs/templates/intent.md`.
-2. **`spec.md` (Living Specification & Contracts)**:
-   - Authored second. Turns `intent.md` into concrete behavioral contracts, UI mockups/states, communication protocols (e.g. Improv Wi-Fi Serial framing, Web Serial JSON), memory budgets, and 1:1 Web-to-C++ parity definitions.
-   - Template: `docs/templates/spec.md`.
-3. **`plan.md` (Implementation Blueprint & Quality Gates)**:
-   - Authored third before code execution. Outlines the precise ordered list of code changes (`[NEW]`, `[MODIFY]`, `[DELETE]`), verification commands, and delivery gates.
-   - Template: `docs/templates/plan.md`.
-
-### 3.3. Documentation Architecture: PRD vs. ROADMAP vs. Feature Artifacts
-To maintain clear separation of concerns, prevent documentation bloat, and eliminate duplication:
-- **`PRD.md` (Product Source of Truth)**: Permanent product requirements, game rules, math models, continent progression, display layouts, and hardware limits.
-- **`docs/ROADMAP.md` (Macro Milestone Portfolio)**: Tracks multi-milestone progression, delivery order, and high-level completion status (`COMPLETE`, `ACTIVE`, `UPCOMING`). It links to feature packages but does not contain low-level specs, packet framing, or granular task checklists.
-- **`docs/features/<feature-name>/` (Micro Execution Packages)**:
-  * **Just-In-Time (JIT) Authoring**: Author `intent.md` $\rightarrow$ `spec.md` $\rightarrow$ `plan.md` only when a milestone transitions from `UPCOMING` to `ACTIVE`.
-  * **Zero Retroactive Backfilling**: Historical milestones already marked `COMPLETE` (Phase 1, Milestones 1 & 2) are validated by existing passing tests and code; they do not need backfilled intent/spec/plan artifacts.
-  * **Zero Premature Speculation**: Do not author specs/plans for future milestones until the current active milestone is complete.
+1. **`PRD.md` (Product Source of Truth)**:
+   - Permanent home for product requirements, screen specs, math models (cadence, easing), UI states, continent progression, and hardware limits.
+   - All architectural and behavioral contracts live here.
+2. **`docs/ROADMAP.md` (Macro Milestone Portfolio)**:
+   - Tracks macro milestone progression, delivery order, and completion status (`COMPLETE`, `ACTIVE`, `UPCOMING`).
+   - Contains high-level bulleted checklists of completed and planned deliverables without low-level packet dumps.
+3. **Interactive `/plan` Execution (Zero Static File Clutter)**:
+   - For all non-trivial milestones and features, agents/contributors must use the `/plan` slash command before modifying production code.
+   - Planning artifacts are reviewed and approved interactively in chat. They are not committed to git, avoiding redundant `intent.md` / `spec.md` / `plan.md` file chains.
+4. **Pull Requests as Living Delivery Logs**:
+   - Every feature PR must contain a comprehensive description: summary of intent, file diff breakdown, test verification evidence, and hardware impact.
+   - The PR itself serves as the permanent record of implementation and review.
 
 ---
 
