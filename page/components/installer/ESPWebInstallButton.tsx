@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Zap, AlertCircle, RefreshCw } from "lucide-react";
+import { Usb, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { checkWebSerialSupport } from "@/lib/installer/browser-support";
 
 interface ESPWebInstallButtonProps {
@@ -38,15 +38,17 @@ export function ESPWebInstallButton({
 
   if (hasError) {
     return (
-      <div className="inline-flex items-center gap-3 p-3 px-5 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-200 font-mono text-sm">
-        <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
-        <span>Błąd ładowania instalatora Web Serial.</span>
+      <div className="flex items-center justify-between gap-3 p-3 px-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs font-mono">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          <span>Błąd ładowania modułu Web Serial.</span>
+        </div>
         <button
           onClick={loadTools}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-900/80 hover:bg-rose-800 text-white text-xs font-bold transition border border-rose-400/40 cursor-pointer"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-rose-900/60 hover:bg-rose-800 text-white text-xs font-bold transition border border-rose-400/30 cursor-pointer"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Spróbuj ponownie</span>
+          <RefreshCw className="w-3 h-3" />
+          <span>Ponów</span>
         </button>
       </div>
     );
@@ -54,50 +56,43 @@ export function ESPWebInstallButton({
 
   if (!mounted) {
     return (
-      <div className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-900/80 text-slate-400 font-mono text-sm border border-white/10 animate-pulse">
-        <Zap className="w-4 h-4 text-slate-500" />
-        <span>Inicjalizacja instalatora Web Serial...</span>
+      <div className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#091326] text-slate-400 font-mono text-xs border border-white/10">
+        <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+        <span>Inicjalizacja modułu Web Serial...</span>
       </div>
     );
   }
 
   return (
-    <div className={`inline-block ${className}`}>
+    <div className={className}>
       <esp-web-install-button manifest={manifestUrl}>
         <button
           slot="activate"
-          className="group relative inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-mono font-bold text-sm sm:text-base shadow-xl shadow-emerald-950/70 border border-emerald-400/40 hover:border-emerald-300 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          className="w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-mono font-bold text-sm border border-emerald-400/50 shadow-md shadow-emerald-950/40 transition cursor-pointer"
         >
-          <span className="p-1 rounded-lg bg-black/20 group-hover:scale-110 transition-transform">
-            <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
-          </span>
-          <div className="flex flex-col text-left">
-            <span>⚡ Zainstaluj Santa-OS</span>
-            <span className="text-[11px] text-emerald-200/90 font-normal">
-              Wgraj firmware przez kabel USB
-            </span>
-          </div>
+          <Usb className="w-4 h-4 text-emerald-200" />
+          <span>Wgraj oprogramowanie do pamięci Flash</span>
         </button>
 
         <div
           slot="unsupported"
-          className="inline-flex items-start gap-2.5 p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs font-mono max-w-md text-left"
+          className="flex items-start gap-2.5 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs font-mono text-left"
         >
           <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold block">Przeglądarka nieobsługiwana:</span>
-            <span>{supportInfo.recommendation}</span>
+            <span className="font-bold block text-rose-100">Przeglądarka nieobsługiwana:</span>
+            <span className="text-rose-200/90">{supportInfo.recommendation}</span>
           </div>
         </div>
 
         <div
           slot="not-allowed"
-          className="inline-flex items-start gap-2.5 p-3 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-200 text-xs font-mono max-w-md text-left"
+          className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs font-mono text-left"
         >
           <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold block">Wymagane bezpieczne połączenie:</span>
-            <span>Web Serial wymaga protokołu HTTPS lub uruchomienia na localhost.</span>
+            <span className="font-bold block text-amber-100">Wymagany bezpieczny kontekst:</span>
+            <span className="text-amber-200/90">Web Serial wymaga protokołu HTTPS lub uruchomienia na localhost.</span>
           </div>
         </div>
       </esp-web-install-button>
