@@ -222,7 +222,7 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
    * Dedicated `/install` route and landing page callouts using **ESP Web Tools** (`<esp-web-install-button>`).
    * Flashes ESP32 bootloader, partitions, and application binaries over USB via the Web Serial API (`navigator.serial`) at 1.5M baud without requiring local developer tools (no PlatformIO, Python, or terminal).
    * Real-time browser support detection (`checkWebSerialSupport()`) with targeted guidance for unsupported platforms (iOS, desktop Safari, Firefox).
-   * 3-step visual onboarding guide with driver download links for CP2104 (Silicon Labs) and CH9102 (WCH).
+   * Minimalist festive hero UI featuring a prominent install action, three feature highlight cards (MikoRadar, Kokpit Misji, Santa Cam), and a collapsible USB-UART driver troubleshooting accordion (Silicon Labs CP2104 and WCH CH9102).
    * Automated packaging pipeline (`scripts/package-firmware.mjs`) extracting version from `page/package.json` and generating `public/firmware/manifest.json` with MD5 checksums.
 
 ### 6.5. Milestone 3B: In-Browser Wi-Fi Setup & NTP Provisioning (ACTIVE 🎯)
