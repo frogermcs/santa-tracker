@@ -112,17 +112,17 @@ export default function InstallPage() {
               <span>MikoRadar</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed text-pretty">
-              Światowa siatka 912 punktów, wirujący promień i złoty pył gwiezdny.
+              Śledź trasę Mikołaja na żywo na globalnym radarze lotu.
             </p>
           </div>
 
           <div className="p-4 rounded-2xl bg-[#0c162b]/80 border border-white/10 text-left space-y-1">
             <div className="flex items-center gap-2 text-amber-400 font-mono font-bold text-xs">
               <Gauge className="w-4 h-4 shrink-0" />
-              <span>Kokpit Mach 4.8</span>
+              <span>Kokpit Misji</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed text-pretty">
-              Prędkościomierz lotu, miliardy prezentów, zapasy ciastek i mleka.
+              Sprawdź telemetrię sani: prędkość Mach 4.8, dostarczone prezenty i zapasy ciastek.
             </p>
           </div>
 
@@ -132,7 +132,7 @@ export default function InstallPage() {
               <span>Santa Cam</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed text-pretty">
-              7 scen pixel-art z finałowym lądowaniem i fajerwerkami w Krakowie.
+              Zobacz Mikołaja w akcji: od przelotu w chmurach po lądowanie na dachach.
             </p>
           </div>
         </div>
