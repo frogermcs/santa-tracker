@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Zap, AlertCircle } from "lucide-react";
+import React, { useEffect, useState, useCallback } from "react";
+import { Zap, AlertCircle, RefreshCw } from "lucide-react";
 import { checkWebSerialSupport } from "@/lib/installer/browser-support";
 
 interface ESPWebInstallButtonProps {
@@ -14,9 +14,11 @@ export function ESPWebInstallButton({
   className = "",
 }: ESPWebInstallButtonProps) {
   const [mounted, setMounted] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const [supportInfo, setSupportInfo] = useState({ isSupported: false, recommendation: "" });
 
-  useEffect(() => {
+  const loadTools = useCallback(() => {
+    setHasError(false);
     // Dynamically load pre-bundled esp-web-tools on client side only
     // @ts-expect-error - dist/web is the standalone pre-bundled web distribution
     import("esp-web-tools/dist/web/install-button.js")
@@ -25,10 +27,30 @@ export function ESPWebInstallButton({
       })
       .catch((err) => {
         console.error("Failed to load esp-web-tools:", err);
+        setHasError(true);
       });
-
-    setSupportInfo(checkWebSerialSupport());
   }, []);
+
+  useEffect(() => {
+    loadTools();
+    setSupportInfo(checkWebSerialSupport());
+  }, [loadTools]);
+
+  if (hasError) {
+    return (
+      <div className="inline-flex items-center gap-3 p-3 px-5 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-200 font-mono text-sm">
+        <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+        <span>Błąd ładowania instalatora Web Serial.</span>
+        <button
+          onClick={loadTools}
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-900/80 hover:bg-rose-800 text-white text-xs font-bold transition border border-rose-400/40 cursor-pointer"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span>Spróbuj ponownie</span>
+        </button>
+      </div>
+    );
+  }
 
   if (!mounted) {
     return (

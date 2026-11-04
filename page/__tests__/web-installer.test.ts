@@ -97,4 +97,25 @@ describe("Web Installer: Browser Support Detection", () => {
     const result = checkWebSerialSupport(edgeUA);
     expect(result.browserName).toBe("Microsoft Edge");
   });
+
+  it("identifies Opera browser when both Chrome and OPR tokens are present", () => {
+    const operaUA =
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OPR/106.0.0.0";
+
+    const result = checkWebSerialSupport(operaUA, true);
+    expect(result.isSupported).toBe(true);
+    expect(result.browserName).toBe("Opera");
+  });
+
+  it("identifies modern iPadOS masking as desktop Safari with touch points", () => {
+    const ipadDesktopUA =
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15";
+
+    // maxTouchPoints = 5 indicates an iPad touch screen despite "Macintosh" UA token
+    const result = checkWebSerialSupport(ipadDesktopUA, false, 5);
+    expect(result.isSupported).toBe(false);
+    expect(result.isDesktop).toBe(false);
+    expect(result.browserName).toBe("Apple iPadOS (Safari)");
+    expect(result.recommendation).toContain("iOS/iPadOS");
+  });
 });

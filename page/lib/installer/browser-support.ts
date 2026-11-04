@@ -9,10 +9,12 @@ export interface BrowserSupportInfo {
  * Checks whether the current runtime environment supports the Web Serial API.
  * @param userAgent Optional custom user-agent string (useful for testing and SSR)
  * @param hasSerialOverride Optional boolean override for navigator.serial existence check
+ * @param maxTouchPointsOverride Optional number override for navigator.maxTouchPoints check
  */
 export function checkWebSerialSupport(
   userAgent?: string,
-  hasSerialOverride?: boolean
+  hasSerialOverride?: boolean,
+  maxTouchPointsOverride?: number
 ): BrowserSupportInfo {
   const ua = userAgent || (typeof navigator !== "undefined" ? navigator.userAgent : "");
   const hasSerial =
@@ -20,17 +22,26 @@ export function checkWebSerialSupport(
       ? hasSerialOverride
       : typeof navigator !== "undefined" && "serial" in navigator;
 
-  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const maxTouchPoints =
+    typeof maxTouchPointsOverride === "number"
+      ? maxTouchPointsOverride
+      : typeof navigator !== "undefined"
+      ? navigator.maxTouchPoints || 0
+      : 0;
+
+  // Modern iPadOS (iOS 13+) reports as "Macintosh" desktop user-agent, but has touch points
+  const isIPadOS = /Macintosh/.test(ua) && maxTouchPoints > 1;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || isIPadOS;
   const isAndroid = /Android/.test(ua);
   const isMobile = isIOS || isAndroid;
   const isDesktop = !isMobile;
 
   let browserName = "Inna przeglądarka";
   if (/Edg\//.test(ua)) browserName = "Microsoft Edge";
+  else if (/OPR\//.test(ua)) browserName = "Opera";
   else if (/Chrome\//.test(ua)) browserName = "Google Chrome";
   else if (/Firefox\//.test(ua)) browserName = "Mozilla Firefox";
   else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) browserName = "Apple Safari";
-  else if (/OPR\//.test(ua)) browserName = "Opera";
 
   if (hasSerial) {
     return {
@@ -46,9 +57,9 @@ export function checkWebSerialSupport(
     return {
       isSupported: false,
       isDesktop: false,
-      browserName,
+      browserName: isIPadOS ? "Apple iPadOS (Safari)" : browserName,
       recommendation:
-        "System iOS nie obsługuje połączeń USB przez przeglądarkę. Uruchom tę stronę na komputerze (Mac, Windows, Linux) w przeglądarce Google Chrome lub Microsoft Edge.",
+        "System iOS/iPadOS nie obsługuje połączeń USB przez przeglądarkę. Uruchom tę stronę na komputerze (Mac, Windows, Linux) w przeglądarce Google Chrome lub Microsoft Edge.",
     };
   }
 

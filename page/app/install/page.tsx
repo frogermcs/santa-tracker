@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ESPWebInstallButton } from "@/components/installer/ESPWebInstallButton";
 import { checkWebSerialSupport, BrowserSupportInfo } from "@/lib/installer/browser-support";
+import { APP_VERSION } from "@/lib/version";
 
 export default function InstallPage() {
   const [support, setSupport] = useState<BrowserSupportInfo | null>(null);
@@ -43,7 +44,7 @@ export default function InstallPage() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
           <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wider">
-            Web Installer v1.0.0
+            Web Installer v{APP_VERSION}
           </span>
         </div>
       </header>
