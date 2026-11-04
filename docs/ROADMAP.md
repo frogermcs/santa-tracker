@@ -117,7 +117,7 @@ stateDiagram-v2
     * Generates `manifest.json` conforming to ESP Web Tools specification with MD5 checksum reporting.
   - [x] **2. Dedicated `/install` Web Route (`page/app/install/page.tsx`):**
     * Dedicated, festive installation hub with real-time browser capability detection (`checkWebSerialSupport()`).
-    * Clear 3-step preparation guide (USB-C data cable check, port selection, 40s automated flashing).
+    * Minimalist festive hero UI featuring a prominent install button and 3 feature highlight cards (MikoRadar, Kokpit Misji, Santa Cam).
     * Collapsible driver & troubleshooting guide with direct links for CP2104 (Silicon Labs) and CH9102 (WCH) USB-to-UART bridges.
     * Client-side dynamic Web Serial flasher button using `<esp-web-install-button>`.
   - [x] **3. Navigation Integration (`page/app/page.tsx`):**
