@@ -7,11 +7,15 @@ import { checkWebSerialSupport } from "@/lib/installer/browser-support";
 interface ESPWebInstallButtonProps {
   manifestUrl?: string;
   className?: string;
+  size?: "default" | "hero";
+  label?: string;
 }
 
 export function ESPWebInstallButton({
   manifestUrl = "/firmware/manifest.json",
   className = "",
+  size = "default",
+  label = "Zainstaluj SANTA-OS",
 }: ESPWebInstallButtonProps) {
   const [mounted, setMounted] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -56,27 +60,35 @@ export function ESPWebInstallButton({
 
   if (!mounted) {
     return (
-      <div className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#091326] text-slate-400 font-mono text-xs border border-white/10">
-        <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+      <div
+        className={
+          size === "hero"
+            ? "inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl bg-[#091326] text-slate-300 font-mono text-sm sm:text-base border border-white/10"
+            : "flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#091326] text-slate-400 font-mono text-xs border border-white/10"
+        }
+      >
+        <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
         <span>Inicjalizacja modułu Web Serial...</span>
       </div>
     );
   }
 
+  const buttonClasses =
+    size === "hero"
+      ? "inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white font-mono font-bold text-base sm:text-lg border border-emerald-400/50 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.99] cursor-pointer"
+      : "w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white font-mono font-bold text-sm border border-emerald-400/50 shadow-sm transition cursor-pointer";
+
   return (
     <div className={className}>
       <esp-web-install-button manifest={manifestUrl}>
-        <button
-          slot="activate"
-          className="w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white font-mono font-bold text-sm border border-emerald-400/50 shadow-md shadow-emerald-950/40 transition cursor-pointer"
-        >
-          <Usb className="w-4 h-4 text-emerald-200" />
-          <span>Wgraj oprogramowanie do pamięci Flash</span>
+        <button slot="activate" className={buttonClasses}>
+          <Usb className={size === "hero" ? "w-5 h-5 sm:w-6 sm:h-6 text-emerald-200" : "w-4 h-4 text-emerald-200"} />
+          <span>{label}</span>
         </button>
 
         <div
           slot="unsupported"
-          className="flex items-start gap-2.5 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs font-mono text-left"
+          className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs font-mono text-left max-w-md mx-auto"
         >
           <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
           <div>
@@ -87,7 +99,7 @@ export function ESPWebInstallButton({
 
         <div
           slot="not-allowed"
-          className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs font-mono text-left"
+          className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs font-mono text-left max-w-md mx-auto"
         >
           <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div>
