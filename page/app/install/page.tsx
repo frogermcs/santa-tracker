@@ -54,14 +54,14 @@ export default function InstallPage() {
             <h1 className="text-sm font-bold font-mono tracking-tight text-white">
               SANTA-OS
             </h1>
-            <span className="text-xs font-mono text-slate-400 border-l border-white/10 pl-2 hidden sm:inline">
+            <span className="text-xs font-mono text-slate-300 border-l border-white/10 pl-2 hidden sm:inline">
               Flasher Firmware M5Stick
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2.5 text-xs font-mono">
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900/80 border border-white/10 text-slate-300">
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900/80 border border-white/10 text-slate-200">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span>v{APP_VERSION}</span>
           </div>
@@ -84,7 +84,7 @@ export default function InstallPage() {
             <Terminal className="w-5 h-5 text-emerald-400" />
             <span>Instalator Firmware M5Stick</span>
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-300 mt-1 text-pretty">
             Bezpośrednie programowanie pamięci Flash mikrokontrolera przez interfejs Web Serial (USB-UART).
           </p>
         </div>
@@ -106,14 +106,14 @@ export default function InstallPage() {
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-white">
+                  <span className="font-bold text-white text-sm">
                     {support.isSupported ? "Web Serial API aktywny" : "Brak obsługi Web Serial"}
                   </span>
-                  <span className="px-1.5 py-0.5 rounded bg-black/40 border border-white/10 text-slate-300">
+                  <span className="px-2 py-0.5 rounded bg-black/40 border border-white/10 text-slate-200 text-xs">
                     {support.browserName}
                   </span>
                 </div>
-                <p className="mt-1 opacity-90 leading-relaxed">{support.recommendation}</p>
+                <p className="mt-1 text-slate-300 leading-relaxed text-xs text-pretty">{support.recommendation}</p>
               </div>
             </div>
           </div>
@@ -123,70 +123,69 @@ export default function InstallPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Column: Flasher Terminal & Memory Map (7 cols) */}
           <div className="lg:col-span-7 space-y-5">
-            {/* Hardware Target & Flashing Specifications */}
-            <div className="rounded-2xl bg-[#0c162b]/90 border border-white/10 p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-amber-400" />
-                  <span className="font-mono font-bold text-sm text-white">Parametry platformy docelowej</span>
-                </div>
-                <span className="font-mono text-xs px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
-                  ESP32-PICO-D4
-                </span>
+            {/* Platform Specifications Header Bar */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-amber-400" />
+                <h3 className="font-mono font-bold text-sm text-white">Parametry platformy docelowej</h3>
+              </div>
+              <span className="font-mono text-xs px-2.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-bold">
+                ESP32-PICO-D4
+              </span>
+            </div>
+
+            {/* Flattened specs grid (single level) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+              <div className="p-3 bg-[#0c162b]/80 border border-white/10 rounded-xl">
+                <span className="text-slate-400 block uppercase tracking-wider text-xs">Urządzenie</span>
+                <span className="text-white font-bold text-sm block mt-0.5">M5StickC-Plus / SE</span>
+              </div>
+              <div className="p-3 bg-[#0c162b]/80 border border-white/10 rounded-xl">
+                <span className="text-slate-400 block uppercase tracking-wider text-xs">Wyświetlacz</span>
+                <span className="text-white font-bold text-sm block mt-0.5">ST7789v2 240×135</span>
+              </div>
+              <div className="p-3 bg-[#0c162b]/80 border border-white/10 rounded-xl">
+                <span className="text-slate-400 block uppercase tracking-wider text-xs">Prędkość UART</span>
+                <span className="text-emerald-400 font-bold text-sm block mt-0.5">1 500 000 bps</span>
+              </div>
+              <div className="p-3 bg-[#0c162b]/80 border border-white/10 rounded-xl">
+                <span className="text-slate-400 block uppercase tracking-wider text-xs">Pamięć Flash</span>
+                <span className="text-amber-300 font-bold text-sm block mt-0.5">4 MB Flash</span>
+              </div>
+            </div>
+
+            {/* Flash Memory Partition & Flasher Card (single level) */}
+            <div className="p-5 bg-[#0c162b]/80 border border-white/10 rounded-2xl space-y-4">
+              <div className="flex items-center gap-2 text-xs font-mono text-slate-200 font-bold">
+                <Layers className="w-4 h-4 text-sky-400" />
+                <span>Układ partycji Flash (manifest.json)</span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
-                <div className="p-2.5 rounded-lg bg-[#081224] border border-white/5">
-                  <span className="text-slate-400 block text-[10px] uppercase">Urządzenie</span>
-                  <span className="text-white font-bold">M5StickC-Plus / SE</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#081224] border border-white/5">
-                  <span className="text-slate-400 block text-[10px] uppercase">Wyświetlacz</span>
-                  <span className="text-white font-bold">ST7789v2 240×135</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#081224] border border-white/5">
-                  <span className="text-slate-400 block text-[10px] uppercase">Prędkość UART</span>
-                  <span className="text-emerald-400 font-bold">1 500 000 bps</span>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#081224] border border-white/5">
-                  <span className="text-slate-400 block text-[10px] uppercase">Rozmiar ROM</span>
-                  <span className="text-amber-300 font-bold">4 MB Flash</span>
-                </div>
-              </div>
-
-              {/* Memory Partition Layout */}
-              <div className="space-y-2 pt-1">
-                <div className="flex items-center gap-1.5 text-xs font-mono text-slate-300">
-                  <Layers className="w-3.5 h-3.5 text-sky-400" />
-                  <span className="font-bold">Układ partycji Flash (manifest.json)</span>
-                </div>
-                <div className="overflow-x-auto rounded-lg border border-white/10 bg-[#081224]">
-                  <table className="w-full text-left text-xs font-mono">
-                    <thead className="border-b border-white/10 bg-slate-900/60 text-slate-400 text-[11px]">
-                      <tr>
-                        <th className="py-2 px-3">Adres offsetu</th>
-                        <th className="py-2 px-3">Plik binarny</th>
-                        <th className="py-2 px-3">Rola w pamięci Flash</th>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="border-b border-white/10 text-slate-400">
+                    <tr>
+                      <th className="py-2.5 px-2">Offset</th>
+                      <th className="py-2.5 px-3">Plik binarny</th>
+                      <th className="py-2.5 px-3">Rola w pamięci Flash</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-slate-300">
+                    {MEMORY_PARTITIONS.map((part) => (
+                      <tr key={part.offset} className="hover:bg-white/[0.02]">
+                        <td className="py-2.5 px-2 text-amber-300 font-bold">{part.offset}</td>
+                        <td className="py-2.5 px-3 text-white font-semibold">{part.file}</td>
+                        <td className="py-2.5 px-3 text-slate-300">{part.desc}</td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5 text-slate-300">
-                      {MEMORY_PARTITIONS.map((part) => (
-                        <tr key={part.offset} className="hover:bg-white/[0.02]">
-                          <td className="py-2 px-3 text-amber-300 font-bold">{part.offset}</td>
-                          <td className="py-2 px-3 text-white">{part.file}</td>
-                          <td className="py-2 px-3 text-slate-400">{part.desc}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
-              {/* Action Trigger Card */}
-              <div className="pt-2 border-t border-white/10 space-y-3">
+              <div className="pt-3 border-t border-white/10 space-y-2">
                 <ESPWebInstallButton />
-                <p className="text-[11px] font-mono text-slate-400 text-center">
-                  Przeglądarka wyświetli natywny selektor portów szeregowych. Wybierz podłączony moduł M5Stick.
+                <p className="text-xs font-mono text-slate-400 text-center text-pretty">
+                  Przeglądarka wyświetli natywny selektor portów szeregowych. Wybierz podłączony moduł&nbsp;M5Stick.
                 </p>
               </div>
             </div>
@@ -195,103 +194,104 @@ export default function InstallPage() {
           {/* Right Column: Operational Checklist & Diagnostics (5 cols) */}
           <div className="lg:col-span-5 space-y-5">
             {/* 3-Step Procedure */}
-            <div className="rounded-2xl bg-[#0c162b]/90 border border-white/10 p-5 space-y-4">
+            <div className="p-5 bg-[#0c162b]/80 border border-white/10 rounded-2xl space-y-4">
               <div className="flex items-center gap-2 border-b border-white/10 pb-3">
                 <Usb className="w-4 h-4 text-emerald-400" />
                 <h3 className="font-mono font-bold text-sm text-white">Procedura instalacji</h3>
               </div>
 
-              <div className="space-y-3 text-xs font-mono">
-                <div className="flex gap-3 items-start p-3 rounded-lg bg-[#081224] border border-white/5">
-                  <div className="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400 shrink-0">
+              <ol className="space-y-4 text-xs font-mono divide-y divide-white/10">
+                <li className="flex gap-3 items-start pt-3 first:pt-0">
+                  <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-300 font-bold flex items-center justify-center shrink-0 border border-emerald-500/30 text-xs">
                     1
-                  </div>
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-white block">Podłączenie USB-C</span>
-                    <p className="text-slate-400 text-[11px] leading-relaxed">
+                  </span>
+                  <div className="space-y-1">
+                    <span className="font-bold text-white block text-sm">Podłączenie USB-C</span>
+                    <p className="text-slate-300 text-xs leading-relaxed text-pretty">
                       Połącz M5Stick kablem USB-C z komputerem. Upewnij się, że przewód posiada linie danych D+/D- (nie jest kablem wyłącznie ładującym).
                     </p>
                   </div>
-                </div>
+                </li>
 
-                <div className="flex gap-3 items-start p-3 rounded-lg bg-[#081224] border border-white/5">
-                  <div className="w-6 h-6 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-center justify-center font-bold text-amber-400 shrink-0">
+                <li className="flex gap-3 items-start pt-4">
+                  <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center shrink-0 border border-amber-500/30 text-xs">
                     2
-                  </div>
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-white block">Wybór portu szeregowego</span>
-                    <p className="text-slate-400 text-[11px] leading-relaxed">
+                  </span>
+                  <div className="space-y-1">
+                    <span className="font-bold text-white block text-sm">Wybór portu szeregowego</span>
+                    <p className="text-slate-300 text-xs leading-relaxed text-pretty">
                       W oknie wyboru wskaż port zawierający w nazwie <code>CP2104</code> lub <code>CH9102 USB to UART</code> i zatwierdź połączenie.
                     </p>
                   </div>
-                </div>
+                </li>
 
-                <div className="flex gap-3 items-start p-3 rounded-lg bg-[#081224] border border-white/5">
-                  <div className="w-6 h-6 rounded-md bg-sky-500/10 border border-sky-500/30 flex items-center justify-center font-bold text-sky-400 shrink-0">
+                <li className="flex gap-3 items-start pt-4">
+                  <span className="w-6 h-6 rounded-full bg-sky-500/20 text-sky-300 font-bold flex items-center justify-center shrink-0 border border-sky-500/30 text-xs">
                     3
-                  </div>
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-white block">Zapis Flash i automatyczny restart</span>
-                    <p className="text-slate-400 text-[11px] leading-relaxed">
+                  </span>
+                  <div className="space-y-1">
+                    <span className="font-bold text-white block text-sm">Zapis Flash i automatyczny restart</span>
+                    <p className="text-slate-300 text-xs leading-relaxed text-pretty">
                       Wgrywanie 4 partycji trwa ok. 35 sekund. Po weryfikacji sumy kontrolnej ESP32 zrestartuje się bezpośrednio do ekranu radaru.
                     </p>
                   </div>
-                </div>
-              </div>
+                </li>
+              </ol>
             </div>
 
             {/* Drivers and Hardware Diagnostics */}
-            <div className="rounded-2xl bg-[#0c162b]/90 border border-white/10 p-5 space-y-4">
+            <div className="p-5 bg-[#0c162b]/80 border border-white/10 rounded-2xl space-y-4">
               <div className="flex items-center gap-2 border-b border-white/10 pb-3">
                 <HelpCircle className="w-4 h-4 text-sky-400" />
                 <h3 className="font-mono font-bold text-sm text-white">Sterowniki USB-UART i diagnostyka</h3>
               </div>
 
-              <div className="space-y-3 text-xs font-mono">
-                <p className="text-slate-400 text-[11px] leading-relaxed">
-                  Nowsze systemy operacyjne (macOS, Windows 11) posiadają wbudowane sterowniki. Jeśli port szeregowy nie pojawia się na liście, pobierz sterownik odpowiedni dla Twojego egzemplarza:
+              <div className="space-y-4 text-xs font-mono">
+                <p className="text-slate-300 text-xs leading-relaxed text-pretty">
+                  Nowsze systemy operacyjne posiadają wbudowane sterowniki. Jeśli port szeregowy nie pojawia się na liście, pobierz sterownik odpowiedni dla Twojego egzemplarza:
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <a
                     href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-lg bg-[#081224] hover:bg-slate-800/80 border border-white/10 flex items-center justify-between text-sky-300 transition"
+                    className="p-3 rounded-lg border border-white/15 hover:border-white/30 hover:bg-white/[0.03] flex items-center justify-between text-sky-300 transition"
                   >
                     <div>
                       <span className="font-bold block text-white text-xs">CP2104 (Silicon Labs)</span>
-                      <span className="text-[10px] text-slate-400">Dla M5StickC-Plus</span>
+                      <span className="text-xs text-slate-400">Dla M5StickC-Plus</span>
                     </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                    <ExternalLink className="w-4 h-4 text-sky-400 shrink-0 ml-2" />
                   </a>
 
                   <a
                     href="https://www.wch-ic.com/downloads/CH343SER_ZIP.html"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-lg bg-[#081224] hover:bg-slate-800/80 border border-white/10 flex items-center justify-between text-emerald-300 transition"
+                    className="p-3 rounded-lg border border-white/15 hover:border-white/30 hover:bg-white/[0.03] flex items-center justify-between text-emerald-300 transition"
                   >
                     <div>
                       <span className="font-bold block text-white text-xs">CH9102 (WCH)</span>
-                      <span className="text-[10px] text-slate-400">Dla M5StickC-Plus SE</span>
+                      <span className="text-xs text-slate-400">Dla M5StickC-Plus SE</span>
                     </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <ExternalLink className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />
                   </a>
                 </div>
 
-                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-200 text-[11px] space-y-1">
-                  <span className="font-bold block text-amber-100">Wymuszenie trybu Download (Bootloader):</span>
-                  <p className="leading-relaxed">
-                    W rzadkich przypadkach, gdy ESP32 nie odpowiada na automatyczny impuls resetu (DTR/RTS), odłącz kabel USB, wciśnij i przytrzymaj przedni przycisk M5 (GPIO0), a następnie podłącz kabel USB i kliknij instalację.
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-lg bg-slate-900/60 border border-white/5 text-slate-400 text-[11px] space-y-1">
-                  <span className="font-bold block text-slate-300">Użytkownicy systemu Linux:</span>
-                  <p className="leading-relaxed">
-                    Upewnij się, że Twoje konto należy do grupy uprawnień portów szeregowych: <code>sudo usermod -a -G dialout $USER</code>.
-                  </p>
+                <div className="pt-2 border-t border-white/10 space-y-3">
+                  <div className="text-xs">
+                    <span className="font-bold text-amber-300 block">Wymuszenie trybu Download (Bootloader):</span>
+                    <p className="text-slate-300 text-xs leading-relaxed mt-0.5 text-pretty">
+                      W rzadkich przypadkach, gdy ESP32 nie odpowiada na automatyczny impuls resetu (DTR/RTS), odłącz kabel USB, wciśnij i przytrzymaj przedni przycisk M5 (GPIO0), a następnie podłącz kabel USB i kliknij instalację.
+                    </p>
+                  </div>
+                  <div className="text-xs pt-2 border-t border-white/5">
+                    <span className="font-bold text-slate-200 block">Użytkownicy systemu Linux:</span>
+                    <p className="text-slate-400 text-xs leading-relaxed mt-0.5 text-pretty">
+                      Upewnij się, że Twoje konto należy do grupy uprawnień portów szeregowych: <code>sudo usermod -a -G dialout $USER</code>.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -300,7 +300,7 @@ export default function InstallPage() {
       </main>
 
       {/* Tactical Footer */}
-      <footer className="border-t border-white/10 py-5 text-center text-xs font-mono text-slate-500 relative z-10">
+      <footer className="border-t border-white/10 py-5 text-center text-xs font-mono text-slate-400 relative z-10">
         SANTA-OS v{APP_VERSION} • ESP32-PICO-D4 • Web Serial API
       </footer>
     </div>

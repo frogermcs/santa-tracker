@@ -68,7 +68,7 @@ export function ESPWebInstallButton({
       <esp-web-install-button manifest={manifestUrl}>
         <button
           slot="activate"
-          className="w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-mono font-bold text-sm border border-emerald-400/50 shadow-md shadow-emerald-950/40 transition cursor-pointer"
+          className="w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white font-mono font-bold text-sm border border-emerald-400/50 shadow-md shadow-emerald-950/40 transition cursor-pointer"
         >
           <Usb className="w-4 h-4 text-emerald-200" />
           <span>Wgraj oprogramowanie do pamięci Flash</span>
