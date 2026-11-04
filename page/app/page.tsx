@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Compass, Volume2, VolumeX, RefreshCw, Map, Calendar, Gauge, Layers, Sparkles, Camera } from "lucide-react";
+import { Compass, Volume2, VolumeX, RefreshCw, Map, Calendar, Gauge, Layers, Sparkles, Camera, Usb } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
 import { SnowEffect } from "@/components/SnowEffect";
 import { computeSantaMetrics, SantaCockpitMetrics } from "@/lib/telemetry/santa-metrics";
@@ -245,6 +245,14 @@ export default function RadarPage() {
             <span>Map Debugger</span>
           </Link>
 
+          <Link
+            href="/install"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 transition font-bold cursor-pointer shadow-sm shadow-emerald-950/40"
+          >
+            <Usb className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Instalator M5Stick</span>
+          </Link>
+
           <button
             onClick={() => setIsMuted((prev) => !prev)}
             className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-white/10 transition cursor-pointer"
@@ -362,6 +370,25 @@ export default function RadarPage() {
               <span className="text-slate-400">Przytrzymaj (&gt;0.6s) = Dźwięk</span>
             </div>
           </div>
+
+          {/* Web Installer Hardware CTA */}
+          <Link
+            href="/install"
+            className="w-full max-w-lg p-3 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-[#0c162b] to-teal-950/40 border border-emerald-500/30 hover:border-emerald-400/60 transition group flex items-center justify-between gap-3 text-xs font-mono shadow-lg cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 group-hover:scale-105 transition-transform">
+                <Usb className="w-4 h-4 text-emerald-400" />
+              </span>
+              <div>
+                <span className="font-bold text-white block">Posiadasz fizyczny M5StickC-Plus?</span>
+                <span className="text-[11px] text-emerald-300/80">Wgraj Santa-OS bezpośrednio przez kabel USB</span>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 group-hover:bg-emerald-500/30 transition text-[11px] shrink-0">
+              Instaluj →
+            </span>
+          </Link>
         </div>
 
         {/* Right Column: Mission Telemetry & Waypoints List (5 cols) */}
