@@ -86,27 +86,18 @@ export function ESPWebInstallButton({
           <span>{label}</span>
         </button>
 
-        <div
-          slot="unsupported"
-          className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs font-mono text-left max-w-md mx-auto"
-        >
-          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold block text-rose-100">Przeglądarka nieobsługiwana:</span>
-            <span className="text-rose-200/90">{supportInfo.recommendation}</span>
+        {!supportInfo.isSupported && (
+          <div
+            slot="unsupported"
+            className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs font-mono text-left max-w-md mx-auto"
+          >
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold block text-rose-100">Przeglądarka nieobsługiwana:</span>
+              <span className="text-rose-200/90">{supportInfo.recommendation}</span>
+            </div>
           </div>
-        </div>
-
-        <div
-          slot="not-allowed"
-          className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs font-mono text-left max-w-md mx-auto"
-        >
-          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold block text-amber-100">Wymagany bezpieczny kontekst:</span>
-            <span className="text-amber-200/90">Web Serial wymaga protokołu HTTPS lub uruchomienia na localhost.</span>
-          </div>
-        </div>
+        )}
       </esp-web-install-button>
     </div>
   );

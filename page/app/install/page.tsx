@@ -112,7 +112,7 @@ export default function InstallPage() {
               <span>MikoRadar</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed text-pretty">
-              Śledź trasę Mikołaja na żywo na globalnym radarze lotu.
+              Śledź trasę Mikołaja na żywo.
             </p>
           </div>
 
@@ -122,7 +122,7 @@ export default function InstallPage() {
               <span>Kokpit Misji</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed text-pretty">
-              Sprawdź telemetrię sani: prędkość Mach 4.8, dostarczone prezenty i zapasy ciastek.
+              Sprawdź telemetrię misji Mikołaja.
             </p>
           </div>
 
@@ -132,7 +132,7 @@ export default function InstallPage() {
               <span>Santa Cam</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed text-pretty">
-              Zobacz Mikołaja w akcji: od przelotu w chmurach po lądowanie na dachach.
+              Zobacz Mikołaja w akcji.
             </p>
           </div>
         </div>
