@@ -561,10 +561,27 @@ void test_improv_wifi_settings_parser(void) {
   TEST_ASSERT_EQUAL_STRING("Home", ssid);
   TEST_ASSERT_EQUAL_STRING("Secret", pass);
 
-  // Test malformed payload with out-of-bounds length
+  // Test malformed payload with out-of-bounds SSID length
   uint8_t badPayload[] = { 50, 'X' };
   bool badOk = ImprovHandler::parseWifiSettings(badPayload, sizeof(badPayload), ssid, sizeof(ssid), pass, sizeof(pass));
   TEST_ASSERT_FALSE(badOk);
+
+  // Test truncated payload missing password length byte
+  uint8_t missingPassLen[] = { 4, 'H', 'o', 'm', 'e' };
+  bool missingOk = ImprovHandler::parseWifiSettings(missingPassLen, sizeof(missingPassLen), ssid, sizeof(ssid), pass, sizeof(pass));
+  TEST_ASSERT_FALSE(missingOk);
+
+  // Test truncated payload where password length exceeds remaining bytes
+  uint8_t truncatedPass[] = { 4, 'H', 'o', 'm', 'e', 10, 'A', 'B' };
+  bool truncOk = ImprovHandler::parseWifiSettings(truncatedPass, sizeof(truncatedPass), ssid, sizeof(ssid), pass, sizeof(pass));
+  TEST_ASSERT_FALSE(truncOk);
+
+  // Test explicit zero-length password (open network)
+  uint8_t openWifi[] = { 4, 'H', 'o', 'm', 'e', 0 };
+  bool openOk = ImprovHandler::parseWifiSettings(openWifi, sizeof(openWifi), ssid, sizeof(ssid), pass, sizeof(pass));
+  TEST_ASSERT_TRUE(openOk);
+  TEST_ASSERT_EQUAL_STRING("Home", ssid);
+  TEST_ASSERT_EQUAL_STRING("", pass);
 }
 
 // Test 22: Improv byte stream parser and state transitions
@@ -604,8 +621,8 @@ void test_improv_rpc_wifi_settings_unwrapping(void) {
   ImprovHandler handler;
   handler.setState(IMPROV_STATE_READY);
 
-  const char* testSsid = "koty_residence";
-  const char* testPass = "Koty201512";
+  const char* testSsid = "NorthPole_2.4G";
+  const char* testPass = "RudolphRedNose2026";
   uint8_t rpcData[32];
   rpcData[0] = IMPROV_CMD_SEND_WIFI_SETTINGS;
   rpcData[1] = 1 + strlen(testSsid) + 1 + strlen(testPass); // 26

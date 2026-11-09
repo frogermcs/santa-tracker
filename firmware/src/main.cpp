@@ -40,6 +40,9 @@ void setup() {
   auto cfg = M5.config();
   M5.begin(cfg);
 
+  // Initialize Serial UART before any logging calls
+  Serial.begin(115200);
+
   // Initialize Central European Timezone (CET/CEST) for battery-backed RTC
   setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
   tzset();
@@ -56,7 +59,6 @@ void setup() {
     }
   }
 
-  Serial.begin(115200);
   Serial.println("\n=================================");
   Serial.println("  SANTA-OS v2.4 - ADVENT RADAR   ");
   Serial.println("  24 Days / 288 Stops / ST7789v2 ");
@@ -83,7 +85,7 @@ void setup() {
   improvHandler.init();
 
   // If Wi-Fi credentials are provided in config.h and not provisioned yet, attempt fallback
-  if (!improvHandler.isConnected() && strlen(DEFAULT_WIFI_SSID) > 0) {
+  if (!improvHandler.isConnected() && !improvHandler.isConnecting() && strlen(DEFAULT_WIFI_SSID) > 0) {
     JourneyData remoteData;
     if (JourneyClient::fetchRemoteOrFallback(DEFAULT_WIFI_SSID, DEFAULT_WIFI_PASS, JOURNEY_API_URL, remoteData)) {
       engine.setJourneyData(remoteData);
@@ -99,11 +101,14 @@ void loop() {
   improvHandler.update();
 
   unsigned long now = millis();
-  float dt = (now - lastFrameTime) / 1000.0f;
+  unsigned long elapsedMs = now - lastFrameTime;
   lastFrameTime = now;
+
+  float dt = elapsedMs / 1000.0f;
   if (dt > 0.1f) dt = 0.033f;
 
-  improvHandler.updateTimers((uint32_t)(dt * 1000.0f));
+  // Pass un-clamped elapsed wall-clock milliseconds to network timers
+  improvHandler.updateTimers((uint32_t)elapsedMs);
   if (improvHandler.checkJustConnected()) {
     playChirp(2000, 70);
   }
@@ -158,12 +163,12 @@ void loop() {
   if (improvHandler.isConnecting()) {
     bool pulse = (now / 300) % 2 == 0;
     if (pulse) {
-      canvas.fillCircle(6, 6, 2, 0xfde0); // Vibrant amber pulsing dot
+      canvas.fillCircle(6, 6, 2, 0xffe0); // Vibrant amber/yellow pulsing dot (TFT_YELLOW 0xffe0)
     }
   } else if (improvHandler.isConnected() || (improvHandler.isRadioSleeping() && improvHandler.isSyncSucceeded())) {
-    canvas.fillCircle(6, 6, 2, 0x07e0); // Solid emerald green dot
+    canvas.fillCircle(6, 6, 2, 0x07e0); // Solid emerald green dot (TFT_GREEN 0x07e0)
   } else {
-    canvas.drawCircle(6, 6, 2, 0x52aa); // Muted slate ring
+    canvas.drawCircle(6, 6, 2, 0x7bef); // Muted slate ring (TFT_DARKGREY 0x7bef)
   }
 
   // High-Contrast Wi-Fi Toast Overlay (Connected vs Offline)

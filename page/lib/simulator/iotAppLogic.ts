@@ -219,6 +219,59 @@ export function getTelemetry(state: SimulatorAppState): TelemetryState {
 }
 
 /**
+ * Formats a given timestamp or current wall-clock into the Polish CET timezone string
+ * matching M5StickC-Plus firmware ImprovHandler::getFormattedTime().
+ */
+export function formatNtpTime(d: Date = new Date()): string {
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `CZAS NTP: ${hours}:${minutes} CET`;
+}
+
+/**
+ * Triggers simulated Wi-Fi connection with live NTP time sync and contextual toast
+ */
+export function simulateWifiConnect(
+  state: SimulatorAppState,
+  ssid = "NorthPole_2.4G",
+  ip = "192.168.1.100"
+): void {
+  state.wifiState = "connected";
+  state.wifiSsid = ssid;
+  state.wifiIp = ip;
+  state.wifiTime = formatNtpTime();
+  state.toastType = "connected";
+  state.toastTimer = 4000;
+  state.lastAction = `WI-FI POŁĄCZONO: ${ssid}`;
+}
+
+/**
+ * Triggers simulated Wi-Fi disconnection / offline fallback
+ */
+export function simulateWifiDisconnect(
+  state: SimulatorAppState,
+  ssid = "NorthPole_2.4G"
+): void {
+  state.wifiState = "offline";
+  state.wifiSsid = ssid;
+  state.toastType = "offline";
+  state.toastTimer = 3500;
+  state.lastAction = "WI-FI: BRAK POŁĄCZENIA";
+}
+
+/**
+ * Triggers a Wi-Fi popup toast
+ */
+export function triggerWifiToast(
+  state: SimulatorAppState,
+  type: ToastType,
+  durationMs = 4000
+): void {
+  state.toastType = type;
+  state.toastTimer = durationMs;
+}
+
+/**
  * Initializes firmware state. Equivalent to Arduino setup() in main.cpp.
  */
 export function setup(nowMs = 0): SimulatorAppState {
@@ -238,7 +291,7 @@ export function setup(nowMs = 0): SimulatorAppState {
     wifiState: "offline",
     wifiSsid: "",
     wifiIp: "",
-    wifiTime: "CZAS NTP: 15:44 CET",
+    wifiTime: formatNtpTime(new Date(nowMs || Date.now())),
     toastType: "none",
     toastTimer: 0,
   };
@@ -254,15 +307,19 @@ export function update(
   dtMs: number,
   nowMs: number
 ): void {
-  void nowMs;
   const dtSec = Math.min(dtMs / 1000.0, 0.1);
 
-  // 1. Advance simulation clock (JourneyEngine::update)
+  // 1. Advance simulation clock (JourneyEngine::update) & toast timers
   if (state.toastTimer > 0) {
     state.toastTimer = Math.max(0, state.toastTimer - dtMs);
     if (state.toastTimer === 0) {
       state.toastType = "none";
     }
+  }
+
+  // Update live clock when connected / NTP synced
+  if (state.wifiState === "connected" || state.wifiState === "sleep") {
+    state.wifiTime = formatNtpTime(new Date(nowMs || Date.now()));
   }
 
   if (state.cityCount > 0) {

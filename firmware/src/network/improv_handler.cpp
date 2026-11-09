@@ -7,6 +7,7 @@
   #include <WiFi.h>
   #include <Preferences.h>
   #include <M5Unified.h>
+  #include <esp_sntp.h>
   #define LOG_PRINTF(...) Serial.printf(__VA_ARGS__)
   #define LOG_PRINTLN(...) Serial.println(__VA_ARGS__)
 #else
@@ -20,12 +21,16 @@ static const uint8_t IMPROV_HEADER[7] = {'I', 'M', 'P', 'R', 'O', 'V', 1};
 ImprovHandler::ImprovHandler()
   : currentState(IMPROV_STATE_READY),
     toastType(TOAST_NONE),
+    hasPendingCredentials(false),
     toastMs(0),
     sleepCountdownMs(0),
     connectTimeoutMs(0),
+    sntpTimeoutMs(0),
     justConnected(false),
     justFailed(false),
     isConnectingAsync(false),
+    isWaitingSntp(false),
+    isScanning(false),
     radioSleeping(true),
     syncSucceeded(false),
     rxIndex(0),
@@ -33,6 +38,8 @@ ImprovHandler::ImprovHandler()
   memset(localIp, 0, sizeof(localIp));
   memset(currentSsid, 0, sizeof(currentSsid));
   memset(ntpTimeStr, 0, sizeof(ntpTimeStr));
+  memset(pendingSsid, 0, sizeof(pendingSsid));
+  memset(pendingPass, 0, sizeof(pendingPass));
   memset(rxBuffer, 0, sizeof(rxBuffer));
 }
 
@@ -79,6 +86,9 @@ void ImprovHandler::startConnectAsync(const char* ssid, const char* pass) {
     return;
   }
 
+  // Cancel any prior sleep timer to avoid powering down during provisioning
+  sleepCountdownMs = 0;
+
   strncpy(currentSsid, ssid, sizeof(currentSsid) - 1);
   currentSsid[sizeof(currentSsid) - 1] = '\0';
   currentState = IMPROV_STATE_PROVISIONING;
@@ -97,8 +107,8 @@ void ImprovHandler::startConnectAsync(const char* ssid, const char* pass) {
   if (strcmp(ssid, "FailNet") != 0) {
     currentState = IMPROV_STATE_PROVISIONED;
     strncpy(localIp, "192.168.1.100", sizeof(localIp) - 1);
-    toastType = TOAST_CONNECTED;
     toastMs = 4000;
+    toastType = TOAST_CONNECTED;
     justConnected = true;
     syncSucceeded = true;
     radioSleeping = false;
@@ -127,6 +137,86 @@ void ImprovHandler::updateTimers(uint32_t dtMs) {
     }
   }
 
+#if defined(ARDUINO)
+  // Poll background network scan
+  if (isScanning) {
+    int n = WiFi.scanComplete();
+    if (n >= 0) {
+      isScanning = false;
+      if (n > 10) n = 10;
+      for (int i = 0; i < n; ++i) {
+        String ssidStr = WiFi.SSID(i);
+        String rssiStr = String(WiFi.RSSI(i));
+        const char* authStr = (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? "NO" : "YES";
+
+        const char* strings[3] = {
+          ssidStr.c_str(),
+          rssiStr.c_str(),
+          authStr
+        };
+
+        uint8_t txBuf[128];
+        size_t len = buildRpcResult(IMPROV_CMD_REQUEST_NETWORKS, strings, 3, txBuf, sizeof(txBuf));
+        writeSerial(txBuf, len);
+      }
+      WiFi.scanDelete();
+
+      uint8_t emptyBuf[32];
+      size_t emptyLen = buildRpcResult(IMPROV_CMD_REQUEST_NETWORKS, nullptr, 0, emptyBuf, sizeof(emptyBuf));
+      writeSerial(emptyBuf, emptyLen);
+
+      // Re-enter sleep after 30s idle if not provisioning
+      if (!isConnectingAsync) {
+        scheduleRadioSleep(30000);
+      }
+    } else if (n == -2) {
+      isScanning = false;
+      uint8_t emptyBuf[32];
+      size_t emptyLen = buildRpcResult(IMPROV_CMD_REQUEST_NETWORKS, nullptr, 0, emptyBuf, sizeof(emptyBuf));
+      writeSerial(emptyBuf, emptyLen);
+      if (!isConnectingAsync) {
+        scheduleRadioSleep(30000);
+      }
+    }
+  }
+
+  // Poll asynchronous SNTP time sync
+  if (isWaitingSntp) {
+    bool sntpReady = (sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED);
+    if (sntpTimeoutMs > dtMs) {
+      sntpTimeoutMs -= dtMs;
+    } else {
+      sntpTimeoutMs = 0;
+    }
+
+    if (sntpReady || sntpTimeoutMs == 0) {
+      isWaitingSntp = false;
+      struct tm timeinfo;
+      if (getLocalTime(&timeinfo, 0)) {
+        strftime(ntpTimeStr, sizeof(ntpTimeStr), "CZAS NTP: %H:%M CET", &timeinfo);
+        LOG_PRINTF("[NTP] Clock synchronized: %s\n", ntpTimeStr);
+
+        time_t nowUtc = time(nullptr);
+        if (nowUtc > 1700000000 && M5.Rtc.isEnabled()) {
+          struct tm tmUtc;
+          gmtime_r(&nowUtc, &tmUtc);
+          M5.Rtc.setDateTime(&tmUtc);
+          LOG_PRINTLN("[RTC] Synced to hardware BM8563 RTC via gmtime_r.");
+        }
+      } else {
+        snprintf(ntpTimeStr, sizeof(ntpTimeStr), "CZAS NTP: OK");
+      }
+
+      syncSucceeded = true;
+      scheduleRadioSleep(5000); // 5-second burst then power down radio
+
+      char url[48];
+      snprintf(url, sizeof(url), "http://%s/", localIp);
+      sendProvisionResult(url, IMPROV_CMD_SEND_WIFI_SETTINGS);
+    }
+  }
+#endif
+
   if (isConnectingAsync) {
 #if defined(ARDUINO)
     if (WiFi.status() == WL_CONNECTED) {
@@ -136,45 +226,31 @@ void ImprovHandler::updateTimers(uint32_t dtMs) {
       localIp[sizeof(localIp) - 1] = '\0';
       LOG_PRINTF("[IMPROV] Connected! IP: %s, RSSI: %d dBm\n", localIp, (int)WiFi.RSSI());
 
-      // Trigger initial NTP time sync per Milestone 3B specification
-      configTzTime("CET-1CEST,M3.5.0,M10.5.0/3", "pool.ntp.org", "time.google.com");
-      LOG_PRINTLN("[NTP] Initial SNTP time sync initiated.");
-
-      struct tm timeinfo;
-      if (getLocalTime(&timeinfo, 1200)) {
-        strftime(ntpTimeStr, sizeof(ntpTimeStr), "CZAS NTP: %H:%M CET", &timeinfo);
-        LOG_PRINTF("[NTP] Clock synchronized: %s\n", ntpTimeStr);
-
-        // Persist real-time clock to onboard battery-backed BM8563 RTC
-        time_t nowUtc = time(nullptr);
-        if (nowUtc > 1700000000 && M5.Rtc.isEnabled()) {
-          M5.Rtc.setDateTime(gmtime(&nowUtc));
-          LOG_PRINTLN("[RTC] Synced to hardware BM8563 RTC. Time will persist across reboots!");
-        }
-      } else {
-        snprintf(ntpTimeStr, sizeof(ntpTimeStr), "CZAS NTP: OK");
+      // Commit candidate credentials to NVS only after connection is verified
+      if (hasPendingCredentials) {
+        saveCredentials(pendingSsid, pendingPass);
+        hasPendingCredentials = false;
       }
 
-      toastType = TOAST_CONNECTED;
+      // Initiate asynchronous SNTP sync
+      configTzTime("CET-1CEST,M3.5.0,M10.5.0/3", "pool.ntp.org", "time.google.com");
+      isWaitingSntp = true;
+      sntpTimeoutMs = 3000;
+
       triggerToast(TOAST_CONNECTED, 4000);
       justConnected = true;
-      syncSucceeded = true;
       radioSleeping = false;
-      scheduleRadioSleep(5000); // 5-second burst then power down radio
 
       sendCurrentState();
-      char url[48];
-      snprintf(url, sizeof(url), "http://%s/", localIp);
-      sendProvisionResult(url);
     } else if (connectTimeoutMs > dtMs) {
       connectTimeoutMs -= dtMs;
     } else {
       // 8-second timeout reached: connection failed / network unavailable
       isConnectingAsync = false;
+      hasPendingCredentials = false; // Discard invalid candidate credentials without touching NVS
       currentState = IMPROV_STATE_READY;
       LOG_PRINTF("[IMPROV] Wi-Fi connection timed out for SSID: '%s'. Entering autonomous mode.\n", currentSsid);
 
-      toastType = TOAST_OFFLINE;
       triggerToast(TOAST_OFFLINE, 3500);
       justFailed = true;
       powerDownRadio();
@@ -187,8 +263,8 @@ void ImprovHandler::updateTimers(uint32_t dtMs) {
       connectTimeoutMs -= dtMs;
     } else {
       isConnectingAsync = false;
+      hasPendingCredentials = false;
       currentState = IMPROV_STATE_READY;
-      toastType = TOAST_OFFLINE;
       triggerToast(TOAST_OFFLINE, 3500);
       justFailed = true;
       powerDownRadio();
@@ -229,8 +305,14 @@ bool ImprovHandler::processByte(uint8_t byte) {
   if (!inPacket) {
     if (rxIndex <= 7) {
       if (rxBuffer[rxIndex - 1] != IMPROV_HEADER[rxIndex - 1]) {
-        // Mismatch — slide or reset
-        rxIndex = 0;
+        // Mismatch during header detection
+        // If current byte matches start of header ('I'), keep it as index 1 to preserve sync
+        if (byte == IMPROV_HEADER[0]) {
+          rxBuffer[0] = byte;
+          rxIndex = 1;
+        } else {
+          rxIndex = 0;
+        }
         return false;
       }
       if (rxIndex == 7) {
@@ -309,7 +391,7 @@ void ImprovHandler::handleRpcCommand(uint8_t command, const uint8_t* data, uint8
       if (currentState == IMPROV_STATE_PROVISIONED) {
         char url[48];
         snprintf(url, sizeof(url), "http://%s/", localIp[0] ? localIp : "santa.local");
-        sendProvisionResult(url);
+        sendProvisionResult(url, IMPROV_CMD_REQUEST_STATE);
       }
       break;
     }
@@ -324,10 +406,16 @@ void ImprovHandler::handleRpcCommand(uint8_t command, const uint8_t* data, uint8
       if (radioSleeping) {
         WiFi.mode(WIFI_STA);
         radioSleeping = false;
-        delay(100);
+        delay(50);
+      }
+      WiFi.scanNetworks(true /* async */, false, false, 300);
+      isScanning = true;
+#else
+      handleScanNetworks();
+      if (!isConnectingAsync) {
+        scheduleRadioSleep(30000);
       }
 #endif
-      handleScanNetworks();
       break;
     }
 
@@ -340,7 +428,13 @@ void ImprovHandler::handleRpcCommand(uint8_t command, const uint8_t* data, uint8
         return;
       }
 
-      saveCredentials(ssid, pass);
+      // Store candidate credentials in pending buffer; commit to NVS only upon connection success
+      strncpy(pendingSsid, ssid, sizeof(pendingSsid) - 1);
+      pendingSsid[sizeof(pendingSsid) - 1] = '\0';
+      strncpy(pendingPass, pass, sizeof(pendingPass) - 1);
+      pendingPass[sizeof(pendingPass) - 1] = '\0';
+      hasPendingCredentials = true;
+
       startConnectAsync(ssid, pass);
       sendCurrentState();
       break;
@@ -379,10 +473,10 @@ void ImprovHandler::sendDeviceInfo() {
   writeSerial(txBuf, len);
 }
 
-void ImprovHandler::sendProvisionResult(const char* url) {
+void ImprovHandler::sendProvisionResult(const char* url, uint8_t command) {
   const char* urlStrings[1] = { url ? url : "" };
   uint8_t txBuf[128];
-  size_t len = buildRpcResult(IMPROV_CMD_SEND_WIFI_SETTINGS, urlStrings, 1, txBuf, sizeof(txBuf));
+  size_t len = buildRpcResult(command, urlStrings, 1, txBuf, sizeof(txBuf));
   writeSerial(txBuf, len);
 }
 
@@ -566,17 +660,23 @@ bool ImprovHandler::parseWifiSettings(const uint8_t* data, uint8_t dataLen, char
   outSsid[copySsid] = '\0';
 
   size_t passIdx = 1 + ssidLen;
-  if (passIdx < dataLen) {
-    uint8_t passLen = data[passIdx];
-    if (passIdx + 1 + passLen <= dataLen && outPass && maxPass > 0) {
-      size_t copyPass = (passLen < maxPass - 1) ? passLen : (maxPass - 1);
+  // Must have at least pass_len byte
+  if (passIdx >= dataLen) {
+    return false;
+  }
+
+  uint8_t passLen = data[passIdx];
+  // Guard against truncated payload claiming more bytes than available
+  if (passIdx + 1 + passLen > dataLen) {
+    return false;
+  }
+
+  if (outPass && maxPass > 0) {
+    size_t copyPass = (passLen < maxPass - 1) ? passLen : (maxPass - 1);
+    if (passLen > 0) {
       memcpy(outPass, &data[passIdx + 1], copyPass);
-      outPass[copyPass] = '\0';
-    } else if (outPass && maxPass > 0) {
-      outPass[0] = '\0';
     }
-  } else if (outPass && maxPass > 0) {
-    outPass[0] = '\0';
+    outPass[copyPass] = '\0';
   }
 
   return true;

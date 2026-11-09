@@ -16,6 +16,10 @@ import {
   render,
   getTelemetry,
   ButtonEventState,
+  simulateWifiConnect,
+  simulateWifiDisconnect,
+  triggerWifiToast,
+  formatNtpTime,
 } from "@/lib/simulator/iotAppLogic";
 
 describe("M5Canvas Simulator Parity Tests", () => {
@@ -496,7 +500,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
 
       // 3. Connected state with toast
       state.wifiState = "connected";
-      state.wifiSsid = "koty_residence";
+      state.wifiSsid = "NorthPole_2.4G";
       state.wifiIp = "192.168.0.81";
       state.toastType = "connected";
       state.toastTimer = 4000;
@@ -522,6 +526,23 @@ describe("M5Canvas Simulator Parity Tests", () => {
       render(sim, state, 5000);
       update(state, noButtons, 3500, 8500);
       expect(state.toastType).toBe("none");
+
+      // 6. Test helper functions: simulateWifiConnect & simulateWifiDisconnect
+      simulateWifiConnect(state, "NorthPole_2.4G", "192.168.1.100");
+      expect(state.wifiState).toBe("connected");
+      expect(state.wifiSsid).toBe("NorthPole_2.4G");
+      expect(state.toastType).toBe("connected");
+      expect(state.toastTimer).toBe(4000);
+      expect(state.wifiTime).toContain("CZAS NTP:");
+
+      simulateWifiDisconnect(state, "FailNet");
+      expect(state.wifiState).toBe("offline");
+      expect(state.toastType).toBe("offline");
+      expect(state.toastTimer).toBe(3500);
+
+      triggerWifiToast(state, "connected", 5000);
+      expect(state.toastType).toBe("connected");
+      expect(state.toastTimer).toBe(5000);
     });
   });
 });

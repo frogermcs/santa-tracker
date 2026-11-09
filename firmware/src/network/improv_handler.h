@@ -74,7 +74,7 @@ public:
   void sendDeviceInfo();
 
   // Send Wi-Fi provisioning result with local IP redirect URL
-  void sendProvisionResult(const char* url);
+  void sendProvisionResult(const char* url, uint8_t command = IMPROV_CMD_SEND_WIFI_SETTINGS);
 
   // Trigger network scan and stream results
   void handleScanNetworks();
@@ -126,17 +126,23 @@ private:
   char localIp[24];
   char currentSsid[33];
   char ntpTimeStr[32];
+  char pendingSsid[33];
+  char pendingPass[65];
+  bool hasPendingCredentials;
   uint32_t toastMs;
   uint32_t sleepCountdownMs;
   uint32_t connectTimeoutMs;
+  uint32_t sntpTimeoutMs;
   bool justConnected;
   bool justFailed;
   bool isConnectingAsync;
+  bool isWaitingSntp;
+  bool isScanning;
   bool radioSleeping;
   bool syncSucceeded;
 
-  // Static RX ring/frame buffer
-  static const size_t RX_BUFFER_SIZE = 256;
+  // Static RX ring/frame buffer (272 bytes covers max legal 265B Improv frame + margin)
+  static const size_t RX_BUFFER_SIZE = 272;
   uint8_t rxBuffer[RX_BUFFER_SIZE];
   size_t rxIndex;
   bool inPacket;
