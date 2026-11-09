@@ -238,7 +238,8 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
    * Minimalist 5×5 px dot placed in the top-left corner at `x: 6, y: 6` across all screens:
      - Battery indicator moved right to `x: 14` (icon) and `x: 28` (percentage), leaving clean balance before screen titles.
      - **Connecting / Syncing**: Vibrant amber pulsing dot (`●`).
-     - **Connected / Synced**: Solid emerald green dot (`●`).
+     - **Connected & Transmitting**: Solid emerald green dot (`●`) during the active 5-second burst window.
+     - **Burst & Sleep (Time Synchronized)**: Emerald green outline ring (`○`) indicating the radio is asleep to conserve power while the clock remains accurate.
      - **Offline / Autonomous**: Muted slate outline ring (`○`).
 4. **Contextual Pop-up Toasts & Audio Chimes:**
    * **Connected Toast**: Centered polar navy overlay (210×68 px) with emerald accents displaying `WI-FI: POŁĄCZONO!`, SSID, and real-time synchronized clock (`CZAS NTP: HH:MM CET`) with an upward dual chime tone.

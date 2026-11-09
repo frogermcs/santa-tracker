@@ -507,7 +507,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
       render(sim, state, 2000);
       expect(arcSpy).toHaveBeenCalledWith(6, 6, 2, 0, Math.PI * 2);
 
-      // 4. Update timer countdown
+      // 4. Update timer countdown: transitions to sleep (Burst & Sleep active)
       const noButtons = {
         wasPressedA: false,
         wasHoldA: false,
@@ -518,6 +518,11 @@ describe("M5Canvas Simulator Parity Tests", () => {
       update(state, noButtons, 4000, 4000);
       expect(state.toastTimer).toBe(0);
       expect(state.toastType).toBe("none");
+      expect(state.wifiState).toBe("sleep");
+
+      // In sleep state, renders emerald ring
+      render(sim, state, 3000);
+      expect(arcSpy).toHaveBeenCalledWith(6.5, 6.5, 2, 0, Math.PI * 2);
 
       // 5. Offline failure toast
       state.wifiState = "offline";

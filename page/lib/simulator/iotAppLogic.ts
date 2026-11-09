@@ -314,6 +314,10 @@ export function update(
     state.toastTimer = Math.max(0, state.toastTimer - dtMs);
     if (state.toastTimer === 0) {
       state.toastType = "none";
+      // Burst & Sleep: transition to sleep state once post-sync toast finishes
+      if (state.wifiState === "connected") {
+        state.wifiState = "sleep";
+      }
     }
   }
 
@@ -421,10 +425,12 @@ export function render(
     if (pulse) {
       canvas.fillCircle(6, 6, 2, TFT_YELLOW);
     }
-  } else if (state.wifiState === "connected" || state.wifiState === "sleep") {
-    canvas.fillCircle(6, 6, 2, TFT_GREEN);
+  } else if (state.wifiState === "connected") {
+    canvas.fillCircle(6, 6, 2, TFT_GREEN); // Solid emerald dot (radio active)
+  } else if (state.wifiState === "sleep") {
+    canvas.drawCircle(6, 6, 2, TFT_GREEN); // Emerald ring (radio asleep, time synced)
   } else {
-    canvas.drawCircle(6, 6, 2, TFT_DARKGREY);
+    canvas.drawCircle(6, 6, 2, TFT_DARKGREY); // Muted slate ring (offline / unsynced)
   }
 
   // Pop-up Toast Overlay (High-Contrast 210x68 Box)

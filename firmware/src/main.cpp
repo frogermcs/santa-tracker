@@ -165,10 +165,12 @@ void loop() {
     if (pulse) {
       canvas.fillCircle(6, 6, 2, 0xffe0); // Vibrant amber/yellow pulsing dot (TFT_YELLOW 0xffe0)
     }
-  } else if (improvHandler.isConnected() || (improvHandler.isRadioSleeping() && improvHandler.isSyncSucceeded())) {
-    canvas.fillCircle(6, 6, 2, 0x07e0); // Solid emerald green dot (TFT_GREEN 0x07e0)
+  } else if (improvHandler.isConnected() && !improvHandler.isRadioSleeping()) {
+    canvas.fillCircle(6, 6, 2, 0x07e0); // Solid emerald green dot (TFT_GREEN 0x07e0 — radio active)
+  } else if (improvHandler.isRadioSleeping() && improvHandler.isSyncSucceeded()) {
+    canvas.drawCircle(6, 6, 2, 0x07e0); // Emerald green ring (TFT_GREEN 0x07e0 — radio asleep, time synced)
   } else {
-    canvas.drawCircle(6, 6, 2, 0x7bef); // Muted slate ring (TFT_DARKGREY 0x7bef)
+    canvas.drawCircle(6, 6, 2, 0x7bef); // Muted slate ring (TFT_DARKGREY 0x7bef — offline / unsynced)
   }
 
   // High-Contrast Wi-Fi Toast Overlay (Connected vs Offline)
