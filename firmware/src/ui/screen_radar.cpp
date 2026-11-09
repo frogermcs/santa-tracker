@@ -116,7 +116,7 @@ void ScreenRadar::render(const JourneyData& journey, const TelemetryState& telem
   _canvas->drawFastHLine(0, 12, SCREEN_WIDTH, COLOR_GRID);
   _canvas->setTextSize(1);
 
-  // Left (x: 4, y: 2): BAT % or USB 5V
+  // Left (x: 14, y: 2): BAT % or USB 5V (shifted right to make room for top-left Wi-Fi dot at x: 6)
   int battery = M5.Power.getBatteryLevel();
   char batBuf[16];
   if (battery >= 0) {
@@ -126,7 +126,7 @@ void ScreenRadar::render(const JourneyData& journey, const TelemetryState& telem
   }
   _canvas->setTextDatum(top_left);
   _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
-  _canvas->drawString(batBuf, 4, 2);
+  _canvas->drawString(batBuf, 14, 2);
 
   // Center (x: 120, y: 2): MIKORADAR
   _canvas->setTextDatum(top_center);

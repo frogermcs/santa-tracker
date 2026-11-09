@@ -1336,11 +1336,11 @@ export function renderCamScreen(
   canvas.drawFastHLine(0, 13, SCREEN_WIDTH, COLOR_BORDER);
 
   // Battery Icon + 98%
-  drawBatteryIcon(canvas, 4, 3, COLOR_EMERALD_NEON);
+  drawBatteryIcon(canvas, 14, 3, COLOR_EMERALD_NEON);
   canvas.setTextSize(1);
   canvas.setTextDatum(top_left);
   canvas.setTextColor(TFT_WHITE, COLOR_HEADER_BG);
-  canvas.drawString("98%", 18, 3);
+  canvas.drawString("98%", 28, 3);
 
   // Active Advent Day Badge
   canvas.setTextDatum(top_right);

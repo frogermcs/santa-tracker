@@ -15,6 +15,7 @@ describe("Web Installer: Firmware Manifest & Binary Artifacts", () => {
 
     expect(manifest.name).toBe("SANTA-OS for M5StickC-Plus");
     expect(typeof manifest.version).toBe("string");
+    expect(manifest.new_install_improv_wait_time).toBe(10);
     expect(manifest.builds).toBeDefined();
     expect(manifest.builds.length).toBeGreaterThan(0);
 
@@ -47,6 +48,14 @@ describe("Web Installer: Firmware Manifest & Binary Artifacts", () => {
       const stats = fs.statSync(binFile);
       expect(stats.size).toBeGreaterThan(exp.minSizeKb * 1024);
     }
+  });
+
+  it("configures Improv Wi-Fi serial parameters in manifest", () => {
+    const raw = fs.readFileSync(manifestPath, "utf-8");
+    const manifest = JSON.parse(raw);
+
+    expect(manifest.new_install_improv_wait_time).toBeDefined();
+    expect(manifest.new_install_improv_wait_time).toBe(10);
   });
 });
 

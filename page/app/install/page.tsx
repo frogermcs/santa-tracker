@@ -14,6 +14,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { ESPWebInstallButton } from "@/components/installer/ESPWebInstallButton";
+import { ImprovWifiButton } from "@/components/installer/ImprovWifiButton";
 import { SnowEffect } from "@/components/SnowEffect";
 import { checkWebSerialSupport, BrowserSupportInfo } from "@/lib/installer/browser-support";
 
@@ -82,9 +83,15 @@ export default function InstallPage() {
           </p>
         </div>
 
-        {/* Big Install Button */}
-        <div className="space-y-3 w-full flex flex-col items-center">
+        {/* Big Install Button & In-Browser Wi-Fi Action */}
+        <div className="space-y-4 w-full flex flex-col items-center">
           <ESPWebInstallButton size="hero" label="Zainstaluj na M5Stick" />
+
+          {/* Returning User / Direct Wi-Fi Provisioning Sub-action */}
+          <div className="flex items-center justify-center gap-2 text-xs">
+            <span className="text-slate-400 font-sans">Masz już SANTA-OS?</span>
+            <ImprovWifiButton label="Skonfiguruj Wi-Fi" />
+          </div>
 
           {/* Browser / Protocol Status */}
           {support && (
@@ -185,6 +192,7 @@ export default function InstallPage() {
                 <span className="font-bold text-amber-300 block">Wskazówki:</span>
                 <ul className="space-y-1 list-disc list-inside text-slate-300 text-pretty">
                   <li>Użyj kabla USB-C z liniami danych (nie tylko do ładowania).</li>
+                  <li>Wi-Fi: M5Stick wymaga sieci 2.4 GHz (pasmo 5 GHz nie jest obsługiwane przez ESP32).</li>
                   <li>W razie braku reakcji przytrzymaj przedni przycisk M5 (GPIO0) podczas wpinania kabla.</li>
                   <li>W Linuksie dodaj uprawnienia: <code>sudo usermod -a -G dialout $USER</code>.</li>
                 </ul>

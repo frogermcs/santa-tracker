@@ -139,12 +139,18 @@ firmware/
     │   ├── journey_engine.h # Pure math simulation (no display/hardware dependencies)
     │   └── journey_engine.cpp
     ├── network/
+    │   ├── improv_handler.h # Improv Wi-Fi Serial protocol, NVS credentials & BM8563 RTC sync
+    │   ├── improv_handler.cpp
     │   ├── journey_client.h # Wi-Fi connection, HTTPClient & ArduinoJson parser
     │   └── journey_client.cpp
     ├── ui/
-    │   ├── screen_radar.h   # Concentric rings, sweep beam, beacon, and HUD
+    │   ├── screen_cam.h     # 7-phase animated side-view Santa Cam renderer
+    │   ├── screen_cam.cpp
+    │   ├── screen_cockpit.h # Cockpit glass telemetry & Mach gauge renderer
+    │   ├── screen_cockpit.cpp
+    │   ├── screen_radar.h   # Concentric rings, sweep beam, beacon, and CRT HUD
     │   └── screen_radar.cpp
-    └── main.cpp             # Hardware lifecycle (M5Unified) and frame dispatch
+    └── main.cpp             # Hardware lifecycle (M5Unified), RTC restore, and frame dispatch
 ```
 
 ### Module Responsibilities:
@@ -155,8 +161,11 @@ firmware/
 | **`advent_schedule.h`** | 288 stops (24 days x 12 stops) compiled in PROGMEM (Flash ROM) | No | Yes |
 | **`JourneyEngine`** | Coordinate projection, ease-in-out flight interpolation, ETA, day/city cycling, Kraków lock | No | **Yes (0.76s native test)** |
 | **`JourneyClient`** | Wi-Fi connection, HTTPClient, ArduinoJson deserialization, offline fallback | Only in fetch | **Yes (parseJson is tested)** |
+| **`ImprovHandler`** | Improv Wi-Fi Serial parser, NVS preferences, async connection, BM8563 RTC sync, burst-and-sleep | Only in Wi-Fi / NVS | **Yes (Tests 19–25 in native Unity suite)** |
 | **`ScreenRadar`** | 16-bit double buffer rendering, dot-matrix world map, sweep beam, CRT HUD | Yes (`M5Canvas`) | No (Render layer) |
-| **`main.cpp`** | Hardware init, button event polling (Btn A: Day, Btn B: City), audio chirps | Yes (`M5Unified`) | No (Entrypoint) |
+| **`ScreenCockpit`** | 16-bit double buffer rendering, glass cockpit HUD, Mach gauge, cookie/milk counters | Yes (`M5Canvas`) | No (Render layer) |
+| **`ScreenCam`** | 16-bit double buffer rendering, 7-phase animated side-view Santa Cam | Yes (`M5Canvas`) | No (Render layer) |
+| **`main.cpp`** | Hardware init, RTC restoration, button event polling (Btn A/B), audio chirps | Yes (`M5Unified`) | No (Entrypoint) |
 
 ---
 

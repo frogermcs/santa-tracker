@@ -18,11 +18,11 @@ A pocket-sized retro aviation Santa Tracker gadget for the **M5StickC-Plus SE** 
 .
 ├── firmware/       # ESP32 C++17 firmware (PlatformIO + M5Unified + ArduinoJson)
 │   ├── include/    # Config, types, advent schedule (288 stops in PROGMEM), and land dots
-│   ├── src/        # Core engine, demographic telemetry, radar, cockpit & cam UI renderers
-│   └── test/       # Native desktop unit test suite (18 tests passing in 0.6s!)
+│   ├── src/        # Core engine, radar, cockpit, cam renderers, and Improv Wi-Fi handler
+│   └── test/       # Native desktop unit test suite (25 tests passing in 0.5s!)
 ├── page/           # Next.js 15 web platform & emulator (App Router, Tailwind)
-│   ├── app/        # / (Mission Control Hub & Emulator), /map-debugger, /scene-debugging, /api/journey
-│   └── public/     # Static assets and master journey.json
+│   ├── app/        # / (Mission Control Hub), /install (Web Flasher & Wi-Fi Setup), /map-debugger, /scene-debugging
+│   └── public/     # Static assets, firmware binaries, and master journey.json
 ├── docs/           # PRD, Architecture, and Roadmap specifications
 ├── scripts/        # CSV ingest & C++ PROGMEM schedule export scripts
 └── .github/        # GitHub Actions CI workflow (Web + Firmware build & tests)
@@ -44,7 +44,7 @@ Open [http://localhost:3000](http://localhost:3000) for the Mission Control hub 
 ```bash
 cd firmware
 
-# Run fast desktop unit tests (18 tests in 0.6s, no hardware needed!)
+# Run fast desktop unit tests (25 tests in 0.5s, no hardware needed!)
 pio test -e native
 
 # Compile ESP32 firmware
@@ -53,6 +53,9 @@ pio run -e m5stick-c
 # Flash to connected M5StickC-Plus SE
 pio run -e m5stick-c --target upload
 ```
+
+### 3. In-Browser 1-Click Flashing & Wi-Fi Provisioning
+Open [http://localhost:3000/install](http://localhost:3000/install) in Google Chrome or Microsoft Edge to flash firmware directly over Web Serial and configure home Wi-Fi via Improv Serial with zero command-line tools installed.
 
 ---
 

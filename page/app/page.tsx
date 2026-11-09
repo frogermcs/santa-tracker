@@ -382,7 +382,7 @@ export default function RadarPage() {
               </span>
               <div>
                 <span className="font-bold text-white block">Posiadasz fizyczny M5StickC-Plus?</span>
-                <span className="text-[11px] text-emerald-300/80">Wgraj Santa-OS bezpośrednio przez kabel USB</span>
+                <span className="text-[11px] text-emerald-300/80">Wgraj system lub skonfiguruj Wi-Fi przez kabel USB</span>
               </div>
             </div>
             <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 group-hover:bg-emerald-500/30 transition text-[11px] shrink-0">
