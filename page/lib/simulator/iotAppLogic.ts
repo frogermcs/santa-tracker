@@ -221,11 +221,22 @@ export function getTelemetry(state: SimulatorAppState): TelemetryState {
 /**
  * Formats a given timestamp or current wall-clock into the Polish CET timezone string
  * matching M5StickC-Plus firmware ImprovHandler::getFormattedTime().
+ * Explicitly formats in 'Europe/Warsaw' timezone.
  */
 export function formatNtpTime(d: Date = new Date()): string {
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `CZAS NTP: ${hours}:${minutes} CET`;
+  try {
+    const formatter = new Intl.DateTimeFormat("pl-PL", {
+      timeZone: "Europe/Warsaw",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    return `CZAS NTP: ${formatter.format(d)} CET`;
+  } catch {
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `CZAS NTP: ${hours}:${minutes} CET`;
+  }
 }
 
 /**
@@ -239,7 +250,7 @@ export function simulateWifiConnect(
   state.wifiState = "connected";
   state.wifiSsid = ssid;
   state.wifiIp = ip;
-  state.wifiTime = formatNtpTime();
+  state.wifiTime = formatNtpTime(new Date());
   state.toastType = "connected";
   state.toastTimer = 4000;
   state.lastAction = `WI-FI POŁĄCZONO: ${ssid}`;
@@ -291,7 +302,7 @@ export function setup(nowMs = 0): SimulatorAppState {
     wifiState: "offline",
     wifiSsid: "",
     wifiIp: "",
-    wifiTime: formatNtpTime(new Date(nowMs || Date.now())),
+    wifiTime: formatNtpTime(new Date()),
     toastType: "none",
     toastTimer: 0,
   };
@@ -307,6 +318,7 @@ export function update(
   dtMs: number,
   nowMs: number
 ): void {
+  void nowMs;
   const dtSec = Math.min(dtMs / 1000.0, 0.1);
 
   // 1. Advance simulation clock (JourneyEngine::update) & toast timers
@@ -321,9 +333,9 @@ export function update(
     }
   }
 
-  // Update live clock when connected / NTP synced
+  // Update live clock using real wall-clock time when connected / NTP synced
   if (state.wifiState === "connected" || state.wifiState === "sleep") {
-    state.wifiTime = formatNtpTime(new Date(nowMs || Date.now()));
+    state.wifiTime = formatNtpTime(new Date());
   }
 
   if (state.cityCount > 0) {

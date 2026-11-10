@@ -623,15 +623,15 @@ void test_improv_rpc_wifi_settings_unwrapping(void) {
 
   const char* testSsid = "NorthPole_2.4G";
   const char* testPass = "RudolphRedNose2026";
-  uint8_t rpcData[32];
+  uint8_t rpcData[64];
   rpcData[0] = IMPROV_CMD_SEND_WIFI_SETTINGS;
-  rpcData[1] = 1 + strlen(testSsid) + 1 + strlen(testPass); // 26
+  rpcData[1] = 1 + strlen(testSsid) + 1 + strlen(testPass); // 34
   rpcData[2] = strlen(testSsid);
   memcpy(&rpcData[3], testSsid, strlen(testSsid));
   rpcData[3 + strlen(testSsid)] = strlen(testPass);
   memcpy(&rpcData[4 + strlen(testSsid)], testPass, strlen(testPass));
 
-  uint8_t packet[64];
+  uint8_t packet[128];
   size_t len = ImprovHandler::buildPacket(IMPROV_TYPE_RPC, rpcData, 2 + rpcData[1], packet, sizeof(packet));
 
   for (size_t i = 0; i < len; ++i) {

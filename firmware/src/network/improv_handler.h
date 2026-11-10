@@ -91,7 +91,7 @@ public:
   ImprovState getState() const { return currentState; }
   void setState(ImprovState state) { currentState = state; }
   bool isConnected() const { return currentState == IMPROV_STATE_PROVISIONED; }
-  bool isConnecting() const { return currentState == IMPROV_STATE_PROVISIONING || isConnectingAsync; }
+  bool isConnecting() const { return currentState == IMPROV_STATE_PROVISIONING || isConnectingAsync || isWaitingSntp; }
   bool isRadioSleeping() const { return radioSleeping; }
   bool isSyncSucceeded() const { return syncSucceeded; }
   const char* getLocalIp() const { return localIp; }

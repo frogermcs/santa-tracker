@@ -83,11 +83,15 @@ void ImprovHandler::startConnectAsync(const char* ssid, const char* pass) {
     currentState = IMPROV_STATE_READY;
     toastType = TOAST_NONE;
     isConnectingAsync = false;
+    isWaitingSntp = false;
+    sntpTimeoutMs = 0;
     return;
   }
 
-  // Cancel any prior sleep timer to avoid powering down during provisioning
+  // Cancel any prior sleep and SNTP timers to avoid powering down during provisioning
   sleepCountdownMs = 0;
+  isWaitingSntp = false;
+  sntpTimeoutMs = 0;
 
   strncpy(currentSsid, ssid, sizeof(currentSsid) - 1);
   currentSsid[sizeof(currentSsid) - 1] = '\0';
@@ -189,7 +193,7 @@ void ImprovHandler::updateTimers(uint32_t dtMs) {
       sntpTimeoutMs = 0;
     }
 
-    if (sntpReady || sntpTimeoutMs == 0) {
+    if (sntpReady) {
       isWaitingSntp = false;
       struct tm timeinfo;
       if (getLocalTime(&timeinfo, 0)) {
@@ -203,12 +207,18 @@ void ImprovHandler::updateTimers(uint32_t dtMs) {
           M5.Rtc.setDateTime(&tmUtc);
           LOG_PRINTLN("[RTC] Synced to hardware BM8563 RTC via gmtime_r.");
         }
-      } else {
-        snprintf(ntpTimeStr, sizeof(ntpTimeStr), "CZAS NTP: OK");
       }
-
       syncSucceeded = true;
       scheduleRadioSleep(5000); // 5-second burst then power down radio
+
+      char url[48];
+      snprintf(url, sizeof(url), "http://%s/", localIp);
+      sendProvisionResult(url, IMPROV_CMD_SEND_WIFI_SETTINGS);
+    } else if (sntpTimeoutMs == 0) {
+      // SNTP timed out without confirmation: keep existing RTC clock and do NOT mark syncSucceeded
+      isWaitingSntp = false;
+      LOG_PRINTLN("[NTP] SNTP synchronization timed out. Keeping existing clock.");
+      scheduleRadioSleep(5000); // Power down radio after timeout
 
       char url[48];
       snprintf(url, sizeof(url), "http://%s/", localIp);
@@ -402,6 +412,7 @@ void ImprovHandler::handleRpcCommand(uint8_t command, const uint8_t* data, uint8
     }
 
     case IMPROV_CMD_REQUEST_NETWORKS: {
+      sleepCountdownMs = 0; // Cancel any active sleep countdown while scanning
 #if defined(ARDUINO)
       if (radioSleeping) {
         WiFi.mode(WIFI_STA);

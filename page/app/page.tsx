@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Compass, Volume2, VolumeX, RefreshCw, Map, Calendar, Gauge, Layers, Sparkles, Camera, Usb } from "lucide-react";
+import { Compass, Volume2, VolumeX, RefreshCw, Map, Calendar, Gauge, Layers, Sparkles, Camera, Usb, Wifi, WifiOff } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
 import { SnowEffect } from "@/components/SnowEffect";
 import { computeSantaMetrics, SantaCockpitMetrics } from "@/lib/telemetry/santa-metrics";
@@ -18,6 +18,8 @@ import {
   setDay,
   setCityIndex,
   setActiveScreen as setSimActiveScreen,
+  simulateWifiConnect,
+  simulateWifiDisconnect,
   SimulatorAppState,
   ButtonEventState,
 } from "@/lib/simulator/iotAppLogic";
@@ -39,6 +41,7 @@ export default function RadarPage() {
   const [eta, setEta] = useState<number>(12);
   const [coords, setCoords] = useState<{ lat: string; lon: string }>({ lat: "-38.7", lon: "178.0" });
   const [isFlightPhase, setIsFlightPhase] = useState<boolean>(false);
+  const [wifiStatus, setWifiStatus] = useState<string>("offline");
 
   // Button visual states
   const [isBtnAPressed, setIsBtnAPressed] = useState<boolean>(false);
@@ -110,6 +113,18 @@ export default function RadarPage() {
       return next;
     });
   }, []);
+
+  // Wi-Fi Simulator Toggle: Exercise hardware connection & Burst & Sleep states
+  const handleToggleWifi = useCallback(() => {
+    const sim = simStateRef.current;
+    if (sim.wifiState === "offline") {
+      simulateWifiConnect(sim);
+      if (!isMuted) buzzer.playTone(2000, 70);
+    } else {
+      simulateWifiDisconnect(sim);
+      if (!isMuted) buzzer.playTone(600, 90);
+    }
+  }, [isMuted]);
 
   // Day Selector Click
   const handleSelectDay = useCallback((dayNum: number) => {
@@ -183,6 +198,7 @@ export default function RadarPage() {
         const newLat = t.santaLat.toFixed(1);
         const newLon = t.santaLon.toFixed(1);
         setCoords((prev) => (prev.lat !== newLat || prev.lon !== newLon ? { lat: newLat, lon: newLon } : prev));
+        setWifiStatus((prev) => (prev !== simStateRef.current.wifiState ? simStateRef.current.wifiState : prev));
 
         // Compute festive cockpit metrics for the right panel
         const metrics = computeSantaMetrics(
@@ -369,6 +385,30 @@ export default function RadarPage() {
               <span className="text-slate-600">|</span>
               <span className="text-slate-400">Przytrzymaj (&gt;0.6s) = Dźwięk</span>
             </div>
+            <button
+              onClick={handleToggleWifi}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition cursor-pointer shadow-sm ${
+                wifiStatus === "connected"
+                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50"
+                  : wifiStatus === "sleep"
+                  ? "bg-teal-500/20 text-teal-300 border-teal-500/40"
+                  : "bg-slate-900/80 text-slate-400 border-white/10 hover:bg-slate-800"
+              }`}
+              title="Symuluj połączenie Wi-Fi i synchronizację czasu NTP"
+            >
+              {wifiStatus === "offline" ? (
+                <WifiOff className="w-3.5 h-3.5 text-slate-500" />
+              ) : (
+                <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+              )}
+              <span>
+                {wifiStatus === "connected"
+                  ? "Wi-Fi: Połączono (Burst)"
+                  : wifiStatus === "sleep"
+                  ? "Wi-Fi: Uśpione (RTC OK)"
+                  : "Symuluj Wi-Fi"}
+              </span>
+            </button>
           </div>
 
           {/* Web Installer Hardware CTA */}
