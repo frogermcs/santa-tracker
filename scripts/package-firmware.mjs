@@ -123,6 +123,7 @@ const manifest = {
   version: appVersion,
   home_page: "https://santa-tracker-five.vercel.app",
   new_install_prompt_erase: true,
+  new_install_improv_wait_time: 10,
   builds: [
     {
       chipFamily: "ESP32",

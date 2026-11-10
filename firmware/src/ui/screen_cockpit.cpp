@@ -142,8 +142,8 @@ void ScreenCockpit::render(
   _canvas->fillRect(0, 0, SCREEN_WIDTH, 13, COLOR_HEADER_BG);
   _canvas->drawFastHLine(0, 13, SCREEN_WIDTH, COLOR_BORDER);
 
-  // Battery icon + percentage
-  drawBatteryIcon(4, 3, COLOR_EMERALD_NEON);
+  // Battery icon + percentage (shifted right to make room for top-left Wi-Fi dot at x: 6)
+  drawBatteryIcon(14, 3, COLOR_EMERALD_NEON);
   int battery = M5.Power.getBatteryLevel();
   char batBuf[12];
   if (battery >= 0) {
@@ -154,7 +154,7 @@ void ScreenCockpit::render(
   _canvas->setTextSize(1);
   _canvas->setTextDatum(top_left);
   _canvas->setTextColor(TFT_WHITE, COLOR_HEADER_BG);
-  _canvas->drawString(batBuf, 18, 3);
+  _canvas->drawString(batBuf, 28, 3);
 
   // System Title
   _canvas->setTextDatum(top_center);

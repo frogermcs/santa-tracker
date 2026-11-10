@@ -1074,11 +1074,11 @@ void ScreenCam::render(
   _canvas->fillRect(0, 0, SCREEN_WIDTH, 13, COLOR_HEADER_BG);
   _canvas->drawFastHLine(0, 13, SCREEN_WIDTH, COLOR_BORDER);
 
-  drawBatteryIcon(4, 3, COLOR_EMERALD_NEON);
+  drawBatteryIcon(14, 3, COLOR_EMERALD_NEON);
   _canvas->setTextSize(1);
   _canvas->setTextDatum(top_left);
   _canvas->setTextColor(TFT_WHITE, COLOR_HEADER_BG);
-  _canvas->drawString("98%", 18, 3);
+  _canvas->drawString("98%", 28, 3);
 
   char dayBuf[16];
   snprintf(dayBuf, sizeof(dayBuf), "DZIEN %02d", telemetry.activeDay);

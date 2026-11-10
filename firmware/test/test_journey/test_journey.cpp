@@ -7,6 +7,7 @@
 #include "core/journey_engine.h"
 #include "core/santa_metrics.h"
 #include "network/journey_client.h"
+#include "network/improv_handler.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -509,6 +510,178 @@ void test_santa_cam_subphase_resolution(void) {
   TEST_ASSERT_EQUAL_INT(PHASE_FINAL, m.flightPhase);
 }
 
+// Test 19: Improv Wi-Fi Serial packet framing and checksum verification
+void test_improv_packet_framing_and_checksum(void) {
+  uint8_t data[1] = { (uint8_t)IMPROV_STATE_READY };
+  uint8_t packet[32];
+  size_t len = ImprovHandler::buildPacket(IMPROV_TYPE_CURRENT_STATE, data, 1, packet, sizeof(packet));
+
+  // 7 header + 1 type + 1 dataLen + 1 data + 1 checksum + 1 newline = 12 bytes
+  TEST_ASSERT_EQUAL_UINT(12, len);
+  TEST_ASSERT_EQUAL_UINT8('I', packet[0]);
+  TEST_ASSERT_EQUAL_UINT8('M', packet[1]);
+  TEST_ASSERT_EQUAL_UINT8('P', packet[2]);
+  TEST_ASSERT_EQUAL_UINT8('R', packet[3]);
+  TEST_ASSERT_EQUAL_UINT8('O', packet[4]);
+  TEST_ASSERT_EQUAL_UINT8('V', packet[5]);
+  TEST_ASSERT_EQUAL_UINT8(1, packet[6]); // version 1
+  TEST_ASSERT_EQUAL_UINT8(IMPROV_TYPE_CURRENT_STATE, packet[7]);
+  TEST_ASSERT_EQUAL_UINT8(1, packet[8]); // dataLen
+  TEST_ASSERT_EQUAL_UINT8(IMPROV_STATE_READY, packet[9]);
+
+  // Verify checksum at index 10
+  uint8_t expectedChecksum = 0;
+  for (size_t i = 0; i < 10; ++i) {
+    expectedChecksum = (expectedChecksum + packet[i]) & 0xFF;
+  }
+  TEST_ASSERT_EQUAL_UINT8(expectedChecksum, packet[10]);
+  TEST_ASSERT_EQUAL_UINT8('\n', packet[11]);
+}
+
+// Test 20: Improv Wi-Fi RPC Result formatting (Device Info)
+void test_improv_rpc_result_formatting(void) {
+  const char* info[4] = { "SANTA-OS for M5StickC-Plus", "1.0.0", "ESP32", "SANTA-OS" };
+  uint8_t outBuf[128];
+  size_t len = ImprovHandler::buildRpcResult(IMPROV_CMD_REQUEST_INFO, info, 4, outBuf, sizeof(outBuf));
+
+  TEST_ASSERT_TRUE(len > 12);
+  TEST_ASSERT_EQUAL_UINT8(IMPROV_TYPE_RPC_RESULT, outBuf[7]);
+  TEST_ASSERT_EQUAL_UINT8(IMPROV_CMD_REQUEST_INFO, outBuf[9]); // RPC command in payload
+}
+
+// Test 21: Improv Wi-Fi settings payload decoding
+void test_improv_wifi_settings_parser(void) {
+  // [4, 'H','o','m','e', 6, 'S','e','c','r','e','t']
+  uint8_t payload[] = { 4, 'H', 'o', 'm', 'e', 6, 'S', 'e', 'c', 'r', 'e', 't' };
+  char ssid[32] = {0};
+  char pass[32] = {0};
+
+  bool ok = ImprovHandler::parseWifiSettings(payload, sizeof(payload), ssid, sizeof(ssid), pass, sizeof(pass));
+  TEST_ASSERT_TRUE(ok);
+  TEST_ASSERT_EQUAL_STRING("Home", ssid);
+  TEST_ASSERT_EQUAL_STRING("Secret", pass);
+
+  // Test malformed payload with out-of-bounds SSID length
+  uint8_t badPayload[] = { 50, 'X' };
+  bool badOk = ImprovHandler::parseWifiSettings(badPayload, sizeof(badPayload), ssid, sizeof(ssid), pass, sizeof(pass));
+  TEST_ASSERT_FALSE(badOk);
+
+  // Test truncated payload missing password length byte
+  uint8_t missingPassLen[] = { 4, 'H', 'o', 'm', 'e' };
+  bool missingOk = ImprovHandler::parseWifiSettings(missingPassLen, sizeof(missingPassLen), ssid, sizeof(ssid), pass, sizeof(pass));
+  TEST_ASSERT_FALSE(missingOk);
+
+  // Test truncated payload where password length exceeds remaining bytes
+  uint8_t truncatedPass[] = { 4, 'H', 'o', 'm', 'e', 10, 'A', 'B' };
+  bool truncOk = ImprovHandler::parseWifiSettings(truncatedPass, sizeof(truncatedPass), ssid, sizeof(ssid), pass, sizeof(pass));
+  TEST_ASSERT_FALSE(truncOk);
+
+  // Test explicit zero-length password (open network)
+  uint8_t openWifi[] = { 4, 'H', 'o', 'm', 'e', 0 };
+  bool openOk = ImprovHandler::parseWifiSettings(openWifi, sizeof(openWifi), ssid, sizeof(ssid), pass, sizeof(pass));
+  TEST_ASSERT_TRUE(openOk);
+  TEST_ASSERT_EQUAL_STRING("Home", ssid);
+  TEST_ASSERT_EQUAL_STRING("", pass);
+}
+
+// Test 22: Improv byte stream parser and state transitions
+void test_improv_state_machine_stream(void) {
+  ImprovHandler handler;
+  handler.setState(IMPROV_STATE_READY);
+  TEST_ASSERT_EQUAL_INT(IMPROV_STATE_READY, handler.getState());
+
+  // Build a valid REQUEST_STATE (0x02) RPC packet
+  uint8_t rpcData[1] = { IMPROV_CMD_REQUEST_STATE };
+  uint8_t packet[32];
+  size_t len = ImprovHandler::buildPacket(IMPROV_TYPE_RPC, rpcData, 1, packet, sizeof(packet));
+  TEST_ASSERT_TRUE(len > 0);
+
+  // Stream bytes into handler
+  bool packetCompleted = false;
+  for (size_t i = 0; i < len; ++i) {
+    if (handler.processByte(packet[i])) {
+      packetCompleted = true;
+    }
+  }
+  TEST_ASSERT_TRUE(packetCompleted);
+
+  // Corrupt checksum stream test
+  packet[len - 2] ^= 0xFF; // Invert checksum byte
+  bool badCompleted = false;
+  for (size_t i = 0; i < len; ++i) {
+    if (handler.processByte(packet[i])) {
+      badCompleted = true;
+    }
+  }
+  TEST_ASSERT_FALSE(badCompleted);
+}
+
+// Test 23: Improv Wi-Fi RPC packet unwrapping with inner length header
+void test_improv_rpc_wifi_settings_unwrapping(void) {
+  ImprovHandler handler;
+  handler.setState(IMPROV_STATE_READY);
+
+  const char* testSsid = "NorthPole_2.4G";
+  const char* testPass = "RudolphRedNose2026";
+  uint8_t rpcData[64];
+  rpcData[0] = IMPROV_CMD_SEND_WIFI_SETTINGS;
+  rpcData[1] = 1 + strlen(testSsid) + 1 + strlen(testPass); // 34
+  rpcData[2] = strlen(testSsid);
+  memcpy(&rpcData[3], testSsid, strlen(testSsid));
+  rpcData[3 + strlen(testSsid)] = strlen(testPass);
+  memcpy(&rpcData[4 + strlen(testSsid)], testPass, strlen(testPass));
+
+  uint8_t packet[128];
+  size_t len = ImprovHandler::buildPacket(IMPROV_TYPE_RPC, rpcData, 2 + rpcData[1], packet, sizeof(packet));
+
+  for (size_t i = 0; i < len; ++i) {
+    handler.processByte(packet[i]);
+  }
+
+  // Under native test, connectWifi succeeds for valid ssid and transitions to PROVISIONED
+  TEST_ASSERT_EQUAL_INT(IMPROV_STATE_PROVISIONED, handler.getState());
+  TEST_ASSERT_EQUAL_STRING("192.168.1.100", handler.getLocalIp());
+  TEST_ASSERT_EQUAL_STRING("CZAS NTP: 15:44 CET", handler.getFormattedTime());
+}
+
+// Test 24: Improv Wi-Fi Burst & Sleep countdown and state transition
+void test_improv_burst_and_sleep_cycle(void) {
+  ImprovHandler handler;
+  handler.setState(IMPROV_STATE_PROVISIONED);
+  handler.scheduleRadioSleep(5000);
+  TEST_ASSERT_FALSE(handler.isRadioSleeping());
+
+  // Advance by 3 seconds: should still be awake
+  handler.updateTimers(3000);
+  TEST_ASSERT_FALSE(handler.isRadioSleeping());
+
+  // Advance by 3 more seconds (total 6s): should power down radio
+  handler.updateTimers(3000);
+  TEST_ASSERT_TRUE(handler.isRadioSleeping());
+}
+
+// Test 25: Improv Wi-Fi async timeout failure and offline toast transition
+void test_improv_async_timeout_failure(void) {
+  ImprovHandler handler;
+  handler.startConnectAsync("FailNet", "WrongPass");
+  TEST_ASSERT_TRUE(handler.isConnecting());
+  TEST_ASSERT_EQUAL_INT(IMPROV_STATE_PROVISIONING, handler.getState());
+  TEST_ASSERT_FALSE(handler.isRadioSleeping());
+
+  // Advance by 4 seconds (timeout is 8 seconds): should still be connecting
+  handler.updateTimers(4000);
+  TEST_ASSERT_TRUE(handler.isConnecting());
+
+  // Advance by 5 more seconds (total 9s): should time out, trigger offline toast, and sleep
+  handler.updateTimers(5000);
+  TEST_ASSERT_FALSE(handler.isConnecting());
+  TEST_ASSERT_EQUAL_INT(IMPROV_STATE_READY, handler.getState());
+  TEST_ASSERT_EQUAL_INT(TOAST_OFFLINE, handler.getToastType());
+  TEST_ASSERT_TRUE(handler.hasToast());
+  TEST_ASSERT_TRUE(handler.isRadioSleeping());
+  TEST_ASSERT_TRUE(handler.checkJustFailed());
+}
+
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_default_journey_parsing);
@@ -529,5 +702,12 @@ int main(void) {
   RUN_TEST(test_santa_metrics_krakow_finale);
   RUN_TEST(test_screen_carousel_navigation);
   RUN_TEST(test_santa_cam_subphase_resolution);
+  RUN_TEST(test_improv_packet_framing_and_checksum);
+  RUN_TEST(test_improv_rpc_result_formatting);
+  RUN_TEST(test_improv_wifi_settings_parser);
+  RUN_TEST(test_improv_state_machine_stream);
+  RUN_TEST(test_improv_rpc_wifi_settings_unwrapping);
+  RUN_TEST(test_improv_burst_and_sleep_cycle);
+  RUN_TEST(test_improv_async_timeout_failure);
   return UNITY_END();
 }

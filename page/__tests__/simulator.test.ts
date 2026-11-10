@@ -16,6 +16,10 @@ import {
   render,
   getTelemetry,
   ButtonEventState,
+  simulateWifiConnect,
+  simulateWifiDisconnect,
+  triggerWifiToast,
+  formatNtpTime,
 } from "@/lib/simulator/iotAppLogic";
 
 describe("M5Canvas Simulator Parity Tests", () => {
@@ -453,6 +457,97 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(sim.textWidth("FINAŁ KRAKÓW")).toBe(12 * 6);
       expect(() => sim.drawString("FINAŁ KRAKÓW", 10, 20)).not.toThrow();
       expect(fillRectSpy).toHaveBeenCalled();
+    });
+
+    it("renders Wi-Fi micro dot and toast states with 1:1 hardware parity", () => {
+      const fillRectSpy = vi.fn();
+      const strokeRectSpy = vi.fn();
+      const arcSpy = vi.fn();
+      const mockCtx = {
+        imageSmoothingEnabled: false,
+        fillStyle: "",
+        strokeStyle: "",
+        lineWidth: 1,
+        fillRect: fillRectSpy,
+        strokeRect: strokeRectSpy,
+        beginPath: vi.fn(),
+        moveTo: vi.fn(),
+        lineTo: vi.fn(),
+        stroke: vi.fn(),
+        fill: vi.fn(),
+        closePath: vi.fn(),
+        arc: arcSpy,
+        roundRect: vi.fn(),
+      };
+      const mockCanvas = { width: 240, height: 135 };
+      const sim = new M5CanvasSim(
+        mockCtx as unknown as CanvasRenderingContext2D,
+        mockCanvas as unknown as HTMLCanvasElement
+      );
+
+      const state = setup(0);
+      expect(state.wifiState).toBe("offline");
+      expect(state.toastType).toBe("none");
+
+      // 1. Offline state renders slate ring in top-left corner (x: 6, y: 6)
+      render(sim, state, 1000);
+      expect(arcSpy).toHaveBeenCalledWith(6.5, 6.5, 2, 0, Math.PI * 2);
+
+      // 2. Connecting state renders pulsing yellow dot (fillCircle uses x, y)
+      state.wifiState = "connecting";
+      render(sim, state, 1200); // 1200ms: Math.floor(1200/300) = 4 % 2 = 0 (pulse active)
+      expect(arcSpy).toHaveBeenCalledWith(6, 6, 2, 0, Math.PI * 2);
+
+      // 3. Connected state with toast
+      state.wifiState = "connected";
+      state.wifiSsid = "NorthPole_2.4G";
+      state.wifiIp = "192.168.0.81";
+      state.toastType = "connected";
+      state.toastTimer = 4000;
+      render(sim, state, 2000);
+      expect(arcSpy).toHaveBeenCalledWith(6, 6, 2, 0, Math.PI * 2);
+
+      // 4. Update timer countdown: transitions to sleep (Burst & Sleep active)
+      const noButtons = {
+        wasPressedA: false,
+        wasHoldA: false,
+        wasPressedB: false,
+        wasHoldB: false,
+        wasPressedPWR: false,
+      };
+      update(state, noButtons, 4000, 4000);
+      expect(state.toastTimer).toBe(0);
+      expect(state.toastType).toBe("none");
+      expect(state.wifiState).toBe("sleep");
+
+      // In sleep state, renders emerald ring
+      render(sim, state, 3000);
+      expect(arcSpy).toHaveBeenCalledWith(6.5, 6.5, 2, 0, Math.PI * 2);
+
+      // 5. Offline failure toast
+      state.wifiState = "offline";
+      state.toastType = "offline";
+      state.toastTimer = 3500;
+      render(sim, state, 5000);
+      update(state, noButtons, 3500, 8500);
+      expect(state.toastType).toBe("none");
+
+      // 6. Test helper functions: simulateWifiConnect & simulateWifiDisconnect
+      simulateWifiConnect(state, "NorthPole_2.4G", "192.168.1.100");
+      expect(state.wifiState).toBe("connected");
+      expect(state.wifiSsid).toBe("NorthPole_2.4G");
+      expect(state.toastType).toBe("connected");
+      expect(state.toastTimer).toBe(4000);
+      expect(state.wifiTime).toContain("CZAS NTP:");
+
+      simulateWifiDisconnect(state, "FailNet");
+      expect(state.wifiState).toBe("offline");
+      expect(state.toastType).toBe("offline");
+      expect(state.toastTimer).toBe(3500);
+
+      triggerWifiToast(state, "connected", 5000);
+      expect(state.toastType).toBe("connected");
+      expect(state.toastTimer).toBe(5000);
     });
   });
 });

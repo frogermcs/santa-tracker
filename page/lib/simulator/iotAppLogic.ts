@@ -20,6 +20,9 @@ import {
   TFT_GREEN,
   TFT_BLUE,
   TFT_YELLOW,
+  TFT_CYAN,
+  TFT_ORANGE,
+  TFT_DARKGREY,
   COLOR_BG,
   COLOR_GRID,
   COLOR_LAND,
@@ -70,6 +73,9 @@ export interface TelemetryState {
   u: number;
 }
 
+export type WifiState = "offline" | "connecting" | "connected" | "sleep";
+export type ToastType = "none" | "connected" | "offline";
+
 export interface SimulatorAppState {
   bootTimeMs: number;
   activeScreen: 0 | 1 | 2; // 0: Radar (Screen 1), 1: Cockpit Dashboard (Screen 2), 2: Santa Cam (Screen 3)
@@ -80,6 +86,12 @@ export interface SimulatorAppState {
   cities: Waypoint[];
   cityCount: number;
   lastAction: string;
+  wifiState: WifiState;
+  wifiSsid: string;
+  wifiIp: string;
+  wifiTime: string;
+  toastType: ToastType;
+  toastTimer: number;
 }
 
 const SCREEN_WIDTH = 240;
@@ -207,6 +219,70 @@ export function getTelemetry(state: SimulatorAppState): TelemetryState {
 }
 
 /**
+ * Formats a given timestamp or current wall-clock into the Polish CET timezone string
+ * matching M5StickC-Plus firmware ImprovHandler::getFormattedTime().
+ * Explicitly formats in 'Europe/Warsaw' timezone.
+ */
+export function formatNtpTime(d: Date = new Date()): string {
+  try {
+    const formatter = new Intl.DateTimeFormat("pl-PL", {
+      timeZone: "Europe/Warsaw",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    return `CZAS NTP: ${formatter.format(d)} CET`;
+  } catch {
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `CZAS NTP: ${hours}:${minutes} CET`;
+  }
+}
+
+/**
+ * Triggers simulated Wi-Fi connection with live NTP time sync and contextual toast
+ */
+export function simulateWifiConnect(
+  state: SimulatorAppState,
+  ssid = "NorthPole_2.4G",
+  ip = "192.168.1.100"
+): void {
+  state.wifiState = "connected";
+  state.wifiSsid = ssid;
+  state.wifiIp = ip;
+  state.wifiTime = formatNtpTime(new Date());
+  state.toastType = "connected";
+  state.toastTimer = 4000;
+  state.lastAction = `WI-FI POŁĄCZONO: ${ssid}`;
+}
+
+/**
+ * Triggers simulated Wi-Fi disconnection / offline fallback
+ */
+export function simulateWifiDisconnect(
+  state: SimulatorAppState,
+  ssid = "NorthPole_2.4G"
+): void {
+  state.wifiState = "offline";
+  state.wifiSsid = ssid;
+  state.toastType = "offline";
+  state.toastTimer = 3500;
+  state.lastAction = "WI-FI: BRAK POŁĄCZENIA";
+}
+
+/**
+ * Triggers a Wi-Fi popup toast
+ */
+export function triggerWifiToast(
+  state: SimulatorAppState,
+  type: ToastType,
+  durationMs = 4000
+): void {
+  state.toastType = type;
+  state.toastTimer = durationMs;
+}
+
+/**
  * Initializes firmware state. Equivalent to Arduino setup() in main.cpp.
  */
 export function setup(nowMs = 0): SimulatorAppState {
@@ -223,6 +299,12 @@ export function setup(nowMs = 0): SimulatorAppState {
     cities,
     cityCount: cities.length,
     lastAction: "BOOT OK (DZIEN 24)",
+    wifiState: "offline",
+    wifiSsid: "",
+    wifiIp: "",
+    wifiTime: formatNtpTime(new Date()),
+    toastType: "none",
+    toastTimer: 0,
   };
 }
 
@@ -239,7 +321,23 @@ export function update(
   void nowMs;
   const dtSec = Math.min(dtMs / 1000.0, 0.1);
 
-  // 1. Advance simulation clock (JourneyEngine::update)
+  // 1. Advance simulation clock (JourneyEngine::update) & toast timers
+  if (state.toastTimer > 0) {
+    state.toastTimer = Math.max(0, state.toastTimer - dtMs);
+    if (state.toastTimer === 0) {
+      state.toastType = "none";
+      // Burst & Sleep: transition to sleep state once post-sync toast finishes
+      if (state.wifiState === "connected") {
+        state.wifiState = "sleep";
+      }
+    }
+  }
+
+  // Update live clock using real wall-clock time when connected / NTP synced
+  if (state.wifiState === "connected" || state.wifiState === "sleep") {
+    state.wifiTime = formatNtpTime(new Date());
+  }
+
   if (state.cityCount > 0) {
     const totalSimTime = state.cityCount * SEC_PER_CITY;
 
@@ -331,6 +429,48 @@ export function render(
     renderCockpitScreen(canvas, state, telemetry, nowMs);
   } else {
     renderCamScreen(canvas, state, telemetry, nowMs);
+  }
+
+  // Top Status Bar Wi-Fi / Sync Micro Dot Indicator (x: 6, y: 6 in top-left corner)
+  if (state.wifiState === "connecting") {
+    const pulse = Math.floor(nowMs / 300) % 2 === 0;
+    if (pulse) {
+      canvas.fillCircle(6, 6, 2, TFT_YELLOW);
+    }
+  } else if (state.wifiState === "connected") {
+    canvas.fillCircle(6, 6, 2, TFT_GREEN); // Solid emerald dot (radio active)
+  } else if (state.wifiState === "sleep") {
+    canvas.drawCircle(6, 6, 2, TFT_GREEN); // Emerald ring (radio asleep, time synced)
+  } else {
+    canvas.drawCircle(6, 6, 2, TFT_DARKGREY); // Muted slate ring (offline / unsynced)
+  }
+
+  // Pop-up Toast Overlay (High-Contrast 210x68 Box)
+  if (state.toastType === "connected") {
+    canvas.fillRoundRect(15, 32, 210, 68, 8, 0x0083);
+    canvas.drawRoundRect(15, 32, 210, 68, 8, TFT_CYAN);
+    canvas.drawRoundRect(16, 33, 208, 66, 7, TFT_GREEN);
+
+    canvas.setTextDatum(top_center);
+    canvas.setTextColor(TFT_GREEN, 0x0083);
+    canvas.drawString("WI-FI: POLACZONO!", 120, 39);
+
+    canvas.setTextColor(TFT_WHITE, 0x0083);
+    canvas.drawString(`SSID: ${state.wifiSsid || "Wi-Fi"}`, 120, 56);
+
+    canvas.setTextColor(0x7dff, 0x0083);
+    canvas.drawString(state.wifiTime || "CZAS NTP: 15:44 CET", 120, 73);
+  } else if (state.toastType === "offline") {
+    canvas.fillRoundRect(15, 36, 210, 56, 8, 0x0083);
+    canvas.drawRoundRect(15, 36, 210, 56, 8, TFT_ORANGE);
+    canvas.drawRoundRect(16, 37, 208, 54, 7, TFT_RED);
+
+    canvas.setTextDatum(top_center);
+    canvas.setTextColor(TFT_ORANGE, 0x0083);
+    canvas.drawString("WI-FI: BRAK POLACZENIA", 120, 45);
+
+    canvas.setTextColor(TFT_WHITE, 0x0083);
+    canvas.drawString(`SSID: ${state.wifiSsid || "BRAK SIECI"}`, 120, 64);
   }
 }
 
@@ -461,10 +601,10 @@ function renderRadarScreen(
   canvas.drawFastHLine(0, 12, SCREEN_WIDTH, COLOR_GRID);
   canvas.setTextSize(1);
 
-  // Left (x: 4, y: 2): BAT 98%
+  // Left (x: 14, y: 2): BAT 98% (shifted right to make room for top-left Wi-Fi dot at x: 6)
   canvas.setTextDatum(top_left);
   canvas.setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
-  canvas.drawString("BAT 98%", 4, 2);
+  canvas.drawString("BAT 98%", 14, 2);
 
   // Center (x: 120, y: 2): MIKORADAR
   canvas.setTextDatum(top_center);
@@ -658,12 +798,12 @@ function renderCockpitScreen(
   canvas.fillRect(0, 0, SCREEN_WIDTH, 13, COLOR_HEADER_BG);
   canvas.drawFastHLine(0, 13, SCREEN_WIDTH, COLOR_BORDER);
 
-  // Battery icon (4, 3) + "98%"
-  drawBatteryIcon(canvas, 4, 3, COLOR_EMERALD_NEON);
+  // Battery icon (14, 3) + "98%"
+  drawBatteryIcon(canvas, 14, 3, COLOR_EMERALD_NEON);
   canvas.setTextSize(1);
   canvas.setTextDatum(top_left);
   canvas.setTextColor(TFT_WHITE, COLOR_HEADER_BG);
-  canvas.drawString("98%", 18, 3);
+  canvas.drawString("98%", 28, 3);
 
   // System Title
   canvas.setTextDatum(top_center);

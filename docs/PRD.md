@@ -225,17 +225,30 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
    * Minimalist festive hero UI featuring a prominent install action, three feature highlight cards (MikoRadar, Kokpit Misji, Santa Cam), and a collapsible USB-UART driver troubleshooting accordion (Silicon Labs CP2104 and WCH CH9102).
    * Automated packaging pipeline (`scripts/package-firmware.mjs`) extracting version from `page/package.json` and generating `public/firmware/manifest.json` with MD5 checksums.
 
-### 6.5. Milestone 3B: In-Browser Wi-Fi Setup & NTP Provisioning (ACTIVE 🎯)
+### 6.5. Milestone 3B: In-Browser Wi-Fi Setup & NTP Provisioning (COMPLETE ✅)
 
 1. **Unified Post-Flash Wi-Fi Onboarding (Improv Wi-Fi Serial):**
    * Immediately upon flashing completion, the dialog transitions to the Wi-Fi setup screen via Improv Wi-Fi Serial.
    * Users enter home Wi-Fi SSID and password directly in the browser; credentials are sent over USB UART.
-   * Device connects, verifies internet connectivity, saves credentials to ESP32 Flash NVS (`Preferences`), and performs an initial NTP time synchronization.
-   * Returning users can connect their M5Stick anytime via the same button to reconfigure Wi-Fi or inspect serial logs without reflashing.
-2. **Firmware Serial Protocol & NVS Storage:**
-   * Embedded Improv Wi-Fi Serial listener in `firmware/src/network/improv_handler.cpp`.
-   * Dynamic NVS credential loading with zero-heap runtime parsing.
-   * 100% offline resilience: if no Wi-Fi is configured, device continues to boot instantly using embedded ROM data.
+   * Returning users can connect their M5Stick anytime via the same hero action to reconfigure Wi-Fi or inspect serial logs without reflashing.
+2. **Zero-Delay Boot & Asynchronous Connection:**
+   * Non-blocking background connection: device boots instantaneously (0 ms black screen) with the simulation rendering on frame 1 from internal ROM.
+   * Non-blocking 8-second timeout: if the home router is offline or unreachable, connection times out smoothly without freezing the display or simulation.
+3. **Top HUD Status Micro Dot (Aerospace Cockpit Style):**
+   * Minimalist 5×5 px dot placed in the top-left corner at `x: 6, y: 6` across all screens:
+     - Battery indicator moved right to `x: 14` (icon) and `x: 28` (percentage), leaving clean balance before screen titles.
+     - **Connecting / Syncing**: Vibrant amber pulsing dot (`●`).
+     - **Connected & Transmitting**: Solid emerald green dot (`●`) during the active 5-second burst window.
+     - **Burst & Sleep (Time Synchronized)**: Emerald green outline ring (`○`) indicating the radio is asleep to conserve power while the clock remains accurate.
+     - **Offline / Autonomous**: Muted slate outline ring (`○`).
+4. **Contextual Pop-up Toasts & Audio Chimes:**
+   * **Connected Toast**: Centered polar navy overlay (210×68 px) with emerald accents displaying `WI-FI: POŁĄCZONO!`, SSID, and real-time synchronized clock (`CZAS NTP: HH:MM CET`) with an upward dual chime tone.
+   * **Offline / Unavailable Toast**: Coral/amber accent overlay (210×56 px) displaying `WI-FI: BRAK POŁĄCZENIA` and `SSID: <name>` with a gentle low notification chirp.
+5. **Hardware BM8563 RTC Persistence & "Burst & Sleep" Power Management:**
+   * Upon NTP synchronization, the exact UTC atomic time is saved directly to the battery-backed onboard BM8563 RTC chip (`M5.Rtc.setDateTime(gmtime(&nowUtc))`).
+   * On reboot or power loss, `setup()` restores system time from the BM8563 (`M5.Rtc.setSystemTimeFromRtc()`), ensuring the clock stays accurate across reboots even with zero Wi-Fi.
+   * Disables the ESP32 Wi-Fi radio (`WiFi.mode(WIFI_OFF)`) ~5 seconds after NTP clock synchronization.
+   * Drops active power consumption from ~140mA to ~40mA and eliminates 2.4 GHz RF emissions next to the laptop USB port.
 
 ### 6.6. Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (UPCOMING 🎯)
 
@@ -263,7 +276,7 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
   * Screen 3: Side-View Santa Cam (7-scene pixel art engine).
   * 3-screen circular carousel navigation across Web & Hardware.
 * **Milestone 3A (COMPLETE ✅):** Pure Web Installer for IoT (ESP Web Tools flashing on `/install` route, automated binary packaging pipeline, browser capability guard).
-* **Milestone 3B (ACTIVE 🎯):** In-Browser Wi-Fi Setup & NTP Provisioning (Improv Wi-Fi Serial & Flash NVS persistence).
+* **Milestone 3B (COMPLETE ✅):** In-Browser Wi-Fi Setup & NTP Provisioning (Improv Wi-Fi Serial & Flash NVS persistence, zero-delay boot, micro dot status indicator, contextual pop-up toasts, Burst & Sleep power management).
 * **Milestone 4 (UPCOMING 🎯):** Dual-Mode Journey Engine & RTC / NTP Time Synchronization (Demo vs Real 2h cadence, BM8563 RTC, Burst & Sleep NTP).
 * **Milestone 5 (FUTURE 🎄):** Hardware Polish & Festive Packaging (Audio jingles, 3D-printed dock, kid's flight log).
 

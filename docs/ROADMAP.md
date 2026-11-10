@@ -128,24 +128,30 @@ stateDiagram-v2
 
 ---
 
-## Milestone 3B: In-Browser Wi-Fi Setup & NTP Provisioning (ACTIVE 🎯)
+## Milestone 3B: In-Browser Wi-Fi Setup & NTP Provisioning (COMPLETE ✅)
 
-* **Objective:** Enable parents and kids to configure Wi-Fi credentials in-browser via Improv Wi-Fi Serial immediately after flashing or upon reconnecting the device, persisting credentials to NVS and performing an initial NTP time sync.
-* **Core Technology:** **Improv Wi-Fi Serial** protocol, ESP32 NVS (`Preferences`), and SNTP time client.
+* **Objective:** Enable parents and kids to configure Wi-Fi credentials in-browser via Improv Wi-Fi Serial immediately after flashing or upon reconnecting the device, persisting credentials to NVS and performing an initial NTP time sync with battery-backed RTC persistence.
+* **Core Technology:** **Improv Wi-Fi Serial** protocol, ESP32 NVS (`Preferences`), SNTP time client, and BM8563 hardware RTC (`M5.Rtc`).
 * **Key Deliverables:**
-  - [ ] **1. Firmware Improv Wi-Fi & NVS Handler (`firmware/`):**
-    * Lightweight Improv Wi-Fi Serial protocol listener in `firmware/src/network/improv_handler.cpp`.
-    * Emits Improv RPC state packets over UART (`Serial`).
+  - [x] **1. Firmware Improv Wi-Fi & NVS Handler (`firmware/src/network/improv_handler.cpp`):**
+    * Lightweight Improv Wi-Fi Serial protocol listener handling RPC frames over UART (`Serial`).
+    * Asynchronous, non-blocking connection with 8.0-second timeout: zero-delay instant boot on frame 1 without freezing display or simulation.
     * On receiving credentials: tests Wi-Fi connection, saves valid credentials to ESP32 Flash NVS (`Preferences` namespace `"santa_cfg"`), and reports device IP to the browser.
-    * On first successful Wi-Fi connection, immediately triggers an initial NTP time sync.
-    * Retains 100% offline fallback: if no Wi-Fi is entered, Santa-OS boots immediately using ROM data.
-  - [ ] **2. Web UI In-Browser Wi-Fi Flow (`page/`):**
-    * Seamless post-flash transition: Once flashing completes, the ESP Web Tools dialog automatically prompts for Wi-Fi SSID and password via Improv Wi-Fi Serial.
-    * Returning user management: Plugging in an already-installed device allows updating Wi-Fi or viewing serial logs without reflashing.
+    * Initial SNTP time sync configuring Polish CET timezone (`CET-1CEST,M3.5.0,M10.5.0/3`).
+    * Hardware BM8563 RTC persistence: writes UTC time to onboard battery-backed RTC chip (`M5.Rtc.setDateTime()`), automatically restored on boot (`M5.Rtc.setSystemTimeFromRtc()`).
+    * "Burst & Sleep" power management: powers off Wi-Fi radio (`WiFi.mode(WIFI_OFF)`) ~5 seconds after sync or immediately upon timeout, reducing power consumption to ~40mA.
+    * Top HUD status micro dot (`(6, 6)`) and contextual pop-up toasts (connected with live synchronized clock `CZAS NTP: HH:MM CET`, offline 2-line alert).
+    * Retains 100% offline fallback: if no Wi-Fi is configured or network is unreachable, Santa-OS boots immediately using ROM data.
+    * 7 new native desktop unit tests (Tests 19–25) verifying Improv framing, state machines, packet parsers, and burst-and-sleep cycles.
+  - [x] **2. Web UI In-Browser Wi-Fi Flow (`page/`):**
+    * Seamless post-flash transition: Once flashing completes, the ESP Web Tools dialog prompts for Wi-Fi SSID and password via Improv Wi-Fi Serial.
+    * Dedicated returning-user management: Added `ImprovWifiButton.tsx` (`<improv-wifi-serial-launch-button>`) to `/install` allowing parents to reconfigure Wi-Fi or view serial logs on existing devices without reflashing.
+    * Living specification parity: Implemented matching top-left status micro dot and pop-up toasts with live clock in `iotAppLogic.ts` and `camScreen.ts`.
+    * Unit tests in `simulator.test.ts` and `web-installer.test.ts` validating UI elements, DOM elements, and status transitions.
 
 ---
 
-## Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (UPCOMING 🎯)
+## Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (ACTIVE 🎯)
 
 * **Objective:** Transition the simulation engine to support two distinct operating modes: an interactive fast-paced Demo Mode, and a real-world live Advent Calendar Mode (Dec 1 – Dec 24) driven by the ESP32 hardware RTC (BM8563) and periodic NTP synchronization.
 * **Key Deliverables:**

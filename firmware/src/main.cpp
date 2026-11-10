@@ -3,6 +3,7 @@
 #include "types.h"
 #include "core/journey_engine.h"
 #include "network/journey_client.h"
+#include "network/improv_handler.h"
 #include "ui/screen_radar.h"
 #include "ui/screen_cockpit.h"
 #include "ui/screen_cam.h"
@@ -24,6 +25,7 @@ JourneyEngine engine;
 ScreenRadar radar;
 ScreenCockpit cockpit;
 ScreenCam cam;
+ImprovHandler improvHandler;
 ActiveScreen activeScreen = SCREEN_RADAR;
 
 bool soundEnabled = true;
@@ -38,7 +40,25 @@ void setup() {
   auto cfg = M5.config();
   M5.begin(cfg);
 
+  // Initialize Serial UART before any logging calls
   Serial.begin(115200);
+
+  // Initialize Central European Timezone (CET/CEST) for battery-backed RTC
+  setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+  tzset();
+
+  // Restore persistent hardware RTC clock if enabled
+  if (M5.Rtc.isEnabled()) {
+    M5.Rtc.setSystemTimeFromRtc();
+    time_t bootTime = time(nullptr);
+    if (bootTime > 1700000000) {
+      struct tm tmBoot;
+      localtime_r(&bootTime, &tmBoot);
+      Serial.printf("[RTC] Battery-backed BM8563 restored: %02d:%02d:%02d CET\n",
+                    tmBoot.tm_hour, tmBoot.tm_min, tmBoot.tm_sec);
+    }
+  }
+
   Serial.println("\n=================================");
   Serial.println("  SANTA-OS v2.4 - ADVENT RADAR   ");
   Serial.println("  24 Days / 288 Stops / ST7789v2 ");
@@ -61,8 +81,11 @@ void setup() {
   // (All 24 days / 288 stops are compiled in PROGMEM, so no Wi-Fi is needed to boot!)
   engine.init(24);
 
-  // If Wi-Fi credentials are provided in config.h, attempt fetch; otherwise runs offline
-  if (strlen(DEFAULT_WIFI_SSID) > 0) {
+  // Initialize Improv Wi-Fi Serial handler (loads credentials from Flash NVS if saved)
+  improvHandler.init();
+
+  // If Wi-Fi credentials are provided in config.h and not provisioned yet, attempt fallback
+  if (!improvHandler.isConnected() && !improvHandler.isConnecting() && strlen(DEFAULT_WIFI_SSID) > 0) {
     JourneyData remoteData;
     if (JourneyClient::fetchRemoteOrFallback(DEFAULT_WIFI_SSID, DEFAULT_WIFI_PASS, JOURNEY_API_URL, remoteData)) {
       engine.setJourneyData(remoteData);
@@ -75,11 +98,23 @@ void setup() {
 
 void loop() {
   M5.update();
+  improvHandler.update();
 
   unsigned long now = millis();
-  float dt = (now - lastFrameTime) / 1000.0f;
+  unsigned long elapsedMs = now - lastFrameTime;
   lastFrameTime = now;
+
+  float dt = elapsedMs / 1000.0f;
   if (dt > 0.1f) dt = 0.033f;
+
+  // Pass un-clamped elapsed wall-clock milliseconds to network timers
+  improvHandler.updateTimers((uint32_t)elapsedMs);
+  if (improvHandler.checkJustConnected()) {
+    playChirp(2000, 70);
+  }
+  if (improvHandler.checkJustFailed()) {
+    playChirp(600, 90);
+  }
 
   // Advance simulation clock and physics
   engine.update(dt);
@@ -122,6 +157,55 @@ void loop() {
     cockpit.render(engine.getJourneyData(), telemetry, now);
   } else {
     cam.render(engine.getJourneyData(), telemetry, now);
+  }
+
+  // Top Status Bar Wi-Fi / Sync Micro Dot Indicator (x: 6, y: 6 in top-left corner across all screens)
+  if (improvHandler.isConnecting()) {
+    bool pulse = (now / 300) % 2 == 0;
+    if (pulse) {
+      canvas.fillCircle(6, 6, 2, 0xffe0); // Vibrant amber/yellow pulsing dot (TFT_YELLOW 0xffe0)
+    }
+  } else if (improvHandler.isConnected() && !improvHandler.isRadioSleeping()) {
+    canvas.fillCircle(6, 6, 2, 0x07e0); // Solid emerald green dot (TFT_GREEN 0x07e0 — radio active)
+  } else if (improvHandler.isRadioSleeping() && improvHandler.isSyncSucceeded()) {
+    canvas.drawCircle(6, 6, 2, 0x07e0); // Emerald green ring (TFT_GREEN 0x07e0 — radio asleep, time synced)
+  } else {
+    canvas.drawCircle(6, 6, 2, 0x7bef); // Muted slate ring (TFT_DARKGREY 0x7bef — offline / unsynced)
+  }
+
+  // High-Contrast Wi-Fi Toast Overlay (Connected vs Offline)
+  if (improvHandler.hasToast()) {
+    ToastType tType = improvHandler.getToastType();
+    if (tType == TOAST_CONNECTED) {
+      canvas.fillRoundRect(15, 32, 210, 68, 8, 0x0083); // Deep polar navy
+      canvas.drawRoundRect(15, 32, 210, 68, 8, 0x07ff); // Electric cyan border
+      canvas.drawRoundRect(16, 33, 208, 66, 7, 0x07e0); // Emerald inner accent
+
+      canvas.setTextDatum(top_center);
+      canvas.setTextColor(0x07e0, 0x0083); // Emerald
+      canvas.drawString("WI-FI: POLACZONO!", 120, 39);
+
+      canvas.setTextColor(0xffff, 0x0083); // Pure white
+      char toastLine2[40];
+      snprintf(toastLine2, sizeof(toastLine2), "SSID: %s", improvHandler.getSsid());
+      canvas.drawString(toastLine2, 120, 56);
+
+      canvas.setTextColor(0x7dff, 0x0083); // Cyan
+      canvas.drawString(improvHandler.getFormattedTime(), 120, 73);
+    } else if (tType == TOAST_OFFLINE) {
+      canvas.fillRoundRect(15, 36, 210, 56, 8, 0x0083); // Deep polar navy (sleek 56px height)
+      canvas.drawRoundRect(15, 36, 210, 56, 8, 0xfda0); // Amber outer border
+      canvas.drawRoundRect(16, 37, 208, 54, 7, 0xf800); // Coral red inner accent
+
+      canvas.setTextDatum(top_center);
+      canvas.setTextColor(0xfda0, 0x0083); // Amber
+      canvas.drawString("WI-FI: BRAK POLACZENIA", 120, 45);
+
+      canvas.setTextColor(0xffff, 0x0083); // Pure white
+      char toastLine2[40];
+      snprintf(toastLine2, sizeof(toastLine2), "SSID: %s", strlen(improvHandler.getSsid()) > 0 ? improvHandler.getSsid() : "BRAK SIECI");
+      canvas.drawString(toastLine2, 120, 64);
+    }
   }
 
   // Flush to screen (flicker-free ST7789v2 IPS push)
