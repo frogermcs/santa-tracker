@@ -211,18 +211,18 @@ void ImprovHandler::updateTimers(uint32_t dtMs) {
       syncSucceeded = true;
       scheduleRadioSleep(5000); // 5-second burst then power down radio
 
-      char url[48];
-      snprintf(url, sizeof(url), "http://%s/", localIp);
-      sendProvisionResult(url, IMPROV_CMD_SEND_WIFI_SETTINGS);
+      // SANTA-OS operates a Burst & Sleep radio lifecycle without an onboard HTTP server.
+      // Passing nullptr sends 0 strings in RPC_RESULT, instructing ESP Web Tools / Improv client
+      // to omit the dead "Visit device" button and display a clean "Provisioned!" completion message.
+      sendProvisionResult(nullptr, IMPROV_CMD_SEND_WIFI_SETTINGS);
     } else if (sntpTimeoutMs == 0) {
       // SNTP timed out without confirmation: keep existing RTC clock and do NOT mark syncSucceeded
       isWaitingSntp = false;
       LOG_PRINTLN("[NTP] SNTP synchronization timed out. Keeping existing clock.");
       scheduleRadioSleep(5000); // Power down radio after timeout
 
-      char url[48];
-      snprintf(url, sizeof(url), "http://%s/", localIp);
-      sendProvisionResult(url, IMPROV_CMD_SEND_WIFI_SETTINGS);
+      // Pass nullptr to omit redirect URL
+      sendProvisionResult(nullptr, IMPROV_CMD_SEND_WIFI_SETTINGS);
     }
   }
 #endif
@@ -399,9 +399,8 @@ void ImprovHandler::handleRpcCommand(uint8_t command, const uint8_t* data, uint8
     case IMPROV_CMD_REQUEST_STATE: {
       sendCurrentState();
       if (currentState == IMPROV_STATE_PROVISIONED) {
-        char url[48];
-        snprintf(url, sizeof(url), "http://%s/", localIp[0] ? localIp : "santa.local");
-        sendProvisionResult(url, IMPROV_CMD_REQUEST_STATE);
+        // Device is provisioned, but has no onboard HTTP server; pass nullptr to omit redirect URL
+        sendProvisionResult(nullptr, IMPROV_CMD_REQUEST_STATE);
       }
       break;
     }
@@ -485,10 +484,19 @@ void ImprovHandler::sendDeviceInfo() {
 }
 
 void ImprovHandler::sendProvisionResult(const char* url, uint8_t command) {
-  const char* urlStrings[1] = { url ? url : "" };
-  uint8_t txBuf[128];
-  size_t len = buildRpcResult(command, urlStrings, 1, txBuf, sizeof(txBuf));
-  writeSerial(txBuf, len);
+  if (url && url[0] != '\0') {
+    const char* urlStrings[1] = { url };
+    uint8_t txBuf[128];
+    size_t len = buildRpcResult(command, urlStrings, 1, txBuf, sizeof(txBuf));
+    writeSerial(txBuf, len);
+  } else {
+    // SANTA-OS operates a Burst & Sleep radio lifecycle without an onboard web server.
+    // Sending 0 result strings instructs Improv Wi-Fi Serial clients (e.g. ESP Web Tools) that
+    // no redirect URL exists, cleanly suppressing the dead "Visit device" button in the browser dialog.
+    uint8_t txBuf[32];
+    size_t len = buildRpcResult(command, nullptr, 0, txBuf, sizeof(txBuf));
+    writeSerial(txBuf, len);
+  }
 }
 
 void ImprovHandler::handleScanNetworks() {

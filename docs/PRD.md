@@ -231,6 +231,7 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
    * Immediately upon flashing completion, the dialog transitions to the Wi-Fi setup screen via Improv Wi-Fi Serial.
    * Users enter home Wi-Fi SSID and password directly in the browser; credentials are sent over USB UART.
    * Returning users can connect their M5Stick anytime via the same hero action to reconfigure Wi-Fi or inspect serial logs without reflashing.
+   * **Clean Completion Dialog (No Dead Redirect Link)**: Because SANTA-OS operates a battery-friendly "Burst & Sleep" radio lifecycle without an onboard HTTP web server, the Improv RPC response returns zero redirect strings. This instructs ESP Web Tools to cleanly omit the "Visit device" button (`http://<ip>/`), presenting a tidy "Provisioned!" completion dialog with `[Close]` and `[Change Wi-Fi]`.
 2. **Zero-Delay Boot & Asynchronous Connection:**
    * Non-blocking background connection: device boots instantaneously (0 ms black screen) with the simulation rendering on frame 1 from internal ROM.
    * Non-blocking 8-second timeout: if the home router is offline or unreachable, connection times out smoothly without freezing the display or simulation.
