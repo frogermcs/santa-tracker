@@ -73,8 +73,8 @@ public:
   // Send device info RPC result (Firmware name, version, chip, name)
   void sendDeviceInfo();
 
-  // Send Wi-Fi provisioning result with local IP redirect URL
-  void sendProvisionResult(const char* url, uint8_t command = IMPROV_CMD_SEND_WIFI_SETTINGS);
+  // Send Wi-Fi provisioning result with optional redirect URL (pass nullptr to omit URL if device has no HTTP server)
+  void sendProvisionResult(const char* url = nullptr, uint8_t command = IMPROV_CMD_SEND_WIFI_SETTINGS);
 
   // Trigger network scan and stream results
   void handleScanNetworks();

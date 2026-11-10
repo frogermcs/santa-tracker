@@ -538,7 +538,7 @@ void test_improv_packet_framing_and_checksum(void) {
   TEST_ASSERT_EQUAL_UINT8('\n', packet[11]);
 }
 
-// Test 20: Improv Wi-Fi RPC Result formatting (Device Info)
+// Test 20: Improv Wi-Fi RPC Result formatting (Device Info and Zero-String Result)
 void test_improv_rpc_result_formatting(void) {
   const char* info[4] = { "SANTA-OS for M5StickC-Plus", "1.0.0", "ESP32", "SANTA-OS" };
   uint8_t outBuf[128];
@@ -547,6 +547,15 @@ void test_improv_rpc_result_formatting(void) {
   TEST_ASSERT_TRUE(len > 12);
   TEST_ASSERT_EQUAL_UINT8(IMPROV_TYPE_RPC_RESULT, outBuf[7]);
   TEST_ASSERT_EQUAL_UINT8(IMPROV_CMD_REQUEST_INFO, outBuf[9]); // RPC command in payload
+
+  // Test zero-string result for devices without HTTP server (suppresses dead "Visit device" button)
+  uint8_t emptyRpcBuf[32];
+  size_t emptyLen = ImprovHandler::buildRpcResult(IMPROV_CMD_SEND_WIFI_SETTINGS, nullptr, 0, emptyRpcBuf, sizeof(emptyRpcBuf));
+  TEST_ASSERT_EQUAL_UINT32(13, emptyLen);
+  TEST_ASSERT_EQUAL_UINT8(IMPROV_TYPE_RPC_RESULT, emptyRpcBuf[7]);
+  TEST_ASSERT_EQUAL_UINT8(2, emptyRpcBuf[8]); // data length = 2 bytes (command + stringCount byte)
+  TEST_ASSERT_EQUAL_UINT8(IMPROV_CMD_SEND_WIFI_SETTINGS, emptyRpcBuf[9]);
+  TEST_ASSERT_EQUAL_UINT8(0, emptyRpcBuf[10]); // total strings payload length = 0
 }
 
 // Test 21: Improv Wi-Fi settings payload decoding
