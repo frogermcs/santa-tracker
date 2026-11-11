@@ -63,6 +63,11 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
   // Button A Pointer Handlers
   const handlePointerDownA = (e: React.PointerEvent) => {
     e.preventDefault();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
     longTriggeredARef.current = false;
     setIsAHolding(true);
 
@@ -78,6 +83,13 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
 
   const handlePointerUpA = (e: React.PointerEvent) => {
     e.preventDefault();
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
     if (timerARef.current) {
       clearTimeout(timerARef.current);
       timerARef.current = null;
@@ -93,7 +105,14 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
     }
   };
 
-  const handlePointerCancelA = () => {
+  const handlePointerCancelA = (e: React.PointerEvent) => {
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
     if (timerARef.current) {
       clearTimeout(timerARef.current);
       timerARef.current = null;
@@ -105,6 +124,11 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
   // Button B Pointer Handlers
   const handlePointerDownB = (e: React.PointerEvent) => {
     e.preventDefault();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
     longTriggeredBRef.current = false;
     setIsBHolding(true);
 
@@ -120,6 +144,13 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
 
   const handlePointerUpB = (e: React.PointerEvent) => {
     e.preventDefault();
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
     if (timerBRef.current) {
       clearTimeout(timerBRef.current);
       timerBRef.current = null;
@@ -135,7 +166,14 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
     }
   };
 
-  const handlePointerCancelB = () => {
+  const handlePointerCancelB = (e: React.PointerEvent) => {
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
     if (timerBRef.current) {
       clearTimeout(timerBRef.current);
       timerBRef.current = null;
@@ -147,6 +185,11 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
   // Button PWR Pointer Handlers (Bottom Side)
   const handlePointerDownPWR = (e: React.PointerEvent) => {
     e.preventDefault();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
     longTriggeredPWRRef.current = false;
     setIsPWRHolding(true);
 
@@ -160,6 +203,13 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
 
   const handlePointerUpPWR = (e: React.PointerEvent) => {
     e.preventDefault();
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
     if (timerPWRRef.current) {
       clearTimeout(timerPWRRef.current);
       timerPWRRef.current = null;
@@ -175,7 +225,14 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
     }
   };
 
-  const handlePointerCancelPWR = () => {
+  const handlePointerCancelPWR = (e: React.PointerEvent) => {
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
     if (timerPWRRef.current) {
       clearTimeout(timerPWRRef.current);
       timerPWRRef.current = null;

@@ -168,8 +168,8 @@ export default function RadarPage() {
     pendingButtonsRef.current.wasHoldB = true;
     const sim = simStateRef.current;
     const nextMode = sim.journeyMode === "demo" ? "real" : "demo";
-    handleToggleMode(nextMode);
-  }, [handleToggleMode]);
+    if (!isMuted) buzzer.playTone(nextMode === "real" ? 2100 : 1700, 60);
+  }, [isMuted]);
 
   // Button PWR Short Press (Bottom Side): Toggle Sound (Mute / Unmute)
   const handleButtonPWRShortPress = useCallback(() => {
@@ -190,8 +190,8 @@ export default function RadarPage() {
     pendingButtonsRef.current.wasHoldPWR = true;
     const sim = simStateRef.current;
     const nextMode = sim.journeyMode === "demo" ? "real" : "demo";
-    handleToggleMode(nextMode);
-  }, [handleToggleMode]);
+    if (!isMuted) buzzer.playTone(nextMode === "real" ? 2100 : 1700, 60);
+  }, [isMuted]);
 
   // Wi-Fi Simulator Toggle: Exercise hardware connection & Burst & Sleep states
   const handleToggleWifi = useCallback(() => {
@@ -253,6 +253,7 @@ export default function RadarPage() {
         wasPressedB: false,
         wasHoldB: false,
         wasPressedPWR: false,
+        wasHoldPWR: false,
       };
 
       // 1. Advance firmware logic state
