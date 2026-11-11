@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Compass, Volume2, VolumeX, RefreshCw, Map, Calendar, Gauge, Layers, Sparkles, Camera, Usb, Wifi, WifiOff } from "lucide-react";
+import { Compass, Volume2, VolumeX, RefreshCw, Map, Calendar, Gauge, Layers, Sparkles, Camera, Usb, Wifi, WifiOff, Zap, Clock } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
 import { SnowEffect } from "@/components/SnowEffect";
 import { computeSantaMetrics, SantaCockpitMetrics } from "@/lib/telemetry/santa-metrics";
@@ -20,6 +20,11 @@ import {
   setActiveScreen as setSimActiveScreen,
   simulateWifiConnect,
   simulateWifiDisconnect,
+  formatEta,
+  FLIGHT_DURATION_DEMO,
+  FLIGHT_DURATION_REAL,
+  SEC_PER_CITY_DEMO,
+  SEC_PER_CITY_REAL,
   SimulatorAppState,
   ButtonEventState,
 } from "@/lib/simulator/iotAppLogic";
@@ -46,6 +51,9 @@ export default function RadarPage() {
   // Button visual states
   const [isBtnAPressed, setIsBtnAPressed] = useState<boolean>(false);
   const [isBtnBPressed, setIsBtnBPressed] = useState<boolean>(false);
+  const [isBtnPWRPressed, setIsBtnPWRPressed] = useState<boolean>(false);
+  const [journeyMode, setJourneyMode] = useState<"demo" | "real">("demo");
+  const [realDatePreset, setRealDatePreset] = useState<"live" | "dec1" | "dec15" | "dec24">("live");
 
   // 1:1 Hardware Simulator Core
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -57,6 +65,7 @@ export default function RadarPage() {
     wasPressedB: false,
     wasHoldB: false,
     wasPressedPWR: false,
+    wasHoldPWR: false,
   });
   const lastReactUpdateRef = useRef<number>(0);
 
@@ -86,33 +95,103 @@ export default function RadarPage() {
     if (!isMuted) buzzer.playTone(1600, 35);
   }, [isMuted]);
 
-  // Button A Long Press (Front M5, >0.6s): Advance Advent Day (1 -> 24 -> 1)
+  // Button A Long Press (Front M5, >0.6s): Advance Advent Day (1 -> 24 -> 1 in Demo Mode)
   const handleButtonALongPress = useCallback(() => {
     setIsBtnAPressed(true);
     setTimeout(() => setIsBtnAPressed(false), 300);
     pendingButtonsRef.current.wasHoldA = true;
-    if (!isMuted) buzzer.playTone(1900, 70);
+    if (simStateRef.current.journeyMode === "demo") {
+      if (!isMuted) buzzer.playTone(1900, 70);
+    } else {
+      if (!isMuted) buzzer.playTone(400, 60);
+    }
   }, [isMuted]);
 
-  // Button B Short Press (Top Side): Advance to next city on active day (0 -> 11 -> 0)
+  // Button B Short Press (Top Side): Advance to next city on active day (0 -> 11 -> 0 in Demo Mode)
   const handleButtonBShortPress = useCallback(() => {
     setIsBtnBPressed(true);
     setTimeout(() => setIsBtnBPressed(false), 200);
     pendingButtonsRef.current.wasPressedB = true;
-    if (!isMuted) buzzer.playTone(1400, 35);
+    if (simStateRef.current.journeyMode === "demo") {
+      if (!isMuted) buzzer.playTone(1400, 35);
+    } else {
+      if (!isMuted) buzzer.playTone(400, 60);
+    }
   }, [isMuted]);
 
-  // Button B Long Press (Top Side, >0.6s): Toggle Sound (Mute / Unmute)
+  // Mode Toggle: Demo Mode (30s) vs Real Advent Mode (2h)
+  const handleToggleMode = useCallback(
+    (mode: "demo" | "real") => {
+      const sim = simStateRef.current;
+      if (sim.journeyMode !== mode) {
+        if (mode === "real") {
+          sim.simTime *= SEC_PER_CITY_REAL / SEC_PER_CITY_DEMO;
+        } else {
+          sim.simTime /= SEC_PER_CITY_REAL / SEC_PER_CITY_DEMO;
+        }
+        sim.journeyMode = mode;
+        sim.toastType = "connected";
+        sim.toastTimer = 2500;
+        sim.lastAction = `TRYB: ${mode === "demo" ? "DEMO (30s)" : "CZAS RZECZYWISTY"}`;
+        setJourneyMode(mode);
+        if (!isMuted) buzzer.playTone(mode === "real" ? 2100 : 1700, 60);
+      }
+    },
+    [isMuted]
+  );
+
+  // Quick Date Preset for Real-Time Mode Simulation
+  const handleSelectDatePreset = useCallback((preset: "live" | "dec1" | "dec15" | "dec24") => {
+    setRealDatePreset(preset);
+    const sim = simStateRef.current;
+    if (preset === "live") {
+      sim.simulatedRealDate = null;
+      sim.lastAction = "CZAS RZECZYWISTY: ZEGAR LIVE";
+    } else if (preset === "dec1") {
+      sim.simulatedRealDate = new Date(2026, 11, 1, 14, 30, 0);
+      sim.lastAction = "CZAS RZECZYWISTY: 01 GRUDNIA 14:30";
+    } else if (preset === "dec15") {
+      sim.simulatedRealDate = new Date(2026, 11, 15, 18, 0, 0);
+      sim.lastAction = "CZAS RZECZYWISTY: 15 GRUDNIA 18:00";
+    } else if (preset === "dec24") {
+      sim.simulatedRealDate = new Date(2026, 11, 24, 22, 15, 0);
+      sim.lastAction = "CZAS RZECZYWISTY: 24 GRUDNIA (KRAKOW)";
+    }
+    sim.toastType = "connected";
+    sim.toastTimer = 2000;
+  }, []);
+
+  // Button B Long Press (Top Side, >0.6s): Toggle Operating Mode (Demo <-> Real-Time)
   const handleButtonBLongPress = useCallback(() => {
     setIsBtnBPressed(true);
     setTimeout(() => setIsBtnBPressed(false), 300);
     pendingButtonsRef.current.wasHoldB = true;
+    const sim = simStateRef.current;
+    const nextMode = sim.journeyMode === "demo" ? "real" : "demo";
+    handleToggleMode(nextMode);
+  }, [handleToggleMode]);
+
+  // Button PWR Short Press (Bottom Side): Toggle Sound (Mute / Unmute)
+  const handleButtonPWRShortPress = useCallback(() => {
+    setIsBtnPWRPressed(true);
+    setTimeout(() => setIsBtnPWRPressed(false), 200);
+    pendingButtonsRef.current.wasPressedPWR = true;
     setIsMuted((prev) => {
       const next = !prev;
       if (!next) buzzer.playTone(2200, 80);
       return next;
     });
   }, []);
+
+  // Button PWR Long Press (Bottom Side, >0.6s): Toggle Operating Mode (Demo <-> Real-Time)
+  const handleButtonPWRLongPress = useCallback(() => {
+    setIsBtnPWRPressed(true);
+    setTimeout(() => setIsBtnPWRPressed(false), 300);
+    pendingButtonsRef.current.wasHoldPWR = true;
+    const sim = simStateRef.current;
+    const nextMode = sim.journeyMode === "demo" ? "real" : "demo";
+    handleToggleMode(nextMode);
+  }, [handleToggleMode]);
 
   // Wi-Fi Simulator Toggle: Exercise hardware connection & Burst & Sleep states
   const handleToggleWifi = useCallback(() => {
@@ -128,16 +207,24 @@ export default function RadarPage() {
 
   // Day Selector Click
   const handleSelectDay = useCallback((dayNum: number) => {
-    const validDay = Math.max(1, Math.min(24, dayNum));
-    setDay(simStateRef.current, validDay);
-    setSelectedDay(validDay);
-    if (!isMuted) buzzer.playTone(1700, 40);
+    if (simStateRef.current.journeyMode === "demo") {
+      const validDay = Math.max(1, Math.min(24, dayNum));
+      setDay(simStateRef.current, validDay);
+      setSelectedDay(validDay);
+      if (!isMuted) buzzer.playTone(1700, 40);
+    } else {
+      if (!isMuted) buzzer.playTone(400, 60);
+    }
   }, [isMuted]);
 
   // City Selector Click (Jump to city on current day)
   const handleSelectCity = useCallback((targetIdx: number) => {
-    setCityIndex(simStateRef.current, targetIdx);
-    if (!isMuted) buzzer.playTone(1300 + targetIdx * 50, 40);
+    if (simStateRef.current.journeyMode === "demo") {
+      setCityIndex(simStateRef.current, targetIdx);
+      if (!isMuted) buzzer.playTone(1300 + targetIdx * 50, 40);
+    } else {
+      if (!isMuted) buzzer.playTone(400, 60);
+    }
   }, [isMuted]);
 
   // Screen Switcher Tabs
@@ -199,15 +286,27 @@ export default function RadarPage() {
         const newLon = t.santaLon.toFixed(1);
         setCoords((prev) => (prev.lat !== newLat || prev.lon !== newLon ? { lat: newLat, lon: newLon } : prev));
         setWifiStatus((prev) => (prev !== simStateRef.current.wifiState ? simStateRef.current.wifiState : prev));
+        setJourneyMode((prev) => (prev !== simStateRef.current.journeyMode ? simStateRef.current.journeyMode : prev));
 
         // Compute festive cockpit metrics for the right panel
+        const flightDur =
+          simStateRef.current.journeyMode === "demo"
+            ? FLIGHT_DURATION_DEMO
+            : FLIGHT_DURATION_REAL;
+        const totalDur =
+          simStateRef.current.journeyMode === "demo"
+            ? SEC_PER_CITY_DEMO
+            : SEC_PER_CITY_REAL;
         const metrics = computeSantaMetrics(
           t.activeDay,
           t.safeIdx,
           t.u,
           nowSec,
           t.nextCityName,
-          t.isDay24Finale
+          t.isDay24Finale,
+          flightDur,
+          totalDur,
+          t.isOffSeason
         );
         setLiveMetrics(metrics);
       }
@@ -317,6 +416,86 @@ export default function RadarPage() {
       <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
         {/* Left Column: M5StickC-Plus SE Hardware Emulator (7 cols) */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center gap-4 w-full max-w-full overflow-x-auto sm:overflow-visible py-1">
+          {/* Dual Operating Mode Switcher Bar */}
+          <div className="flex items-center justify-center gap-2 bg-[#081224]/90 border border-white/10 rounded-2xl p-1.5 px-2.5 shadow-lg">
+            <button
+              onClick={() => handleToggleMode("demo")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer ${
+                journeyMode === "demo"
+                  ? "bg-amber-500/25 text-amber-300 border-amber-500/60 shadow-sm ring-1 ring-amber-400/30"
+                  : "bg-slate-900/50 text-slate-400 border-white/5 hover:bg-slate-800/70"
+              }`}
+              title="Tryb Demo: 15s lot + 15s postój (30s na miasto), ręczny wybór dni i miast"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span>Tryb Demo (30s)</span>
+            </button>
+
+            <button
+              onClick={() => handleToggleMode("real")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer ${
+                journeyMode === "real"
+                  ? "bg-emerald-500/25 text-emerald-300 border-emerald-500/60 shadow-sm ring-1 ring-emerald-400/30"
+                  : "bg-slate-900/50 text-slate-400 border-white/5 hover:bg-slate-800/70"
+              }`}
+              title="Czas Rzeczywisty: 1h lot + 1h postój (2h na miasto), zgodny z zegarem RTC/NTP"
+            >
+              <Clock className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Czas Rzeczywisty (2h)</span>
+            </button>
+          </div>
+
+          {/* Quick Date Simulation Presets (Only visible in Real-Time Mode) */}
+          {journeyMode === "real" && (
+            <div className="flex flex-wrap items-center justify-center gap-1.5 bg-[#081224]/90 border border-emerald-500/30 rounded-2xl p-1.5 px-2.5 shadow-lg text-xs font-mono">
+              <span className="text-emerald-400 font-bold mr-1 text-[11px]">Kalendarz:</span>
+              <button
+                onClick={() => handleSelectDatePreset("live")}
+                className={`px-2.5 py-1 rounded-xl border cursor-pointer transition flex items-center gap-1 ${
+                  realDatePreset === "live"
+                    ? "bg-emerald-500/30 text-emerald-200 border-emerald-400 font-bold shadow-sm ring-1 ring-emerald-400/30"
+                    : "bg-slate-900/60 text-slate-400 border-white/5 hover:bg-slate-800"
+                }`}
+                title="Dzisiejsza data z zegara (Poza sezonem -> Santa odpoczywa)"
+              >
+                <span>🏝️ Dzisiaj (Urlop)</span>
+              </button>
+              <button
+                onClick={() => handleSelectDatePreset("dec1")}
+                className={`px-2.5 py-1 rounded-xl border cursor-pointer transition flex items-center gap-1 ${
+                  realDatePreset === "dec1"
+                    ? "bg-amber-500/30 text-amber-200 border-amber-400 font-bold shadow-sm ring-1 ring-amber-400/30"
+                    : "bg-slate-900/60 text-slate-400 border-white/5 hover:bg-slate-800"
+                }`}
+                title="Symuluj 1 grudnia: Start wielkiej podróży"
+              >
+                <span>🚀 01 Gru (Start)</span>
+              </button>
+              <button
+                onClick={() => handleSelectDatePreset("dec15")}
+                className={`px-2.5 py-1 rounded-xl border cursor-pointer transition flex items-center gap-1 ${
+                  realDatePreset === "dec15"
+                    ? "bg-sky-500/30 text-sky-200 border-sky-400 font-bold shadow-sm ring-1 ring-sky-400/30"
+                    : "bg-slate-900/60 text-slate-400 border-white/5 hover:bg-slate-800"
+                }`}
+                title="Symuluj 15 grudnia: Półmetek Adwentu"
+              >
+                <span>🗺️ 15 Gru (Trasa)</span>
+              </button>
+              <button
+                onClick={() => handleSelectDatePreset("dec24")}
+                className={`px-2.5 py-1 rounded-xl border cursor-pointer transition flex items-center gap-1 ${
+                  realDatePreset === "dec24"
+                    ? "bg-rose-500/30 text-rose-200 border-rose-400 font-bold shadow-sm ring-1 ring-rose-400/30"
+                    : "bg-slate-900/60 text-slate-400 border-white/5 hover:bg-slate-800"
+                }`}
+                title="Symuluj 24 grudnia: Wigilia i Finał Kraków"
+              >
+                <span>🎁 24 Gru (Wigilia)</span>
+              </button>
+            </div>
+          )}
+
           {/* Tactical Screen Selector Bar */}
           <div className="flex items-center justify-center gap-2 bg-[#081224]/80 border border-white/10 rounded-2xl p-1.5 px-2.5 shadow-lg">
             <button
@@ -357,7 +536,7 @@ export default function RadarPage() {
           </div>
 
           {/* Interactive Hardware Shell (Scale 1x native 240x135 display) */}
-          <div className="pt-2 sm:pt-4">
+          <div className="pt-2 sm:pt-4 pb-6 sm:pb-8">
             <M5StickDevice
               canvasRef={canvasRef}
               scanlines={scanlines}
@@ -366,8 +545,11 @@ export default function RadarPage() {
               onButtonALongPress={handleButtonALongPress}
               onButtonBShortPress={handleButtonBShortPress}
               onButtonBLongPress={handleButtonBLongPress}
+              onButtonPWRShortPress={handleButtonPWRShortPress}
+              onButtonPWRLongPress={handleButtonPWRLongPress}
               isButtonAPressed={isBtnAPressed}
               isButtonBPressed={isBtnBPressed}
+              isButtonPWRPressed={isBtnPWRPressed}
             />
           </div>
 
@@ -377,13 +559,21 @@ export default function RadarPage() {
               <span className="text-amber-400 font-bold">Przycisk M5 (Front):</span>
               <span className="text-slate-200">Klik = Ekran</span>
               <span className="text-slate-600">|</span>
-              <span className="text-slate-400">Przytrzymaj (&gt;0.6s) = Dzień</span>
+              <span className="text-slate-400">
+                {journeyMode === "demo" ? "Przytrzymaj (>0.6s) = Dzień" : "Dzień = Zegar"}
+              </span>
             </div>
             <div className="flex items-center gap-2 bg-[#0c162b]/80 px-3 py-1.5 rounded-lg border border-white/10 shadow-sm">
               <span className="text-amber-400 font-bold">Przycisk B (Góra):</span>
-              <span className="text-slate-200">Klik = Miasto</span>
+              <span className="text-slate-200">
+                {journeyMode === "demo" ? "Klik = Miasto" : "Klik = Zablokowane"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 bg-[#0c162b]/80 px-3 py-1.5 rounded-lg border border-white/10 shadow-sm">
+              <span className="text-rose-400 font-bold">Przycisk PWR (Dół):</span>
+              <span className="text-slate-200">Klik = Dźwięk</span>
               <span className="text-slate-600">|</span>
-              <span className="text-slate-400">Przytrzymaj (&gt;0.6s) = Dźwięk</span>
+              <span className="text-slate-400">Przytrzymaj (&gt;0.6s) = Tryb (Demo/Real)</span>
             </div>
             <button
               onClick={handleToggleWifi}
@@ -465,11 +655,13 @@ export default function RadarPage() {
               </span>
             </div>
             <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">
-              <span className="text-slate-400 text-[10px] block">ODLICZANIE ETA</span>
+              <span className="text-slate-400 text-[10px] block">ODLICZANIE ETAPU</span>
               <span className="text-amber-400 font-bold text-sm block mt-0.5">
                 {selectedDay === 24 && activeStopIndex === currentStops.length - 1 && eta === 0
                   ? "WIGILIA!"
-                  : `0:${String(eta).padStart(2, "0")}`}
+                  : liveMetrics
+                  ? `${formatEta(liveMetrics.stepEtaSeconds)} (${liveMetrics.nextStepName})`
+                  : formatEta(eta)}
               </span>
             </div>
             <div className="p-3 bg-[#0c162b]/70 border border-white/5 rounded-xl">

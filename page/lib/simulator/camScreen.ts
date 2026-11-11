@@ -11,6 +11,7 @@
 // 5. Big Santa Cookie Break (Landed 4-8s): Dedicated close-up scene of bigger size Santa eating cookies by the fireplace
 // 6. Takeoff Climb (Landed 8-12s): Sleigh climbing above rooftops, Rudolph beacon strobe, preparing for warp
 // 7. Kraków Finale Hold (Dec 24 Stop 12): Bazylika Mariacka spires silhouette, celebratory fireworks & banner
+// 8. Santa Chilling Out (Off-Season outside Dec 01-24): North Pole workshop relaxation, cozy armchair, Rudolph, countdown to Dec 1
 //
 // Zero dynamic heap allocations in active frame render loop.
 // ============================================================================
@@ -25,7 +26,15 @@ import {
   top_right,
 } from "./M5Constants";
 import { computeSantaMetrics } from "../telemetry/santa-metrics";
-import { TelemetryState, SimulatorAppState, SEC_PER_CITY } from "./iotAppLogic";
+import {
+  TelemetryState,
+  SimulatorAppState,
+  SEC_PER_CITY_DEMO,
+  FLIGHT_DURATION_DEMO,
+  SEC_PER_CITY_REAL,
+  FLIGHT_DURATION_REAL,
+  formatEta,
+} from "./iotAppLogic";
 
 const SCREEN_WIDTH = 240;
 const SCREEN_HEIGHT = 135;
@@ -1018,6 +1027,159 @@ export interface CamRenderOptions {
 }
 
 // ============================================================================
+// MODE 8: OFF-SEASON SANTA CHILLING OUT (Dedicated Vacation / Resting Scene)
+// ============================================================================
+
+function drawSantaChillingScene(
+  canvas: M5CanvasSim,
+  nowSec: number,
+  nowMs: number,
+  daysUntilAdvent: number
+): void {
+  // 1. Dark Polar Night Background (y = 14..119)
+  canvas.fillRect(0, 14, SCREEN_WIDTH, 106, COLOR_SKY_MIDNIGHT);
+
+  // 2. Parquet Floor (y = 108..119)
+  canvas.fillRect(0, 108, SCREEN_WIDTH, 12, 0x4180); // Dark oak floor
+  canvas.drawFastHLine(0, 108, SCREEN_WIDTH, 0x2940); // Baseboard divider
+  for (let px = 0; px < SCREEN_WIDTH; px += 24) {
+    canvas.drawFastVLine(px, 109, 11, 0x2940); // Floor plank lines
+  }
+
+  // 3. Wooden Wall Planks on Left (x = 0..122, y = 14..107)
+  canvas.fillRect(0, 14, 122, 94, 0x5a23); // Warm pine workshop wall
+  for (let wy = 14; wy < 108; wy += 14) {
+    canvas.drawFastHLine(0, wy, 122, 0x3980); // Horizontal wood plank grooves
+  }
+
+  // 4. Workshop Window to Polar Sky on Right (x = 124..234, y = 16..88)
+  canvas.fillRect(124, 16, 112, 72, 0x6180); // Outer wooden window casing
+  canvas.fillRect(128, 20, 104, 64, 0x0825); // Polar night window pane
+  canvas.fillRect(122, 85, 116, 5, 0x8280);  // Snowy wooden windowsill
+  canvas.fillRect(124, 84, 112, 2, COLOR_SNOW); // Layer of fresh snow on sill
+
+  // Sparkling Polar Stars outside window
+  const starCoords = [
+    [135, 26], [152, 34], [178, 24], [195, 38], [215, 28],
+    [142, 52], [168, 62], [205, 58], [222, 44],
+  ];
+  for (let i = 0; i < starCoords.length; i++) {
+    const [sx, sy] = starCoords[i];
+    const sBlink = (Math.floor(nowSec * 3 + i) % 3) !== 0;
+    canvas.drawPixel(sx, sy, sBlink ? TFT_WHITE : COLOR_GOLD);
+  }
+
+  // Gently Falling Snowflakes outside window
+  for (let sf = 0; sf < 14; sf++) {
+    const sfx = 130 + (((sf * 23 + Math.floor(nowSec * 16)) % 98));
+    const sfy = 21 + (((sf * 17 + Math.floor(nowSec * 22)) % 60));
+    canvas.drawPixel(sfx, sfy, COLOR_SNOW);
+  }
+
+  // Window Panes (Wooden Cross)
+  canvas.drawFastVLine(180, 20, 64, 0x51c0);
+  canvas.drawFastHLine(128, 52, 104, 0x51c0);
+
+  // 5. Cozy Armchair (x = 36..106, y = 52..108)
+  canvas.fillRoundRect(38, 52, 66, 42, 6, COLOR_PINE_NEEDLE);
+  canvas.drawRoundRect(38, 52, 66, 42, 6, COLOR_GOLD);
+  canvas.fillRoundRect(30, 72, 16, 28, 4, COLOR_PINE_NEEDLE);
+  canvas.fillRoundRect(96, 72, 16, 28, 4, COLOR_PINE_NEEDLE);
+  canvas.drawRoundRect(30, 72, 16, 28, 4, COLOR_GOLD);
+  canvas.drawRoundRect(96, 72, 16, 28, 4, COLOR_GOLD);
+  canvas.fillRect(36, 100, 6, 9, 0x3140);
+  canvas.fillRect(100, 100, 6, 9, 0x3140);
+
+  // 7. Big Jolly Santa (Relaxed in Chair)
+  const breathY = Math.round(Math.sin(nowSec * 2.2) * 1.5);
+  const cx = 71;
+
+  // Santa Legs & Slippers
+  canvas.fillRect(52, 92, 16, 10, COLOR_SANTA_RED);
+  canvas.fillRect(74, 92, 16, 10, COLOR_SANTA_RED);
+  canvas.fillRoundRect(48, 99, 20, 8, 3, 0x5180);
+  canvas.fillRoundRect(74, 99, 20, 8, 3, 0x5180);
+  canvas.drawFastHLine(50, 99, 16, TFT_WHITE);
+  canvas.drawFastHLine(76, 99, 16, TFT_WHITE);
+
+  // Santa Torso & Belly (Breathing motion)
+  canvas.fillCircle(cx, 75 + breathY, 19, COLOR_SANTA_RED);
+  canvas.fillRect(cx - 19, 78 + breathY, 38, 14, COLOR_SANTA_RED);
+  canvas.fillRect(cx - 18, 80 + breathY, 36, 6, TFT_BLACK);
+  canvas.fillRect(cx - 6, 79 + breathY, 12, 8, COLOR_GOLD);
+  canvas.fillRect(cx - 3, 81 + breathY, 6, 4, TFT_BLACK);
+
+  // Santa Beard & Face
+  canvas.fillCircle(cx, 63 + breathY, 14, TFT_WHITE);
+  canvas.fillCircle(cx, 55 + breathY, 10, COLOR_SANTA_FACE);
+  canvas.fillCircle(cx - 4, 53 + breathY, 2, TFT_BLACK);
+  canvas.fillCircle(cx + 4, 53 + breathY, 2, TFT_BLACK);
+  canvas.fillCircle(cx, 56 + breathY, 2, COLOR_SANTA_RED);
+  canvas.fillCircle(cx - 7, 57 + breathY, 2, 0xfbe4);
+  canvas.fillCircle(cx + 7, 57 + breathY, 2, 0xfbe4);
+
+  // Cozy tipped-back Santa Nightcap / Hat
+  canvas.fillRect(cx - 12, 45 + breathY, 24, 6, TFT_WHITE);
+  canvas.fillTriangle(cx - 10, 45 + breathY, cx + 10, 45 + breathY, cx + 18, 56 + breathY, COLOR_SANTA_RED);
+  canvas.fillCircle(cx + 19, 57 + breathY, 4, TFT_WHITE);
+
+  // Steaming Mug of Hot Chocolate in Santa's Hand
+  const mugX = 98;
+  const mugY = 70 + breathY;
+  canvas.fillRoundRect(mugX, mugY, 12, 14, 2, COLOR_SANTA_RED);
+  canvas.drawFastVLine(mugX + 12, mugY + 3, 7, COLOR_GOLD);
+  canvas.fillRect(mugX + 2, mugY + 2, 8, 3, 0x4a00);
+  for (let s = 0; s < 3; s++) {
+    const steamOffset = (Math.floor(nowSec * 14 + s * 6) % 18);
+    const sy = mugY - steamOffset;
+    if (sy >= 48 && sy < mugY) {
+      const sx = mugX + 5 + Math.round(Math.sin(nowSec * 4 + s + sy * 0.2) * 3);
+      canvas.drawPixel(sx, sy, TFT_WHITE);
+    }
+  }
+
+  // 8. Sleeping Rudolph on a Braided Rug (x = 146..214, y = 96..112)
+  canvas.fillRoundRect(146, 96, 68, 16, 6, 0x8800);
+  canvas.drawRoundRect(146, 96, 68, 16, 6, COLOR_GOLD);
+
+  canvas.fillCircle(170, 98, 9, COLOR_REINDEER_BROWN);
+  canvas.fillCircle(182, 99, 10, COLOR_REINDEER_BROWN);
+  canvas.fillCircle(162, 94, 6, COLOR_REINDEER_BROWN);
+  canvas.drawFastHLine(159, 94, 3, COLOR_REINDEER_DARK);
+  canvas.drawLine(163, 90, 160, 83, COLOR_ANTLERS);
+  canvas.drawLine(160, 85, 157, 85, COLOR_ANTLERS);
+  canvas.drawLine(165, 90, 167, 83, COLOR_ANTLERS);
+  canvas.drawLine(167, 85, 170, 85, COLOR_ANTLERS);
+  const noseGlow = (Math.sin(nowSec * 2.5) + 1.0) * 0.5;
+  if (noseGlow > 0.6) {
+    canvas.fillCircle(156, 95, 3, COLOR_NOSE_GLOW);
+  }
+  canvas.fillCircle(156, 95, 2, COLOR_NOSE_RED);
+
+  for (let z = 0; z < 3; z++) {
+    const zOffset = (Math.floor(nowSec * 10 + z * 8) % 24);
+    const zy = 88 - zOffset;
+    if (zy > 62) {
+      const zx = 154 - Math.round(zOffset * 0.4);
+      canvas.setTextDatum(top_left);
+      canvas.setTextSize(1);
+      canvas.setTextColor(COLOR_CYAN_BRIGHT, COLOR_SKY_MIDNIGHT);
+      canvas.drawString("z", zx, zy);
+    }
+  }
+
+  // 8. Countdown Display Banner (Under window)
+  canvas.fillRoundRect(134, 60, 92, 22, 4, 0x0821);
+  canvas.drawRoundRect(134, 60, 92, 22, 4, COLOR_CYAN_BRIGHT);
+  canvas.setTextDatum(top_center);
+  canvas.setTextSize(1);
+  canvas.setTextColor(COLOR_AMBER_BRIGHT, 0x0821);
+  canvas.drawString("Do startu:", 180, 63);
+  const daysText = daysUntilAdvent === 1 ? "1 dzien" : `${daysUntilAdvent} dni`;
+  canvas.drawString(daysText, 180, 72);
+}
+
+// ============================================================================
 // SCREEN 3: Side-View Santa Cam
 // ============================================================================
 
@@ -1028,11 +1190,12 @@ export function renderCamScreen(
   nowMs: number,
   options?: CamRenderOptions
 ): void {
-  const totalSimTime = state.cityCount * SEC_PER_CITY;
+  const dur = state.journeyMode === "demo" ? SEC_PER_CITY_DEMO : SEC_PER_CITY_REAL;
+  const totalSimTime = state.cityCount * dur;
   const effectiveSimTime =
     state.simTime >= totalSimTime ? totalSimTime - 0.001 : Math.max(0, state.simTime);
-  const cityIdx = Math.floor(effectiveSimTime / SEC_PER_CITY);
-  const naturalU = Math.max(0, effectiveSimTime - cityIdx * SEC_PER_CITY);
+  const cityIdx = Math.floor(effectiveSimTime / dur);
+  const naturalU = Math.max(0, effectiveSimTime - cityIdx * dur);
   const nowSec = nowMs / 1000.0;
 
   // Resolve forced modes if requested for debugging
@@ -1078,19 +1241,31 @@ export function renderCamScreen(
         isFlight = false;
         isFinale = true;
         break;
+      case 8: // Off-Season Santa Chilling Out
+        u = 0.0;
+        isFlight = false;
+        isFinale = false;
+        break;
     }
   } else {
+    const flightDuration = state.journeyMode === "demo" ? FLIGHT_DURATION_DEMO : FLIGHT_DURATION_REAL;
+    const totalDuration = state.journeyMode === "demo" ? SEC_PER_CITY_DEMO : SEC_PER_CITY_REAL;
     const metricsNatural = computeSantaMetrics(
       state.activeDay,
       telemetry.safeIdx,
       u,
       nowSec,
       telemetry.nextCityName,
-      telemetry.isDay24Finale
+      telemetry.isDay24Finale,
+      flightDuration,
+      totalDuration
     );
     isFlight = metricsNatural.flightPhase !== "DACH" && metricsNatural.flightPhase !== "FINAL";
     isFinale = metricsNatural.flightPhase === "FINAL";
   }
+
+  const flightDuration = state.journeyMode === "demo" ? FLIGHT_DURATION_DEMO : FLIGHT_DURATION_REAL;
+  const totalDuration = state.journeyMode === "demo" ? SEC_PER_CITY_DEMO : SEC_PER_CITY_REAL;
 
   const metrics = computeSantaMetrics(
     state.activeDay,
@@ -1098,10 +1273,12 @@ export function renderCamScreen(
     u,
     nowSec,
     telemetry.nextCityName,
-    isFinale
+    isFinale,
+    flightDuration,
+    totalDuration
   );
 
-  const flightProgress = u / 15.0;
+  const flightProgress = flightDuration > 0 ? u / flightDuration : 1.0;
 
   // 1. Clear Screen with Deep Night Polar Navy (y = 14..119)
   canvas.fillScreen(COLOR_BG_DARK);
@@ -1111,7 +1288,13 @@ export function renderCamScreen(
   // 2. Viewport Scene Dispatch
   // --------------------------------------------------------------------------
 
-  if (isFinale) {
+  if (telemetry.isOffSeason || options?.forcedMode === 8) {
+    // ========================================================================
+    // MODE 8: Off-Season Santa Chilling Out (Vacation at North Pole Workshop)
+    // ========================================================================
+    drawSantaChillingScene(canvas, nowSec, nowMs, telemetry.daysUntilAdvent || 21);
+
+  } else if (isFinale) {
     // ========================================================================
     // MODE 7: Kraków Grand Finale Hold (Bazylika Mariacka & Fireworks)
     // ========================================================================
@@ -1344,8 +1527,13 @@ export function renderCamScreen(
 
   // Active Advent Day Badge
   canvas.setTextDatum(top_right);
-  canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
-  canvas.drawString(`DZIEN ${String(state.activeDay).padStart(2, "0")}`, SCREEN_WIDTH - 4, 3);
+  if (telemetry.isOffSeason || options?.forcedMode === 8) {
+    canvas.setTextColor(COLOR_CYAN_BRIGHT, COLOR_HEADER_BG);
+    canvas.drawString("POZA SEZONEM", SCREEN_WIDTH - 4, 3);
+  } else {
+    canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+    canvas.drawString(`DZIEN ${String(state.activeDay).padStart(2, "0")}`, SCREEN_WIDTH - 4, 3);
+  }
 
   // --------------------------------------------------------------------------
   // 4. Bottom Navigation HUD Bar (y: 120..134, 1:1 Parity with Screens 1 & 2)
@@ -1353,22 +1541,36 @@ export function renderCamScreen(
   canvas.fillRect(0, 120, SCREEN_WIDTH, 15, COLOR_HEADER_BG);
   canvas.drawFastHLine(0, 119, SCREEN_WIDTH, COLOR_BORDER);
 
-  canvas.setTextDatum(top_left);
-  const prefixColor = isFinale ? COLOR_AMBER_BRIGHT : isFlight ? COLOR_CYAN_BRIGHT : COLOR_EMERALD_NEON;
-  const prefixText = isFinale ? "FINAL: " : isFlight ? "CEL: " : "POSTOJ: ";
-  canvas.setTextColor(prefixColor, COLOR_HEADER_BG);
-  canvas.drawString(prefixText, 4, 123);
-
-  const prefixWidth = prefixText.length * 6;
-  canvas.setTextColor(TFT_WHITE, COLOR_HEADER_BG);
-  canvas.drawString(metrics.targetCity, 4 + prefixWidth, 123);
-
-  // ETA Countdown on right
-  canvas.setTextDatum(top_right);
-  canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
-  if (isFinale && metrics.etaSeconds === 0) {
-    canvas.drawString("WIGILIA!", SCREEN_WIDTH - 4, 123);
+  if (telemetry.isOffSeason || options?.forcedMode === 8) {
+    canvas.setTextDatum(top_center);
+    canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+    canvas.drawString("Start 01.12", Math.floor(SCREEN_WIDTH / 2), 123);
   } else {
-    canvas.drawString(`CZAS 0:${String(metrics.etaSeconds).padStart(2, "0")}`, SCREEN_WIDTH - 4, 123);
+    canvas.setTextDatum(top_left);
+    const prefixColor = isFinale
+      ? COLOR_AMBER_BRIGHT
+      : isFlight
+      ? COLOR_CYAN_BRIGHT
+      : COLOR_EMERALD_NEON;
+    const prefixText = isFinale
+      ? "FINAL: "
+      : isFlight
+      ? "CEL: "
+      : "POSTOJ: ";
+    canvas.setTextColor(prefixColor, COLOR_HEADER_BG);
+    canvas.drawString(prefixText, 4, 123);
+
+    const prefixWidth = prefixText.length * 6;
+    canvas.setTextColor(TFT_WHITE, COLOR_HEADER_BG);
+    canvas.drawString(metrics.targetCity, 4 + prefixWidth, 123);
+
+    // ETA Countdown on right
+    canvas.setTextDatum(top_right);
+    canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+    if (isFinale && metrics.stepEtaSeconds === 0) {
+      canvas.drawString("WIGILIA!", SCREEN_WIDTH - 4, 123);
+    } else {
+      canvas.drawString(`ETAP ${formatEta(metrics.stepEtaSeconds)}`, SCREEN_WIDTH - 4, 123);
+    }
   }
 }

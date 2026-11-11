@@ -121,6 +121,9 @@ void ScreenCockpit::render(
 
   float nowSec = (float)nowMs / 1000.0f;
 
+  float flight = (telemetry.mode == MODE_REAL) ? 3600.0f : 15.0f;
+  float dur = (telemetry.mode == MODE_REAL) ? 7200.0f : 30.0f;
+
   SantaCockpitMetrics metrics;
   computeSantaMetrics(
     telemetry.activeDay,
@@ -129,7 +132,10 @@ void ScreenCockpit::render(
     nowSec,
     telemetry.nextCityName,
     telemetry.isDay24Finale,
-    metrics
+    metrics,
+    flight,
+    dur,
+    telemetry.isOffSeason
   );
 
   bool isFlight = (metrics.flightPhase != PHASE_DACH && metrics.flightPhase != PHASE_FINAL);
@@ -161,11 +167,16 @@ void ScreenCockpit::render(
   _canvas->setTextColor(COLOR_CYAN_BRIGHT, COLOR_HEADER_BG);
   _canvas->drawString("KOKPIT MISJI", RADAR_CENTER_X, 3);
 
-  // Active Advent Day
+  // Active Advent Day or POZA SEZONEM
   char dayBuf[16];
-  snprintf(dayBuf, sizeof(dayBuf), "DZIEN %02d", telemetry.activeDay);
+  if (telemetry.isOffSeason) {
+    strncpy(dayBuf, "POZA SEZONEM", sizeof(dayBuf));
+    _canvas->setTextColor(0x07ff, COLOR_HEADER_BG);
+  } else {
+    snprintf(dayBuf, sizeof(dayBuf), "DZIEN %02d", telemetry.activeDay);
+    _canvas->setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+  }
   _canvas->setTextDatum(top_right);
-  _canvas->setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
   _canvas->drawString(dayBuf, SCREEN_WIDTH - 4, 3);
 
   // 3. Flight Dynamics & Gift Payload Box (y: 14..57)
@@ -266,24 +277,41 @@ void ScreenCockpit::render(
   _canvas->fillRect(0, 120, SCREEN_WIDTH, 15, COLOR_HEADER_BG);
   _canvas->drawFastHLine(0, 119, SCREEN_WIDTH, COLOR_BORDER);
 
-  _canvas->setTextDatum(top_left);
-  uint16_t prefixColor = isFinale ? COLOR_AMBER_BRIGHT : (isFlight ? COLOR_CYAN_BRIGHT : COLOR_EMERALD_NEON);
-  const char* prefixText = isFinale ? "FINAL: " : (isFlight ? "CEL: " : "POSTOJ: ");
-  _canvas->setTextColor(prefixColor, COLOR_HEADER_BG);
-  _canvas->drawString(prefixText, 4, 123);
-
-  int prefixWidth = (int)strlen(prefixText) * 6;
-  _canvas->setTextColor(TFT_WHITE, COLOR_HEADER_BG);
-  _canvas->drawString(metrics.targetCity, 4 + prefixWidth, 123);
-
-  // ETA Countdown on right
-  _canvas->setTextDatum(top_right);
-  _canvas->setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
-  if (isFinale && metrics.etaSeconds == 0) {
-    _canvas->drawString("WIGILIA!", SCREEN_WIDTH - 4, 123);
+  if (telemetry.isOffSeason) {
+    _canvas->setTextDatum(top_center);
+    _canvas->setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+    _canvas->drawString("Start 01.12", SCREEN_WIDTH / 2, 123);
   } else {
-    char etaBuf[16];
-    snprintf(etaBuf, sizeof(etaBuf), "CZAS 0:%02d", metrics.etaSeconds);
-    _canvas->drawString(etaBuf, SCREEN_WIDTH - 4, 123);
+    _canvas->setTextDatum(top_left);
+    uint16_t prefixColor = isFinale
+      ? COLOR_AMBER_BRIGHT
+      : (isFlight ? COLOR_CYAN_BRIGHT : COLOR_EMERALD_NEON);
+    const char* prefixText = isFinale
+      ? "FINAL: "
+      : (isFlight ? "CEL: " : "POSTOJ: ");
+    _canvas->setTextColor(prefixColor, COLOR_HEADER_BG);
+    _canvas->drawString(prefixText, 4, 123);
+
+    int prefixWidth = (int)strlen(prefixText) * 6;
+    _canvas->setTextColor(TFT_WHITE, COLOR_HEADER_BG);
+    _canvas->drawString(metrics.targetCity, 4 + prefixWidth, 123);
+
+    // ETA Countdown on right
+    _canvas->setTextDatum(top_right);
+    _canvas->setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+    if (isFinale && metrics.stepEtaSeconds == 0) {
+      _canvas->drawString("WIGILIA!", SCREEN_WIDTH - 4, 123);
+    } else {
+      char etaBuf[24];
+      int h = metrics.stepEtaSeconds / 3600;
+      int m = (metrics.stepEtaSeconds % 3600) / 60;
+      int s = metrics.stepEtaSeconds % 60;
+      if (h > 0) {
+        snprintf(etaBuf, sizeof(etaBuf), "ETAP %d:%02d:%02d", h, m, s);
+      } else {
+        snprintf(etaBuf, sizeof(etaBuf), "ETAP %d:%02d", m, s);
+      }
+      _canvas->drawString(etaBuf, SCREEN_WIDTH - 4, 123);
+    }
   }
 }

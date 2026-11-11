@@ -29,6 +29,25 @@ public:
   int getActiveDay() const { return _activeDay; }
   bool isGrandFinale() const { return _activeDay == 24; }
 
+  // Operating mode (Demo vs Real-Time) with proportional time-scaling
+  void setMode(OperatingMode mode) {
+    if (_mode != mode) {
+      if (mode == MODE_REAL) {
+        _simTime *= (7200.0f / 30.0f);
+      } else {
+        _simTime /= (7200.0f / 30.0f);
+      }
+      _mode = mode;
+    }
+  }
+  OperatingMode getMode() const { return _mode; }
+  void toggleMode() { setMode((_mode == MODE_DEMO) ? MODE_REAL : MODE_DEMO); }
+
+  // Simulated / live calendar date for Real-Time mode
+  void setCalendarDate(int year, int month, int day);
+  bool isOffSeason() const;
+  int getDaysUntilAdvent() const;
+
   // City jumping on current day (Button B: 0 -> 11 -> 0)
   void nextCity();
 
@@ -48,10 +67,11 @@ public:
 
 private:
   JourneyData _data;
+  OperatingMode _mode;
   int _activeDay;
   float _simTime;
   float _speedMultiplier;
-
-  // Quadratic ease-in-out interpolation curve matching web ease()
-  static float easeInOut(float q);
+  int _calYear;
+  int _calMonth;
+  int _calDay;
 };

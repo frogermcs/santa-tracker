@@ -129,20 +129,38 @@ void loop() {
     playChirp(1600, 35);
   }
 
-  // Button A (Front M5) Long Press (>0.6s): Jump to next Advent Day (1 -> 24 -> 1)
+  // Button A (Front M5) Long Press (>0.6s): Jump to next Advent Day (1 -> 24 -> 1 in Demo Mode)
   if (M5.BtnA.wasHold()) {
-    engine.nextDay();
-    playChirp(1900, 70);
+    if (engine.getMode() == MODE_DEMO) {
+      engine.nextDay();
+      playChirp(1900, 70);
+    } else {
+      playChirp(400, 60);
+    }
   }
 
-  // Button B (Top Side) Short Click: Jump to next city on current day (0 -> 11 -> 0)
+  // Button B (Top Side) Short Click: Jump to next city on current day (0 -> 11 -> 0 in Demo Mode)
   if (M5.BtnB.wasClicked()) {
-    engine.nextCity();
-    playChirp(1400, 35);
+    if (engine.getMode() == MODE_DEMO) {
+      engine.nextCity();
+      playChirp(1400, 35);
+    } else {
+      playChirp(400, 60);
+    }
   }
 
-  // Button B (Top Side) Long Press (>0.6s): Toggle Sound (Mute / Unmute)
-  if (M5.BtnB.wasHold()) {
+  // Button PWR (Side) Long Press (>0.6s) or Button B Long Press (>0.6s): Toggle Demo Mode vs Real-Time Mode
+  if (M5.BtnPWR.wasHold() || M5.BtnB.wasHold()) {
+    engine.toggleMode();
+    if (engine.getMode() == MODE_REAL) {
+      playChirp(2100, 80);
+    } else {
+      playChirp(1700, 60);
+    }
+  }
+
+  // Button PWR (Side) Short Click: Toggle Sound (Mute / Unmute)
+  if (M5.BtnPWR.wasClicked()) {
     soundEnabled = !soundEnabled;
     if (soundEnabled) playChirp(2200, 80);
   }

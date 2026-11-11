@@ -53,7 +53,9 @@ struct SantaCockpitMetrics {
   // Tactical mission phase
   char stageTitle[48];            // Headline in tactical box
   char targetCity[24];            // Target or current city name uppercase
-  int etaSeconds;                 // Countdown seconds
+  int etaSeconds;                 // Countdown seconds (overall)
+  int stepEtaSeconds;             // Countdown seconds to next subphase
+  char nextStepName[16];          // Next subphase short label (e.g. "PRZELOT")
 };
 
 // Formats a number with compact suffixes ("2.20B", "110.0M", "105.6k", "42")
@@ -67,5 +69,8 @@ void computeSantaMetrics(
   float nowSec,
   const char* targetName,
   bool isDay24Finale,
-  SantaCockpitMetrics& outMetrics
+  SantaCockpitMetrics& outMetrics,
+  float flightDuration = 15.0f,
+  float totalDuration = 30.0f,
+  bool isOffSeason = false
 );

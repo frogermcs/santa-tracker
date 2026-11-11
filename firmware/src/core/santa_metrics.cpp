@@ -44,9 +44,37 @@ void computeSantaMetrics(
   float nowSec,
   const char* targetName,
   bool isDay24Finale,
-  SantaCockpitMetrics& outMetrics
+  SantaCockpitMetrics& outMetrics,
+  float flightDuration,
+  float totalDuration,
+  bool isOffSeason
 ) {
-  bool isFlight = !isDay24Finale && (u < 15.0f);
+  if (isOffSeason) {
+    outMetrics.machSpeed = 0.0f;
+    strncpy(outMetrics.machDisplay, "M 0.0", sizeof(outMetrics.machDisplay));
+    outMetrics.altitudeM = 65;
+    strncpy(outMetrics.altitudeDisplay, "65 M", sizeof(outMetrics.altitudeDisplay));
+    outMetrics.flightPhase = PHASE_DACH;
+    outMetrics.giftsDelivered = 0;
+    strncpy(outMetrics.giftsDeliveredDisplay, "0", sizeof(outMetrics.giftsDeliveredDisplay));
+    outMetrics.giftRatePerSec = 0;
+    strncpy(outMetrics.giftRateDisplay, "0/s", sizeof(outMetrics.giftRateDisplay));
+    outMetrics.payloadPct = 10;
+    outMetrics.cookiesEaten = 0;
+    strncpy(outMetrics.cookiesEatenDisplay, "0", sizeof(outMetrics.cookiesEatenDisplay));
+    outMetrics.milkLiters = 0;
+    strncpy(outMetrics.milkLitersDisplay, "0 L", sizeof(outMetrics.milkLitersDisplay));
+    strncpy(outMetrics.stageTitle, "SANTA NA URLOPIE", sizeof(outMetrics.stageTitle));
+    strncpy(outMetrics.targetCity, "BIEGUN POLNOCNY", sizeof(outMetrics.targetCity));
+    outMetrics.etaSeconds = 0;
+    outMetrics.stepEtaSeconds = 0;
+    strncpy(outMetrics.nextStepName, "START 01.12", sizeof(outMetrics.nextStepName));
+    return;
+  }
+
+  bool isFlight = !isDay24Finale && (u < flightDuration);
+  float landedDuration = totalDuration - flightDuration;
+  if (landedDuration < 1.0f) landedDuration = 1.0f;
 
   // 1. Flight dynamics (Mach speed and altitude)
   float machSpeed = 0.0f;
@@ -58,7 +86,7 @@ void computeSantaMetrics(
     altitudeM = 219; // Kraków Main Square elevation above sea level
     flightPhase = PHASE_FINAL;
   } else if (isFlight) {
-    float flightProgress = u / 15.0f; // 0.0 .. 1.0 (0..30% Warp, 30..80% Przelot, 80..100% Zniżanie)
+    float flightProgress = flightDuration > 0.0f ? (u / flightDuration) : 1.0f;
     if (flightProgress < 0.3f) {
       flightPhase = PHASE_START;
       float p = flightProgress / 0.3f;
@@ -115,7 +143,7 @@ void computeSantaMetrics(
       giftsDelivered = previousStopsGifts;
       giftRatePerSec = 0;
     } else {
-      float progress = (u - 15.0f) / 15.0f;
+      float progress = (u - flightDuration) / landedDuration;
       if (progress < 0.0f) progress = 0.0f;
       if (progress > 1.0f) progress = 1.0f;
       giftsDelivered = previousStopsGifts + (uint64_t)(currentStopGifts * progress);
@@ -132,7 +160,7 @@ void computeSantaMetrics(
       giftsDelivered = previousStopsGifts;
       giftRatePerSec = 0;
     } else {
-      float progress = (u - 15.0f) / 15.0f;
+      float progress = (u - flightDuration) / landedDuration;
       if (progress < 0.0f) progress = 0.0f;
       if (progress > 1.0f) progress = 1.0f;
       giftsDelivered = previousStopsGifts + (uint64_t)(currentStopGifts * progress);
@@ -153,7 +181,7 @@ void computeSantaMetrics(
   }
 
   // Payload progress percentage (1..10 segments)
-  float stopFraction = isFlight ? 0.0f : ((u - 15.0f) / 15.0f);
+  float stopFraction = isFlight ? 0.0f : ((u - flightDuration) / landedDuration);
   if (stopFraction > 1.0f) stopFraction = 1.0f;
   int dayProgressPct = isDay24Finale
     ? 100
@@ -209,9 +237,36 @@ void computeSantaMetrics(
 
   if (isDay24Finale) {
     outMetrics.etaSeconds = 0;
+    outMetrics.stepEtaSeconds = 0;
+    strncpy(outMetrics.nextStepName, "WIGILIA!", sizeof(outMetrics.nextStepName));
   } else if (isFlight) {
-    outMetrics.etaSeconds = (int)ceilf(15.0f - u);
+    outMetrics.etaSeconds = (int)ceilf(flightDuration - u);
+    float tWarp = 0.3f * flightDuration;
+    float tStrato = 0.8f * flightDuration;
+    if (u < tWarp) {
+      outMetrics.stepEtaSeconds = (int)ceilf(tWarp - u);
+      strncpy(outMetrics.nextStepName, "PRZELOT", sizeof(outMetrics.nextStepName));
+    } else if (u < tStrato) {
+      outMetrics.stepEtaSeconds = (int)ceilf(tStrato - u);
+      strncpy(outMetrics.nextStepName, "ZNIZANIE", sizeof(outMetrics.nextStepName));
+    } else {
+      outMetrics.stepEtaSeconds = (int)ceilf(flightDuration - u);
+      strncpy(outMetrics.nextStepName, "LADOWANIE", sizeof(outMetrics.nextStepName));
+    }
   } else {
-    outMetrics.etaSeconds = (int)ceilf(30.0f - u);
+    outMetrics.etaSeconds = (int)ceilf(totalDuration - u);
+    float landedU = u - flightDuration;
+    float tGifts = 0.4f * landedDuration;
+    float tCookies = 0.8f * landedDuration;
+    if (landedU < tGifts) {
+      outMetrics.stepEtaSeconds = (int)ceilf(tGifts - landedU);
+      strncpy(outMetrics.nextStepName, "CIASTKA", sizeof(outMetrics.nextStepName));
+    } else if (landedU < tCookies) {
+      outMetrics.stepEtaSeconds = (int)ceilf(tCookies - landedU);
+      strncpy(outMetrics.nextStepName, "WZNOSZENIE", sizeof(outMetrics.nextStepName));
+    } else {
+      outMetrics.stepEtaSeconds = (int)ceilf(landedDuration - landedU);
+      strncpy(outMetrics.nextStepName, "ODLOT", sizeof(outMetrics.nextStepName));
+    }
   }
 }

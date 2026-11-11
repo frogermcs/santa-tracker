@@ -37,8 +37,9 @@ The physical gadget runs on the **M5StickC-Plus SE** (Special Edition, transluce
   * Internal SRAM usage is only 11.0% (35.9 KB / 320 KB), well below the 25% (< 56 KB) safety budget.
 * **Power Management:** 120mAh LiPo battery with AXP192 PMU.
 * **Inputs:**
-  * `Button A` (Front M5 button): Cycles through the 24 Advent Days (1 $\rightarrow$ 24 $\rightarrow$ 1).
-  * `Button B` (Top side button): Cycles Cities on active day (1 $\rightarrow$ 12 $\rightarrow$ 1). Long press toggles audio mute/unmute.
+  * `Button A` (Front M5 button): Short click cycles screens; long press cycles Advent Days (1 $\rightarrow$ 24 $\rightarrow$ 1 in Demo Mode).
+  * `Button B` (Top side button): Short click advances city (Demo Mode).
+  * `Button PWR` (Bottom side button): Short click toggles audio mute/unmute; long press (>0.6s) rotates between Demo Mode and Real-Time Mode. (Button B long press is also supported as an alternate shortcut).
 * **Audio:** Onboard passive piezo buzzer (`M5.Speaker.tone()`).
 * **Hardware Note:** The *SE* model omits the 6-axis IMU (MPU6886). All interactions rely strictly on buttons.
 
@@ -112,8 +113,9 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 | :--- | :--- | :--- | :--- |
 | **Button A Short Click (<0.6s)** | Front `M5` button (click) | Click `M5` Button | **Switch Screen**: 3-screen carousel navigation (`Flight Radar` → `Santa Cockpit` → `Santa Cam` → `Flight Radar`). Instant visual feedback. |
 | **Button A Long Hold (>0.6s)** | Front `M5` button (hold) | Hold `M5` Button (>0.6s) | **Next Day (1–24)**: Cycles through the 24 Advent days (`D01` → `D02` → ... → `D24` → `D01`) with chime confirmation. |
-| **Button B Short Click (<0.6s)** | Top side button (click) | Click Top Side Button | **Next City (1–12)**: Advances Santa to the next city on the active day, placing Santa landed at that city. |
-| **Button B Long Hold (>0.6s)** | Top side button (hold) | Hold Top Side Button (>0.6s) | **Audio Mute / Unmute**: Toggles synthesized retro buzzer chirps and chimes with audio chirp on unmute. |
+| **Button B Short Click (<0.6s)** | Top side button (click) | Click Top Side Button | **Next City (1–12)**: Advances Santa to the next city on the active day in Demo Mode (locked in Real-Time Mode). |
+| **Button PWR Click (<0.6s)** | Bottom side button (click) | Click Bottom Side Button | **Audio Mute / Unmute**: Toggles synthesized retro buzzer chirps and chimes. |
+| **Button PWR Long Hold (>0.6s)** | Bottom side button (hold) | Hold Bottom Side Button (>0.6s) | **Operating Mode Rotate**: Rotates between Demo Mode (30s) and Real-Time Mode (2h). (Also available via Button B long hold). |
 
 ### 4.2. Simulation Rhythm & Speed Ratio
 * **Real-World Itinerary**: 1 hour in transit (flight) + 1 hour in city (stop) = 2 hours per waypoint (12 stops = 24 hours).
@@ -129,8 +131,10 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 | **5** | **Landed** | **Cookie & Milk Break** (`PRZERWA NA CIASTKA I MLEKO`) | $21.0\text{s} - 27.0\text{s}$ | **6.0 s** | 40% of stay | Big Santa close-up, cozy fireplace with oak logs and licking flames, milk glass, cookie and crumbs |
 | **6** | **Landed** | **Takeoff Climb** (`WZNOSZENIE`) | $27.0\text{s} - 30.0\text{s}$ | **3.0 s** | 20% of stay | Upward takeoff, Christmas trees shrinking in reverse perspective, Rudolph strobe beacon |
 | **7** | **Finale** | **Merry Christmas!** (`WESOŁYCH ŚWIĄT!`, Kraków) | $u \ge 15.0\text{s}$ *(Dec 24)* | **Permanent** | — | Bazylika Mariacka spires silhouette, celebratory fireworks, banner `WESOŁYCH ŚWIĄT!` |
+| **8** | **Off-Season** | **Santa Chilling Out** (`POZA SEZONEM`) | Outside Dec 01–24 | **Continuous** | — | Santa in armchair with warm drink, sleeping Rudolph with glowing nose, countdown banner `Do startu:` / `X dni`, bottom HUD centered `Start 01.12` |
 
 * **Day 24 Grand Finale Hold**: Once Santa lands in Kraków (#288 at $u = 15.0\text{s}$ on Stop 12), Santa remains landed in Kraków indefinitely (`FINAŁ: KRAKOW 🎁`), never prematurely wrapping back to the Pacific.
+* **Off-Season Behavior**: Outside December 01–24 in Real-Time Mode, Santa rests at the North Pole workshop (`90° N, 0° E`), all screens display `POZA SEZONEM` with a centered `Start 01.12` bottom stripe, and Screen 3 displays the Mode 8 relaxation storyboard.
 
 ---
 
@@ -251,20 +255,23 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
    * Disables the ESP32 Wi-Fi radio (`WiFi.mode(WIFI_OFF)`) ~5 seconds after NTP clock synchronization.
    * Drops active power consumption from ~140mA to ~40mA and eliminates 2.4 GHz RF emissions next to the laptop USB port.
 
-### 6.6. Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (UPCOMING 🎯)
+### 6.6. Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (COMPLETE ✅)
 
 1. **Dual Operating Engine (`MODE_DEMO` vs `MODE_REAL`):**
    * **Interactive Demo Mode:** Fast-paced preview with 30s cadence (`secPerCity = 30.0s`, 15s flight + 15s stay) and manual Button A/B day/city jumping for demonstrations anytime.
    * **Real Advent Mode:** Live clock-driven schedule from Dec 1 00:00 UTC through Dec 24 24:00 UTC with 2-hour cadence per stop (1 hour transit flight + 1 hour city stay) across all 12 daily stops.
-   * Proportional scaling of the 7 Santa Cam and Cockpit sub-phases (30%/50%/20% flight and 40%/40%/20% landed dwell).
-   * Pre-Advent countdown view displayed when powered on prior to December 1st.
+   * Proportional scaling of the Santa Cam and Cockpit sub-phases (30%/50%/20% flight and 40%/40%/20% landed dwell).
+   * Linear transit progress interpolation ($p = u / \text{flight}$) maintaining continuous movement.
+   * Pre-Advent / Off-Season chilling view (Mode 8) displayed when powered on outside December 01–24.
    * Day 24 Kraków Grand Finale permanent arrival lock after 22:00-23:00 UTC.
 2. **ESP32 Hardware RTC (BM8563) & "Burst & Sleep" NTP Daemon:**
    * Uses onboard BM8563 I2C Real-Time Clock (`M5.Rtc`) backed by battery.
    * Connects to Wi-Fi on boot and every 12–24h for a brief 2–4 second burst, syncs UTC time via NTP (`configTzTime`), writes to BM8563, and powers off the Wi-Fi radio (`WiFi.mode(WIFI_OFF)`) to drop power to ~40mA.
 3. **Hardware & Web Mode Switching:**
-   * Long-press Button A on boot toggles between Demo Mode and Real Advent Mode on-device without a computer.
-   * Web living specification emulator on `/` includes an interactive Advent Date/Time scrubber for rapid scenario verification.
+   * Long-press Button B (>0.6s) toggles between Demo Mode and Real Advent Mode on-device without a computer with audio chirp and toast.
+   * Short-press Button PWR toggles audio mute/unmute.
+   * Web living specification emulator on `/` includes interactive Advent Date/Time simulation presets (`Dzisiaj / Urlop`, `01 Gru`, `15 Gru`, `24 Gru`).
+   * Scene Debugger on `/scene-debugging` expanded with dedicated Mode 8 support.
 
 ---
 
@@ -274,11 +281,11 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 * **Milestone 2 (COMPLETE ✅):** Context-Aware Multi-Screen Expansion:
   * Screen 1: World Aviation Radar.
   * Screen 2: Flight Telemetry / Cockpit Dashboard (Modern Glass Cockpit).
-  * Screen 3: Side-View Santa Cam (7-scene pixel art engine).
+  * Screen 3: Side-View Santa Cam (8-scene pixel art engine).
   * 3-screen circular carousel navigation across Web & Hardware.
 * **Milestone 3A (COMPLETE ✅):** Pure Web Installer for IoT (ESP Web Tools flashing on `/install` route, automated binary packaging pipeline, browser capability guard).
 * **Milestone 3B (COMPLETE ✅):** In-Browser Wi-Fi Setup & NTP Provisioning (Improv Wi-Fi Serial & Flash NVS persistence, zero-delay boot, micro dot status indicator, contextual pop-up toasts, Burst & Sleep power management).
-* **Milestone 4 (UPCOMING 🎯):** Dual-Mode Journey Engine & RTC / NTP Time Synchronization (Demo vs Real 2h cadence, BM8563 RTC, Burst & Sleep NTP).
+* **Milestone 4 (COMPLETE ✅):** Dual-Mode Journey Engine & RTC / NTP Time Synchronization (Demo 30s vs Real 2h cadence, BM8563 RTC, Burst & Sleep NTP, Off-Season Mode 8).
 * **Milestone 5 (FUTURE 🎄):** Hardware Polish & Festive Packaging (Audio jingles, 3D-printed dock, kid's flight log).
 
 

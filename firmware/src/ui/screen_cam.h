@@ -45,6 +45,7 @@ private:
   void drawStationarySnowyRooftop(float chimneySmokeY);
   void drawKrakowBasilica(int x, int baseY);
   void drawBigSantaCookieBreak(float nowSec, unsigned long nowMs);
+  void drawSantaChillingScene(float nowSec, unsigned long nowMs, int daysUntilAdvent);
   void drawParallaxStars(float nowSec);
   void drawStratosphericStars(float nowSec);
   void drawCurvedEarthGlobe(float nowSec);

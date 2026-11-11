@@ -182,8 +182,8 @@ void test_day24_krakow_grand_finale_lock(void) {
   TEST_ASSERT_EQUAL_STRING("KRAKOW", sPermanent.nextCityName);
 }
 
-// Test 7: Validate Trajectory Interpolation and easeInOut curve
-void test_trajectory_ease_interpolation(void) {
+// Test 7: Validate Trajectory Interpolation and linear equal progression curve
+void test_trajectory_linear_interpolation(void) {
   JourneyEngine engine;
   engine.init(24); // Day 24
   const JourneyData& jd = engine.getJourneyData();
@@ -199,9 +199,18 @@ void test_trajectory_ease_interpolation(void) {
   TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[0].lon, t0.santaLon);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[0].lat, t0.santaLat);
 
-  // Advance 7.5 seconds (halfway through 15.0s flight phase, u = 7.5s, u/15 = 0.5)
-  // easeInOut(0.5) = 2 * (0.5)^2 = 0.5 (exact halfway point!)
-  engine.update(7.5f);
+  // Advance 3.75 seconds (25% through 15.0s flight phase, u = 3.75s, u/15 = 0.25)
+  // Linear equal progression: p = 0.25 (moves equally in Hyper-Warp)
+  engine.update(3.75f);
+  TelemetryState tQuarter = engine.getTelemetry();
+  TEST_ASSERT_TRUE(tQuarter.isFlightPhase);
+  float expectedQuarterLon = jd.cities[0].lon + (jd.cities[1].lon - jd.cities[0].lon) * 0.25f;
+  float expectedQuarterLat = jd.cities[0].lat + (jd.cities[1].lat - jd.cities[0].lat) * 0.25f;
+  TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedQuarterLon, tQuarter.santaLon);
+  TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedQuarterLat, tQuarter.santaLat);
+
+  // Advance another 3.75 seconds (halfway through 15.0s flight phase, u = 7.5s, u/15 = 0.5)
+  engine.update(3.75f);
   TelemetryState tMid = engine.getTelemetry();
   TEST_ASSERT_TRUE(tMid.isFlightPhase);
   float expectedMidLon = jd.cities[0].lon + (jd.cities[1].lon - jd.cities[0].lon) * 0.5f;
@@ -691,6 +700,99 @@ void test_improv_async_timeout_failure(void) {
   TEST_ASSERT_TRUE(handler.checkJustFailed());
 }
 
+void test_real_mode_manual_jumping_disabled(void) {
+  JourneyEngine engine;
+  engine.init(10);
+  engine.setMode(MODE_REAL);
+
+  // In Real-Time mode, nextCity() and nextDay() must be ignored
+  TelemetryState initial = engine.getTelemetry();
+  engine.nextCity();
+  TelemetryState afterCity = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(initial.safeIdx, afterCity.safeIdx);
+
+  engine.nextDay();
+  TEST_ASSERT_EQUAL_INT(10, engine.getActiveDay());
+
+  // Switching back to Demo Mode restores manual skipping
+  engine.setMode(MODE_DEMO);
+  engine.nextCity();
+  TelemetryState afterDemoCity = engine.getTelemetry();
+  TEST_ASSERT_NOT_EQUAL(initial.safeIdx, afterDemoCity.safeIdx);
+}
+
+void test_real_mode_linear_trajectory_progress(void) {
+  JourneyEngine engine;
+  engine.init(24);
+  engine.setCalendarDate(2026, 12, 24); // Active Advent Window
+  engine.setMode(MODE_REAL);
+  const JourneyData& jd = engine.getJourneyData();
+
+  // In Real-Time mode, each stop is 7200s (3600s flight, 3600s landed stay).
+  // At initialization, simTime = 3600s (landed at stop 0).
+  // Advance 3600s to finish stop 0 landed stay, entering stop 1 transit flight at t = 7200s (u = 0s).
+  engine.update(3600.0f);
+  TelemetryState t0 = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(1, t0.safeIdx);
+  TEST_ASSERT_TRUE(t0.isFlightPhase);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[0].lon, t0.santaLon);
+
+  // 15 minutes (900s) = 25% through 3600s flight (Warp phase)
+  // Constant linear progress guarantees Santa is exactly 25% along the path
+  engine.update(900.0f);
+  TelemetryState t25 = engine.getTelemetry();
+  TEST_ASSERT_TRUE(t25.isFlightPhase);
+  float expectedLon25 = jd.cities[0].lon + (jd.cities[1].lon - jd.cities[0].lon) * 0.25f;
+  TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedLon25, t25.santaLon);
+
+  // 30 minutes (1800s) = 50% through flight (Stratosphere phase)
+  engine.update(900.0f);
+  TelemetryState t50 = engine.getTelemetry();
+  TEST_ASSERT_TRUE(t50.isFlightPhase);
+  float expectedLon50 = jd.cities[0].lon + (jd.cities[1].lon - jd.cities[0].lon) * 0.50f;
+  TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedLon50, t50.santaLon);
+
+  // 45 minutes (2700s) = 75% through flight (Stratosphere phase)
+  engine.update(900.0f);
+  TelemetryState t75 = engine.getTelemetry();
+  TEST_ASSERT_TRUE(t75.isFlightPhase);
+  float expectedLon75 = jd.cities[0].lon + (jd.cities[1].lon - jd.cities[0].lon) * 0.75f;
+  TEST_ASSERT_FLOAT_WITHIN(0.05f, expectedLon75, t75.santaLon);
+
+  // 60 minutes (3600s) = 100% arrival at Stop 1 (Bethlehem)
+  engine.update(900.0f);
+  TelemetryState t100 = engine.getTelemetry();
+  TEST_ASSERT_FALSE(t100.isFlightPhase);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, jd.cities[1].lon, t100.santaLon);
+}
+
+void test_real_mode_off_season_chilling_out(void) {
+  JourneyEngine engine;
+  engine.init(1);
+  engine.setMode(MODE_REAL);
+
+  // Simulate November 10th (Outside Dec 01-24)
+  engine.setCalendarDate(2026, 11, 10);
+  TEST_ASSERT_TRUE(engine.isOffSeason());
+  TEST_ASSERT_EQUAL_INT(21, engine.getDaysUntilAdvent());
+
+  TelemetryState tOff = engine.getTelemetry();
+  TEST_ASSERT_TRUE(tOff.isOffSeason);
+  TEST_ASSERT_EQUAL_INT(21, tOff.daysUntilAdvent);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, tOff.santaLon);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 90.0f, tOff.santaLat);
+  TEST_ASSERT_EQUAL_STRING("BIEGUN POLNOCNY", tOff.nextCityName);
+  TEST_ASSERT_EQUAL_STRING("START 01.12", tOff.nextStepName);
+
+  // Simulate December 1st (Active Advent Launch)
+  engine.setCalendarDate(2026, 12, 1);
+  TEST_ASSERT_FALSE(engine.isOffSeason());
+  TEST_ASSERT_EQUAL_INT(0, engine.getDaysUntilAdvent());
+
+  TelemetryState tActive = engine.getTelemetry();
+  TEST_ASSERT_FALSE(tActive.isOffSeason);
+}
+
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_default_journey_parsing);
@@ -699,7 +801,7 @@ int main(void) {
   RUN_TEST(test_day_cycling_btn_a);
   RUN_TEST(test_city_jumping_btn_b);
   RUN_TEST(test_day24_krakow_grand_finale_lock);
-  RUN_TEST(test_trajectory_ease_interpolation);
+  RUN_TEST(test_trajectory_linear_interpolation);
   RUN_TEST(test_eta_countdown_progression);
   RUN_TEST(test_normal_day_looping_without_hold);
   RUN_TEST(test_day_switch_state_isolation);
@@ -718,5 +820,8 @@ int main(void) {
   RUN_TEST(test_improv_rpc_wifi_settings_unwrapping);
   RUN_TEST(test_improv_burst_and_sleep_cycle);
   RUN_TEST(test_improv_async_timeout_failure);
+  RUN_TEST(test_real_mode_manual_jumping_disabled);
+  RUN_TEST(test_real_mode_linear_trajectory_progress);
+  RUN_TEST(test_real_mode_off_season_chilling_out);
   return UNITY_END();
 }
