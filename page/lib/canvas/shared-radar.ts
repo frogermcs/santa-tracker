@@ -14,6 +14,7 @@
  */
 
 import { drawBitmapText } from "./glcd-font";
+import { formatEta } from "../simulator/iotAppLogic";
 
 export interface RadarWaypoint {
   name: string;
@@ -273,7 +274,7 @@ export function renderSharedRadar(
   const targetLabel = isFinalArrival ? "FINAŁ: " + nextCityName : isFlightPhase ? "CEL: " + nextCityName : "POSTÓJ: " + nextCityName;
   text(targetLabel, 4, 124, isFinalArrival ? "#ffd54a" : "#7dff9b");
   text(
-    isFinalArrival ? "WIGILIA!" : "CZAS 0:" + String(Math.max(0, etaSeconds)).padStart(2, "0"),
+    isFinalArrival ? "WIGILIA!" : "CZAS " + formatEta(etaSeconds),
     W - 4,
     124,
     "#ffd54a",

@@ -20,6 +20,7 @@ import {
   simulateWifiDisconnect,
   triggerWifiToast,
   formatNtpTime,
+  formatEta,
 } from "@/lib/simulator/iotAppLogic";
 
 describe("M5Canvas Simulator Parity Tests", () => {
@@ -191,7 +192,7 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(state.activeDay).toBe(2);
     });
 
-    it("jumps to next city on Button B click and lands immediately", () => {
+    it("jumps to next city on Button B click and lands immediately in Demo Mode", () => {
       const state = setup(0);
       expect(state.simTime).toBe(15.0); // Stop 1 landed (u = 15.0)
 
@@ -200,15 +201,72 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(state.simTime).toBe(45.0);
     });
 
-    it("toggles sound on Button B long hold", () => {
+    it("disables manual city and day jumping in Real-Time Mode to preserve clock synchronization", () => {
       const state = setup(0);
+      state.journeyMode = "real";
+      state.simTime = 1200.0;
+      state.activeDay = 24;
+
+      // Button B press in real-time mode: city jump is ignored, only normal dtSec (0.016s) advances
+      update(state, { ...noButtons, wasPressedB: true }, 16, 16);
+      expect(state.simTime).toBeCloseTo(1200.016, 2);
+      expect(state.lastAction).toBe("CZAS RZECZYWISTY: MIASTO ZABLOKOWANE");
+      expect(state.toastType).toBe("offline");
+
+      // Button A long hold in real-time mode
+      update(state, { ...noButtons, wasHoldA: true }, 16, 32);
+      expect(state.activeDay).toBe(24); // Day jump ignored!
+      expect(state.lastAction).toBe("CZAS RZECZYWISTY: DZIEN ZABLOKOWANY");
+    });
+
+    it("toggles operating mode on Button PWR long hold or Button B long hold, and toggles sound on Button PWR click", () => {
+      const state = setup(0);
+      expect(state.journeyMode).toBe("demo");
       expect(state.soundEnabled).toBe(true);
 
-      update(state, { ...noButtons, wasHoldB: true }, 16, 16);
+      // Button PWR long hold: switches Demo -> Real
+      update(state, { ...noButtons, wasHoldPWR: true }, 16, 16);
+      expect(state.journeyMode).toBe("real");
+      expect(state.toastType).toBe("connected");
+      expect(state.lastAction).toContain("CZAS RZECZYWISTY");
+
+      // Button PWR long hold again: switches Real -> Demo
+      update(state, { ...noButtons, wasHoldPWR: true }, 16, 32);
+      expect(state.journeyMode).toBe("demo");
+      expect(state.lastAction).toContain("DEMO");
+
+      // Button B long hold also switches Demo -> Real
+      update(state, { ...noButtons, wasHoldB: true }, 16, 48);
+      expect(state.journeyMode).toBe("real");
+
+      // Button PWR click: toggles sound
+      update(state, { ...noButtons, wasPressedPWR: true }, 16, 64);
       expect(state.soundEnabled).toBe(false);
+      expect(state.lastAction).toBe("DZWIEK: WYL");
 
-      update(state, { ...noButtons, wasHoldB: true }, 16, 32);
+      update(state, { ...noButtons, wasPressedPWR: true }, 16, 80);
       expect(state.soundEnabled).toBe(true);
+      expect(state.lastAction).toBe("DZWIEK: WL");
+    });
+
+    it("activates Off-Season Chilling Out when in Real-Time Mode outside Dec 01-24", () => {
+      const state = setup(0);
+      state.journeyMode = "real";
+
+      // Simulated date: November 10th (Outside Dec 01-24)
+      state.simulatedRealDate = new Date(2026, 10, 10, 12, 0, 0); // Month 10 is November in JS (0-indexed)
+      const tOffSeason = getTelemetry(state);
+      expect(tOffSeason.isOffSeason).toBe(true);
+      expect(tOffSeason.santaLon).toBe(0.0);
+      expect(tOffSeason.santaLat).toBe(90.0);
+      expect(tOffSeason.nextCityName).toBe("BIEGUN POLNOCNY");
+      expect(tOffSeason.daysUntilAdvent).toBe(21); // 21 days until Dec 1st
+
+      // Simulated date: December 15th (Active Advent Season)
+      state.simulatedRealDate = new Date(2026, 11, 15, 14, 0, 0);
+      const tInSeason = getTelemetry(state);
+      expect(tInSeason.isOffSeason).toBe(false);
+      expect(tInSeason.daysUntilAdvent).toBe(0);
     });
 
     it("computes accurate telemetry for 15s transit flight (CEL) and 15s landed stay (POSTOJ)", () => {
@@ -221,6 +279,30 @@ describe("M5Canvas Simulator Parity Tests", () => {
       expect(tFlight.nextCityName).toBe("GISBORNE");
       expect(tFlight.etaSeconds).toBe(10); // 15 - 5 = 10s remaining in flight
       expect(tFlight.u).toBe(5.0);
+
+      // At u = 5.0s (1/3 of 15s flight), linear interpolation ensures progress is exactly 1/3 (p = 5/15)
+      const prevLon = state.cities[0].lon;
+      const currLon = state.cities[0].lon; // for stop 0 prevIdx is 0
+      // Advance to stop 1 (simTime = 30s + 3.75s, u = 3.75s = 25% of flight)
+      state.simTime = 33.75;
+      const tQuarter = getTelemetry(state);
+      const expectedLonQuarter =
+        state.cities[0].lon + (state.cities[1].lon - state.cities[0].lon) * 0.25;
+      expect(tQuarter.santaLon).toBeCloseTo(expectedLonQuarter, 2);
+
+      // At u = 7.5s (50% of flight)
+      state.simTime = 37.5;
+      const tHalf = getTelemetry(state);
+      const expectedLonHalf =
+        state.cities[0].lon + (state.cities[1].lon - state.cities[0].lon) * 0.5;
+      expect(tHalf.santaLon).toBeCloseTo(expectedLonHalf, 2);
+
+      // At u = 11.25s (75% of flight)
+      state.simTime = 41.25;
+      const tThreeQuarter = getTelemetry(state);
+      const expectedLonThreeQuarter =
+        state.cities[0].lon + (state.cities[1].lon - state.cities[0].lon) * 0.75;
+      expect(tThreeQuarter.santaLon).toBeCloseTo(expectedLonThreeQuarter, 2);
 
       // At simTime = 18.0s, landed stay phase (u = 18.0 >= 15.0s)
       state.simTime = 18.0;
@@ -548,6 +630,29 @@ describe("M5Canvas Simulator Parity Tests", () => {
       triggerWifiToast(state, "connected", 5000);
       expect(state.toastType).toBe("connected");
       expect(state.toastTimer).toBe(5000);
+    });
+  });
+
+  describe("formatEta helper", () => {
+    it("formats short countdown seconds into M:SS format for demo mode", () => {
+      expect(formatEta(0)).toBe("0:00");
+      expect(formatEta(5)).toBe("0:05");
+      expect(formatEta(12)).toBe("0:12");
+      expect(formatEta(59)).toBe("0:59");
+      expect(formatEta(60)).toBe("1:00");
+    });
+
+    it("formats minutes and seconds accurately for real 2-hour cadence", () => {
+      expect(formatEta(65)).toBe("1:05");
+      expect(formatEta(3554)).toBe("59:14");
+      expect(formatEta(3556)).toBe("59:16");
+      expect(formatEta(3599)).toBe("59:59");
+    });
+
+    it("formats hour-long countdowns into H:MM:SS format", () => {
+      expect(formatEta(3600)).toBe("1:00:00");
+      expect(formatEta(3665)).toBe("1:01:05");
+      expect(formatEta(7200)).toBe("2:00:00");
     });
   });
 });

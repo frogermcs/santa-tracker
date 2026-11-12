@@ -54,8 +54,15 @@ void setup() {
     if (bootTime > 1700000000) {
       struct tm tmBoot;
       localtime_r(&bootTime, &tmBoot);
-      Serial.printf("[RTC] Battery-backed BM8563 restored: %02d:%02d:%02d CET\n",
+      Serial.printf("[RTC] Battery-backed BM8563 restored: %04d-%02d-%02d %02d:%02d:%02d CET\n",
+                    tmBoot.tm_year + 1900, tmBoot.tm_mon + 1, tmBoot.tm_mday,
                     tmBoot.tm_hour, tmBoot.tm_min, tmBoot.tm_sec);
+      engine.syncWallClock(tmBoot.tm_year + 1900, tmBoot.tm_mon + 1, tmBoot.tm_mday,
+                           tmBoot.tm_hour, tmBoot.tm_min, tmBoot.tm_sec);
+      // Intelligent Mode Selection: Default to Real Mode if active Advent season (Dec 1-24)
+      if (tmBoot.tm_mon + 1 == 12 && tmBoot.tm_mday >= 1 && tmBoot.tm_mday <= 24) {
+        engine.setMode(MODE_REAL);
+      }
     }
   }
 
@@ -116,6 +123,19 @@ void loop() {
     playChirp(600, 90);
   }
 
+  // Periodically synchronize engine calendar date and wall clock time (1 Hz)
+  static unsigned long lastClockSync = 0;
+  if (now - lastClockSync >= 1000) {
+    lastClockSync = now;
+    time_t curTime = time(nullptr);
+    if (curTime > 1700000000) {
+      struct tm tmNow;
+      localtime_r(&curTime, &tmNow);
+      engine.syncWallClock(tmNow.tm_year + 1900, tmNow.tm_mon + 1, tmNow.tm_mday,
+                           tmNow.tm_hour, tmNow.tm_min, tmNow.tm_sec);
+    }
+  }
+
   // Advance simulation clock and physics
   engine.update(dt);
 
@@ -129,20 +149,38 @@ void loop() {
     playChirp(1600, 35);
   }
 
-  // Button A (Front M5) Long Press (>0.6s): Jump to next Advent Day (1 -> 24 -> 1)
+  // Button A (Front M5) Long Press (>0.6s): Jump to next Advent Day (1 -> 24 -> 1 in Demo Mode)
   if (M5.BtnA.wasHold()) {
-    engine.nextDay();
-    playChirp(1900, 70);
+    if (engine.getMode() == MODE_DEMO) {
+      engine.nextDay();
+      playChirp(1900, 70);
+    } else {
+      playChirp(400, 60);
+    }
   }
 
-  // Button B (Top Side) Short Click: Jump to next city on current day (0 -> 11 -> 0)
+  // Button B (Top Side) Short Click: Jump to next city on current day (0 -> 11 -> 0 in Demo Mode)
   if (M5.BtnB.wasClicked()) {
-    engine.nextCity();
-    playChirp(1400, 35);
+    if (engine.getMode() == MODE_DEMO) {
+      engine.nextCity();
+      playChirp(1400, 35);
+    } else {
+      playChirp(400, 60);
+    }
   }
 
-  // Button B (Top Side) Long Press (>0.6s): Toggle Sound (Mute / Unmute)
-  if (M5.BtnB.wasHold()) {
+  // Button PWR (Side) Long Press (>0.6s) or Button B Long Press (>0.6s): Toggle Demo Mode vs Real-Time Mode
+  if (M5.BtnPWR.wasHold() || M5.BtnB.wasHold()) {
+    engine.toggleMode();
+    if (engine.getMode() == MODE_REAL) {
+      playChirp(2100, 80);
+    } else {
+      playChirp(1700, 60);
+    }
+  }
+
+  // Button PWR (Side) Short Click: Toggle Sound (Mute / Unmute)
+  if (M5.BtnPWR.wasClicked()) {
     soundEnabled = !soundEnabled;
     if (soundEnabled) playChirp(2200, 80);
   }

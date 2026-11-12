@@ -141,7 +141,7 @@ export default function SceneDebuggingPage() {
   const [selectedDay, setSelectedDay] = useState<number>(DEFAULT_ADVENT_DAY);
   const [isMuted, setIsMuted] = useState<boolean>(true);
 
-  // Active focused scene (null = full live simulation, 1..7 = forced scene mode)
+  // Active focused scene (null = full live simulation, 1..8 = forced scene mode)
   const [focusedMode, setFocusedMode] = useState<CamSceneMode | null>(5); // Default to Big Santa Cookie Break!
   const [focusedProgress, setFocusedProgress] = useState<number>(0.5);
   const [globalPaused, setGlobalPaused] = useState<boolean>(false);
@@ -183,10 +183,10 @@ export default function SceneDebuggingPage() {
   const handleButtonAShortPress = useCallback(() => {
     setIsBtnAPressed(true);
     setTimeout(() => setIsBtnAPressed(false), 200);
-    // Cycle focused mode: 1 -> 2 -> ... -> 7 -> Live -> 1
+    // Cycle focused mode: 1 -> 2 -> ... -> 8 -> Live -> 1
     setFocusedMode((prev) => {
       if (prev === null) return 1;
-      if (prev >= 7) return null;
+      if (prev >= 8) return null;
       return (prev + 1) as CamSceneMode;
     });
     if (!isMuted) buzzer.playTone(1600, 35);
@@ -364,16 +364,20 @@ export default function SceneDebuggingPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-8 relative z-10">
         {/* Top Section: Focused Device & Scene Selector */}
         <section className="flex flex-col items-center justify-center gap-4 bg-[#070e1e]/60 border border-white/10 rounded-2xl p-4 sm:p-6 backdrop-blur-md">
-          <M5StickDevice
-            canvasRef={primaryCanvasRef}
-            onButtonAShortPress={handleButtonAShortPress}
-            onButtonALongPress={handleButtonALongPress}
-            onButtonBShortPress={handleButtonBShortPress}
-            onButtonBLongPress={handleButtonBLongPress}
-            isButtonAPressed={isBtnAPressed}
-            isButtonBPressed={isBtnBPressed}
-            scanlines={false}
-          />
+          <div className="pt-2 sm:pt-4 pb-5 sm:pb-6">
+            <M5StickDevice
+              canvasRef={primaryCanvasRef}
+              onButtonAShortPress={handleButtonAShortPress}
+              onButtonALongPress={handleButtonALongPress}
+              onButtonBShortPress={handleButtonBShortPress}
+              onButtonBLongPress={handleButtonBLongPress}
+              onButtonPWRShortPress={() => setIsMuted((prev) => !prev)}
+              onButtonPWRLongPress={handleButtonBLongPress}
+              isButtonAPressed={isBtnAPressed}
+              isButtonBPressed={isBtnBPressed}
+              scanlines={false}
+            />
+          </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button
@@ -404,18 +408,18 @@ export default function SceneDebuggingPage() {
           </div>
         </section>
 
-        {/* Bottom Section: 7-Scene Multi-Cam Matrix (Side-by-Side Gallery) */}
+        {/* Bottom Section: 8-Scene Multi-Cam Matrix (Side-by-Side Gallery) */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between border-b border-white/10 pb-2">
             <div>
               <h2 className="text-base font-bold font-mono text-white flex items-center gap-2">
                 <Layers className="w-4 h-4 text-cyan-400" />
-                <span>WSZYSTKIE 7 SCEN</span>
+                <span>WSZYSTKIE 8 SCEN</span>
               </h2>
             </div>
           </div>
 
-          {/* Grid of All 7 Scenes */}
+          {/* Grid of All 8 Scenes */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {CAM_SCENE_DEFINITIONS.map((scene) => (
               <SceneCard

@@ -2,7 +2,7 @@
 // iotAppLogic.ts — C++ Firmware Runtime & UI Renderer (1:1 Hardware Parity)
 // ============================================================================
 // Mirrors the exact architecture of M5StickC-Plus firmware:
-// - JourneyEngine (Advent Calendar state, quadratic ease-in-out, Kraków finale)
+// - JourneyEngine (Advent Calendar state, constant linear trajectory progress, Kraków finale)
 // - ScreenRadar (912 land dots, 360-deg sweep beam, breadcrumbs, blip beacon, HUDs)
 // - ScreenCockpit (Aerospace telemetry dashboard, Mach speed, gifts, cookies/milk)
 //
@@ -46,6 +46,7 @@ export interface ButtonEventState {
   wasPressedB: boolean;
   wasHoldB: boolean;
   wasPressedPWR: boolean;
+  wasHoldPWR?: boolean;
 }
 
 export interface Waypoint {
@@ -57,30 +58,38 @@ export interface Waypoint {
 }
 
 export interface TelemetryState {
+  journeyMode: JourneyMode;
   activeDay: number;
   currentCityIdx: number;
   safeIdx: number;
   targetCityIdx: number;
   isFlightPhase: boolean;
   isDay24Finale: boolean;
+  isOffSeason: boolean;
+  daysUntilAdvent: number;
   santaLon: number;
   santaLat: number;
   santaScreenX: number;
   santaScreenY: number;
   nextCityName: string;
   etaSeconds: number;
+  stepEtaSeconds: number;
+  nextStepName: string;
   progressRatio: number;
   u: number;
 }
 
 export type WifiState = "offline" | "connecting" | "connected" | "sleep";
 export type ToastType = "none" | "connected" | "offline";
+export type JourneyMode = "demo" | "real";
 
 export interface SimulatorAppState {
   bootTimeMs: number;
   activeScreen: 0 | 1 | 2; // 0: Radar (Screen 1), 1: Cockpit Dashboard (Screen 2), 2: Santa Cam (Screen 3)
   activeDay: number;   // Advent Day 1..24 (Defaults to Day 24 Grand Finale)
   simTime: number;     // Simulation clock in seconds
+  journeyMode: JourneyMode; // "demo" or "real"
+  simulatedRealDate: Date | null; // Null means live wall-clock
   soundEnabled: boolean;
   speedMultiplier: number;
   cities: Waypoint[];
@@ -98,9 +107,10 @@ const SCREEN_WIDTH = 240;
 const SCREEN_HEIGHT = 135;
 const RADAR_CENTER_X = 120;
 const RADAR_CENTER_Y = 68;
-export const SEC_PER_CITY = 30.0; // 15s transit flight + 15s rooftop stay = 30s total per city (1:1 with 1h flight + 1h stay)
-export const FLIGHT_DURATION = 15.0; // 15s transit flight
-export const LANDED_DURATION = 15.0; // 15s rooftop stay
+export const SEC_PER_CITY_DEMO = 30.0;
+export const FLIGHT_DURATION_DEMO = 15.0;
+export const SEC_PER_CITY_REAL = 7200.0;
+export const FLIGHT_DURATION_REAL = 3600.0;
 
 /**
  * Loads the 12 stops for the active Advent Day from the master schedule.
@@ -116,32 +126,40 @@ export function loadAdventDay(dayNum: number): Waypoint[] {
   }));
 }
 
-export function setDay(state: SimulatorAppState, dayNum: number): void {
+export function setDay(state: SimulatorAppState, dayNum: number, force = false): void {
+  if (state.journeyMode === "real" && !force) {
+    state.toastType = "offline";
+    state.toastTimer = 1800;
+    state.lastAction = "CZAS RZECZYWISTY: DZIEN ZABLOKOWANY";
+    return;
+  }
   const validDay = Math.max(1, Math.min(24, dayNum));
   state.activeDay = validDay;
   state.cities = loadAdventDay(validDay);
   state.cityCount = state.cities.length;
-  state.simTime = FLIGHT_DURATION; // Start landed at Stop 1 (u = 15.0)
+  const flight = state.journeyMode === "demo" ? FLIGHT_DURATION_DEMO : FLIGHT_DURATION_REAL;
+  state.simTime = flight; // Start landed at first city of new day
   state.lastAction = `DZIEN ${validDay}`;
 }
 
-export function setCityIndex(state: SimulatorAppState, cityIdx: number): void {
+export function setCityIndex(state: SimulatorAppState, cityIdx: number, force = false): void {
   if (state.cityCount === 0) return;
+  if (state.journeyMode === "real" && !force) {
+    state.toastType = "offline";
+    state.toastTimer = 1800;
+    state.lastAction = "CZAS RZECZYWISTY: MIASTO ZABLOKOWANE";
+    return;
+  }
   const safe = ((cityIdx % state.cityCount) + state.cityCount) % state.cityCount;
-  state.simTime = safe * SEC_PER_CITY + FLIGHT_DURATION; // Land immediately at city
+  const dur = state.journeyMode === "demo" ? SEC_PER_CITY_DEMO : SEC_PER_CITY_REAL;
+  const flight = state.journeyMode === "demo" ? FLIGHT_DURATION_DEMO : FLIGHT_DURATION_REAL;
+  state.simTime = safe * dur + flight; // Land immediately at city
   state.lastAction = `MIASTO: ${state.cities[safe]?.name}`;
 }
 
 export function setActiveScreen(state: SimulatorAppState, screen: 0 | 1 | 2): void {
   state.activeScreen = screen;
   state.lastAction = screen === 0 ? "EKRAN: RADAR" : screen === 1 ? "EKRAN: KOKPIT" : "EKRAN: KAMERA";
-}
-
-/**
- * Quadratic ease-in-out matching C++ JourneyEngine::easeInOut()
- */
-function easeInOut(q: number): number {
-  return q < 0.5 ? 2.0 * q * q : 1.0 - Math.pow(-2.0 * q + 2.0, 2.0) / 2.0;
 }
 
 /**
@@ -157,22 +175,68 @@ function projectCoordinates(lon: number, lat: number): [number, number] {
  * Computes telemetry state matching C++ JourneyEngine::getTelemetry()
  */
 export function getTelemetry(state: SimulatorAppState): TelemetryState {
-  const totalSimTime = state.cityCount * SEC_PER_CITY;
+  // In Real-Time mode, check if the current calendar date is within the Dec 01-24 Advent window
+  if (state.journeyMode === "real") {
+    const now = state.simulatedRealDate ?? new Date();
+    const month = now.getMonth() + 1; // 1..12
+    const day = now.getDate();        // 1..31
+    const isAdventSeason = month === 12 && day >= 1 && day <= 24;
+
+    if (!isAdventSeason) {
+      // Off-Season: Santa is chilling out at the North Pole!
+      const targetYear = month === 12 && day > 24 ? now.getFullYear() + 1 : now.getFullYear();
+      const adventStart = new Date(targetYear, 11, 1, 0, 0, 0); // Dec 1 00:00:00
+      const diffMs = Math.max(0, adventStart.getTime() - now.getTime());
+      const daysUntilAdvent = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+      const stepEtaSeconds = Math.floor(diffMs / 1000);
+
+      // Santa rests stationary at the North Pole (90° N, 0° E)
+      const [santaScreenX, santaScreenY] = projectCoordinates(0.0, 90.0);
+
+      return {
+        journeyMode: state.journeyMode,
+        activeDay: 1,
+        currentCityIdx: 0,
+        safeIdx: 0,
+        targetCityIdx: 0,
+        isFlightPhase: false,
+        isDay24Finale: false,
+        isOffSeason: true,
+        daysUntilAdvent,
+        santaLon: 0.0,
+        santaLat: 90.0,
+        santaScreenX,
+        santaScreenY,
+        nextCityName: "BIEGUN POLNOCNY",
+        etaSeconds: stepEtaSeconds,
+        stepEtaSeconds,
+        nextStepName: "START 01.12",
+        progressRatio: 0.0,
+        u: 0.0,
+      };
+    }
+  }
+
+  const dur = state.journeyMode === "demo" ? SEC_PER_CITY_DEMO : SEC_PER_CITY_REAL;
+  const flight = state.journeyMode === "demo" ? FLIGHT_DURATION_DEMO : FLIGHT_DURATION_REAL;
+  const totalSimTime = state.cityCount * dur;
   const effectiveSimTime =
     state.simTime >= totalSimTime ? totalSimTime - 0.001 : Math.max(0, state.simTime);
 
-  const cityIdx = Math.floor(effectiveSimTime / SEC_PER_CITY);
-  const u = Math.max(0, effectiveSimTime - cityIdx * SEC_PER_CITY);
+  const cityIdx = Math.floor(effectiveSimTime / dur);
+  const u = Math.max(0, effectiveSimTime - cityIdx * dur);
 
   const safeIdx = ((cityIdx % state.cityCount) + state.cityCount) % state.cityCount;
   const prevIdx = safeIdx > 0 ? safeIdx - 1 : 0;
 
   const isLastCity = safeIdx === state.cityCount - 1;
   const isDay24Finale =
-    state.activeDay === 24 && isLastCity && (u >= FLIGHT_DURATION || state.simTime >= totalSimTime);
+    state.activeDay === 24 && isLastCity && (u >= flight || state.simTime >= totalSimTime);
 
-  const isFlight = !isDay24Finale && u < FLIGHT_DURATION;
-  const p = isFlight ? easeInOut(u / FLIGHT_DURATION) : 1.0;
+  const isFlight = !isDay24Finale && u < flight;
+  // Constant linear velocity throughout all in-flight subphases (Warp, Stratosphere, Descent)
+  // so progress is equally visible across the entire transit flight (Milestone 4 parity)
+  const p = isFlight ? u / flight : 1.0;
 
   const prevLon = state.cities[prevIdx]?.lon ?? 0;
   const prevLat = state.cities[prevIdx]?.lat ?? 0;
@@ -186,33 +250,70 @@ export function getTelemetry(state: SimulatorAppState): TelemetryState {
 
   let nextCityName = "KRAKOW";
   let etaSeconds = 0;
+  let stepEtaSeconds = 0;
+  let nextStepName = "WIGILIA!";
+
+  const landed = Math.max(1, dur - flight);
 
   if (isDay24Finale) {
     nextCityName = state.cities[safeIdx]?.name ?? "KRAKOW";
     etaSeconds = 0;
+    stepEtaSeconds = 0;
+    nextStepName = "WIGILIA!";
   } else if (isFlight) {
     nextCityName = state.cities[safeIdx]?.name ?? "";
-    etaSeconds = Math.ceil(FLIGHT_DURATION - u);
+    etaSeconds = Math.ceil(flight - u);
+
+    const tWarp = 0.3 * flight;
+    const tStrato = 0.8 * flight;
+    if (u < tWarp) {
+      stepEtaSeconds = Math.ceil(tWarp - u);
+      nextStepName = "PRZELOT";
+    } else if (u < tStrato) {
+      stepEtaSeconds = Math.ceil(tStrato - u);
+      nextStepName = "ZNIZANIE";
+    } else {
+      stepEtaSeconds = Math.ceil(flight - u);
+      nextStepName = "LADOWANIE";
+    }
   } else {
     nextCityName = state.cities[safeIdx]?.name ?? "";
-    etaSeconds = Math.ceil(SEC_PER_CITY - u);
+    etaSeconds = Math.ceil(dur - u);
+
+    const tGifts = flight + 0.4 * landed;
+    const tCookies = flight + 0.8 * landed;
+    if (u < tGifts) {
+      stepEtaSeconds = Math.ceil(tGifts - u);
+      nextStepName = "CIASTKA";
+    } else if (u < tCookies) {
+      stepEtaSeconds = Math.ceil(tCookies - u);
+      nextStepName = "WZNOSZENIE";
+    } else {
+      stepEtaSeconds = Math.ceil(dur - u);
+      nextStepName = "ODLOT";
+    }
   }
 
   const progressRatio = Math.min(1.0, state.simTime / totalSimTime);
 
   return {
+    journeyMode: state.journeyMode,
     activeDay: state.activeDay,
     currentCityIdx: cityIdx,
     safeIdx,
     targetCityIdx: isFlight ? safeIdx : ((safeIdx + 1) % state.cityCount),
     isFlightPhase: isFlight,
     isDay24Finale,
+    isOffSeason: false,
+    daysUntilAdvent: 0,
     santaLon,
     santaLat,
     santaScreenX,
     santaScreenY,
     nextCityName,
     etaSeconds,
+    stepEtaSeconds,
+    nextStepName,
     progressRatio,
     u,
   };
@@ -237,6 +338,21 @@ export function formatNtpTime(d: Date = new Date()): string {
     const minutes = String(d.getMinutes()).padStart(2, "0");
     return `CZAS NTP: ${hours}:${minutes} CET`;
   }
+}
+
+/**
+ * Formats countdown seconds into clean "M:SS" or "H:MM:SS" string for IoT display
+ * e.g. 12s -> "0:12", 3556s -> "59:16", 3600s -> "1:00:00"
+ */
+export function formatEta(etaSeconds: number): string {
+  const safe = Math.max(0, Math.floor(etaSeconds));
+  const h = Math.floor(safe / 3600);
+  const m = Math.floor((safe % 3600) / 60);
+  const s = safe % 60;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 /**
@@ -293,7 +409,9 @@ export function setup(nowMs = 0): SimulatorAppState {
     bootTimeMs: nowMs,
     activeScreen: 0, // Starts on Screen 1: Aviation Radar
     activeDay: initialDay,
-    simTime: FLIGHT_DURATION, // Start landed at first city (Stop 1)
+    journeyMode: "demo",
+    simulatedRealDate: null,
+    simTime: FLIGHT_DURATION_DEMO, // Start landed at first city (Stop 1)
     soundEnabled: true,
     speedMultiplier: 1.0,
     cities,
@@ -339,13 +457,15 @@ export function update(
   }
 
   if (state.cityCount > 0) {
-    const totalSimTime = state.cityCount * SEC_PER_CITY;
+    const dur = state.journeyMode === "demo" ? SEC_PER_CITY_DEMO : SEC_PER_CITY_REAL;
+    const flight = state.journeyMode === "demo" ? FLIGHT_DURATION_DEMO : FLIGHT_DURATION_REAL;
+    const totalSimTime = state.cityCount * dur;
 
     if (state.activeDay === 24) {
       // Day 24 Grand Finale Lock (AGENTS.md Section 5):
-      // On arrival at Kraków (Stop 11 after 12s transit flight), Santa lands and permanently
+      // On arrival at Kraków (Stop 11 after 15s/1h transit flight), Santa lands and permanently
       // locks in the celebration state (FINAŁ: KRAKOW 🎁), never prematurely wrapping back to the Pacific!
-      const krakowArrivalTime = (state.cityCount - 1) * SEC_PER_CITY + FLIGHT_DURATION;
+      const krakowArrivalTime = (state.cityCount - 1) * dur + flight;
       state.simTime += dtSec * state.speedMultiplier;
       if (state.simTime >= krakowArrivalTime) {
         state.simTime = krakowArrivalTime;
@@ -379,37 +499,56 @@ export function update(
 
   // Button A (Front M5) Long Hold (>0.6s): Jump to next Advent Day (1 -> 24 -> 1)
   if (buttons.wasHoldA) {
-    state.activeDay = (state.activeDay % 24) + 1;
-    state.cities = loadAdventDay(state.activeDay);
-    state.cityCount = state.cities.length;
-    state.simTime = FLIGHT_DURATION; // Start landed at first city of new day
-    state.lastAction = `DZIEN ${state.activeDay}`;
+    if (state.journeyMode === "demo") {
+      state.activeDay = (state.activeDay % 24) + 1;
+      state.cities = loadAdventDay(state.activeDay);
+      state.cityCount = state.cities.length;
+      state.simTime = FLIGHT_DURATION_DEMO; // Start landed at first city of new day
+      state.lastAction = `DZIEN ${state.activeDay}`;
+    } else {
+      state.toastType = "offline";
+      state.toastTimer = 1800;
+      state.lastAction = "CZAS RZECZYWISTY: DZIEN ZABLOKOWANY";
+    }
   }
 
   // Button B (Top Side) Short Click: Jump to next city on current day (0 -> 11 -> 0)
   if (buttons.wasPressedB) {
-    if (state.cityCount > 0) {
-      const curIdx = Math.floor(state.simTime / SEC_PER_CITY);
-      const nextIdx = (curIdx + 1) % state.cityCount;
-      state.simTime = nextIdx * SEC_PER_CITY + FLIGHT_DURATION; // Land immediately at next city
-      state.lastAction = `MIASTO: ${state.cities[nextIdx]?.name}`;
+    if (state.journeyMode === "demo") {
+      if (state.cityCount > 0) {
+        const curIdx = Math.floor(state.simTime / SEC_PER_CITY_DEMO);
+        const nextIdx = (curIdx + 1) % state.cityCount;
+        state.simTime = nextIdx * SEC_PER_CITY_DEMO + FLIGHT_DURATION_DEMO; // Land immediately at next city
+        state.lastAction = `MIASTO: ${state.cities[nextIdx]?.name}`;
+      }
+    } else {
+      // In Real-Time mode, manual city skipping is locked to prevent desynchronizing the live schedule
+      state.toastType = "offline";
+      state.toastTimer = 1800;
+      state.lastAction = "CZAS RZECZYWISTY: MIASTO ZABLOKOWANE";
     }
   }
 
-  // Button B (Top Side) Long Hold (>0.6s): Toggle Sound (Mute / Unmute)
-  if (buttons.wasHoldB) {
-    state.soundEnabled = !state.soundEnabled;
-    state.lastAction = state.soundEnabled ? "DZWIEK: WL" : "DZWIEK: WYL";
+  // Button PWR (Side) or Button B (Top Side) Long Hold (>0.6s): Toggle Operating Mode (Demo <-> Real-Time) with proportional scaling
+  if (buttons.wasHoldPWR || buttons.wasHoldB) {
+    const nextMode = state.journeyMode === "demo" ? "real" : "demo";
+    if (nextMode === "real") {
+      state.simTime *= SEC_PER_CITY_REAL / SEC_PER_CITY_DEMO;
+    } else {
+      state.simTime /= SEC_PER_CITY_REAL / SEC_PER_CITY_DEMO;
+    }
+    state.journeyMode = nextMode;
+    state.toastType = "connected";
+    state.toastTimer = 2200;
+    state.lastAction = `TRYB: ${nextMode === "demo" ? "DEMO (30s)" : "CZAS RZECZYWISTY"}`;
   }
 
-  // Button PWR (Side): Reset simulation to Day 24
+  // Button PWR (Side): Toggle Sound (Mute / Unmute)
   if (buttons.wasPressedPWR) {
-    state.activeDay = 24;
-    state.cities = loadAdventDay(24);
-    state.cityCount = state.cities.length;
-    state.simTime = 6.0;
-    state.activeScreen = 0;
-    state.lastAction = "RESET DO DNIA 24";
+    state.soundEnabled = !state.soundEnabled;
+    state.toastType = "connected";
+    state.toastTimer = 1500;
+    state.lastAction = state.soundEnabled ? "DZWIEK: WL" : "DZWIEK: WYL";
   }
 }
 
@@ -611,39 +750,50 @@ function renderRadarScreen(
   canvas.setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
   canvas.drawString("MIKORADAR", RADAR_CENTER_X, 2);
 
-  // Right (x: 236, y: 2): DZIEN <activeDay>
+  // Right (x: 236, y: 2): DZIEN <activeDay> or POZA SEZONEM
   canvas.setTextDatum(top_right);
-  canvas.setTextColor(
-    telemetry.activeDay === 24 ? COLOR_TEXT_GOLD : COLOR_TEXT_GREEN,
-    COLOR_HUD_BG
-  );
-  canvas.drawString(`DZIEN ${telemetry.activeDay}`, SCREEN_WIDTH - 4, 2);
+  if (telemetry.isOffSeason) {
+    canvas.setTextColor(0x07ff, COLOR_HUD_BG); // COLOR_CYAN_BRIGHT
+    canvas.drawString("POZA SEZONEM", SCREEN_WIDTH - 4, 2);
+  } else {
+    canvas.setTextColor(
+      telemetry.activeDay === 24 ? COLOR_TEXT_GOLD : COLOR_TEXT_GREEN,
+      COLOR_HUD_BG
+    );
+    canvas.drawString(`DZIEN ${telemetry.activeDay}`, SCREEN_WIDTH - 4, 2);
+  }
 
   // 9. Bottom HUD Bar (y: 121..135)
   canvas.fillRect(0, 121, SCREEN_WIDTH, 14, COLOR_HUD_BG);
   canvas.drawFastHLine(0, 120, SCREEN_WIDTH, COLOR_GRID);
 
-  // Left (x: 4, y: 124): CEL: <CITY> or POSTOJ: <CITY> or FINAL: KRAKOW
-  canvas.setTextDatum(top_left);
-  if (telemetry.isDay24Finale) {
+  if (telemetry.isOffSeason) {
+    canvas.setTextDatum(top_center);
     canvas.setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
-    canvas.drawString(`FINAL: ${telemetry.nextCityName}`, 4, 124);
-  } else if (telemetry.isFlightPhase) {
-    canvas.setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
-    canvas.drawString(`CEL: ${telemetry.nextCityName}`, 4, 124);
+    canvas.drawString("Start 01.12", RADAR_CENTER_X, 124);
   } else {
-    canvas.setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
-    canvas.drawString(`POSTOJ: ${telemetry.nextCityName}`, 4, 124);
-  }
+    // Left (x: 4, y: 124): CEL: <CITY> or POSTOJ: <CITY> or FINAL: KRAKOW
+    canvas.setTextDatum(top_left);
+    if (telemetry.isDay24Finale) {
+      canvas.setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
+      canvas.drawString(`FINAL: ${telemetry.nextCityName}`, 4, 124);
+    } else if (telemetry.isFlightPhase) {
+      canvas.setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
+      canvas.drawString(`CEL: ${telemetry.nextCityName}`, 4, 124);
+    } else {
+      canvas.setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
+      canvas.drawString(`POSTOJ: ${telemetry.nextCityName}`, 4, 124);
+    }
 
-  // Right (x: 236, y: 124): CZAS 0:<ETA> or WIGILIA!
-  canvas.setTextDatum(top_right);
-  canvas.setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
-  if (telemetry.isDay24Finale) {
-    canvas.drawString("WIGILIA!", SCREEN_WIDTH - 4, 124);
-  } else {
-    const etaStr = `0:${String(telemetry.etaSeconds).padStart(2, "0")}`;
-    canvas.drawString(`CZAS ${etaStr}`, SCREEN_WIDTH - 4, 124);
+    // Right (x: 236, y: 124): ETAP <ETA> or WIGILIA!
+    canvas.setTextDatum(top_right);
+    canvas.setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
+    if (telemetry.isDay24Finale) {
+      canvas.drawString("WIGILIA!", SCREEN_WIDTH - 4, 124);
+    } else {
+      const etaStr = formatEta(telemetry.stepEtaSeconds);
+      canvas.drawString(`ETAP ${etaStr}`, SCREEN_WIDTH - 4, 124);
+    }
   }
 }
 
@@ -772,20 +922,25 @@ function renderCockpitScreen(
   ];
 
   // Calculate detailed telemetry metrics from santa-metrics.ts
-  const totalSimTime = state.cityCount * SEC_PER_CITY;
+  const dur = state.journeyMode === "demo" ? SEC_PER_CITY_DEMO : SEC_PER_CITY_REAL;
+  const totalSimTime = state.cityCount * dur;
   const effectiveSimTime =
     state.simTime >= totalSimTime ? totalSimTime - 0.001 : Math.max(0, state.simTime);
-  const cityIdx = Math.floor(effectiveSimTime / SEC_PER_CITY);
-  const u = Math.max(0, effectiveSimTime - cityIdx * SEC_PER_CITY);
+  const cityIdx = Math.floor(effectiveSimTime / dur);
+  const u = Math.max(0, effectiveSimTime - cityIdx * dur);
   const nowSec = nowMs / 1000.0;
 
+  const flight = state.journeyMode === "demo" ? FLIGHT_DURATION_DEMO : FLIGHT_DURATION_REAL;
   const metrics = computeSantaMetrics(
     state.activeDay,
     telemetry.safeIdx,
     u,
     nowSec,
     telemetry.nextCityName,
-    telemetry.isDay24Finale
+    telemetry.isDay24Finale,
+    flight,
+    dur,
+    telemetry.isOffSeason
   );
 
   const isFlight = metrics.flightPhase !== "DACH" && metrics.flightPhase !== "FINAL";
@@ -810,10 +965,15 @@ function renderCockpitScreen(
   canvas.setTextColor(COLOR_CYAN_BRIGHT, COLOR_HEADER_BG);
   canvas.drawString("KOKPIT MISJI", RADAR_CENTER_X, 3);
 
-  // Active Advent Day
+  // Active Advent Day or POZA SEZONEM
   canvas.setTextDatum(top_right);
-  canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
-  canvas.drawString(`DZIEN ${String(state.activeDay).padStart(2, "0")}`, SCREEN_WIDTH - 4, 3);
+  if (telemetry.isOffSeason) {
+    canvas.setTextColor(0x07ff, COLOR_HEADER_BG);
+    canvas.drawString("POZA SEZONEM", SCREEN_WIDTH - 4, 3);
+  } else {
+    canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+    canvas.drawString(`DZIEN ${String(state.activeDay).padStart(2, "0")}`, SCREEN_WIDTH - 4, 3);
+  }
 
   // 3. Flight Dynamics & Gift Payload Box (y: 14..57)
   canvas.drawFastVLine(120, 14, 43, COLOR_BORDER);
@@ -910,22 +1070,36 @@ function renderCockpitScreen(
   canvas.fillRect(0, 120, SCREEN_WIDTH, 15, COLOR_HEADER_BG);
   canvas.drawFastHLine(0, 119, SCREEN_WIDTH, COLOR_BORDER);
 
-  canvas.setTextDatum(top_left);
-  const prefixColor = isFinale ? COLOR_AMBER_BRIGHT : isFlight ? COLOR_CYAN_BRIGHT : COLOR_EMERALD_NEON;
-  const prefixText = isFinale ? "FINAL: " : isFlight ? "CEL: " : "POSTOJ: ";
-  canvas.setTextColor(prefixColor, COLOR_HEADER_BG);
-  canvas.drawString(prefixText, 4, 123);
-
-  const prefixWidth = prefixText.length * 6;
-  canvas.setTextColor(TFT_WHITE, COLOR_HEADER_BG);
-  canvas.drawString(metrics.targetCity, 4 + prefixWidth, 123);
-
-  // ETA Countdown on right
-  canvas.setTextDatum(top_right);
-  canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
-  if (isFinale && metrics.etaSeconds === 0) {
-    canvas.drawString("WIGILIA!", SCREEN_WIDTH - 4, 123);
+  if (telemetry.isOffSeason) {
+    canvas.setTextDatum(top_center);
+    canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+    canvas.drawString("Start 01.12", Math.floor(SCREEN_WIDTH / 2), 123);
   } else {
-    canvas.drawString(`CZAS 0:${String(metrics.etaSeconds).padStart(2, "0")}`, SCREEN_WIDTH - 4, 123);
+    canvas.setTextDatum(top_left);
+    const prefixColor = isFinale
+      ? COLOR_AMBER_BRIGHT
+      : isFlight
+      ? COLOR_CYAN_BRIGHT
+      : COLOR_EMERALD_NEON;
+    const prefixText = isFinale
+      ? "FINAL: "
+      : isFlight
+      ? "CEL: "
+      : "POSTOJ: ";
+    canvas.setTextColor(prefixColor, COLOR_HEADER_BG);
+    canvas.drawString(prefixText, 4, 123);
+
+    const prefixWidth = prefixText.length * 6;
+    canvas.setTextColor(TFT_WHITE, COLOR_HEADER_BG);
+    canvas.drawString(metrics.targetCity, 4 + prefixWidth, 123);
+
+    // ETA Countdown on right
+    canvas.setTextDatum(top_right);
+    canvas.setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+    if (isFinale && metrics.stepEtaSeconds === 0) {
+      canvas.drawString("WIGILIA!", SCREEN_WIDTH - 4, 123);
+    } else {
+      canvas.drawString(`ETAP ${formatEta(metrics.stepEtaSeconds)}`, SCREEN_WIDTH - 4, 123);
+    }
   }
 }

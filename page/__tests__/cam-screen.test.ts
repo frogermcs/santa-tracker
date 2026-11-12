@@ -165,6 +165,30 @@ describe("ScreenCam (Screen 3 / SCREEN_CAM)", () => {
       expect(strings).not.toContain("FINAL WIGILII: KRAKOW");
       expect(strings).toContain("WIGILIA!");
     });
+
+    it("Mode 8: renders Santa chilling off-season with clean countdown and 'Start 01.12' bottom stripe", () => {
+      const { sim } = createMockCanvas();
+      const drawStringSpy = vi.spyOn(sim, "drawString");
+      const state = setup(0);
+      state.activeScreen = 2;
+      state.journeyMode = "real";
+      const telemetry = {
+        ...getTelemetry(state),
+        isOffSeason: true,
+        daysUntilAdvent: 21,
+      };
+
+      renderCamScreen(sim, state, telemetry, 8000);
+
+      const strings = drawStringSpy.mock.calls.map((c) => c[0]);
+      expect(strings).not.toContain("URLOP MIKOLAJA");
+      expect(strings).not.toContain("Urlop mikolaja");
+      expect(strings.some((s) => s.startsWith("START: 01.12"))).toBe(false);
+      expect(strings).toContain("Do startu:");
+      expect(strings).toContain("21 dni");
+      expect(strings).toContain("Start 01.12");
+      expect(strings).not.toContain("STATUS: BIEGUN POLNOCNY");
+    });
   });
 
   it("safely handles rapid animation ticks across multiple simulated seconds", () => {

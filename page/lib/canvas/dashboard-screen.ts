@@ -13,6 +13,7 @@
 
 import { drawBitmapText } from "./glcd-font";
 import { SantaCockpitMetrics } from "../telemetry/santa-metrics";
+import { formatEta } from "../simulator/iotAppLogic";
 
 const W = 240;
 const H = 135;
@@ -187,7 +188,7 @@ export function renderDashboardScreen(
   if (isFinale && metrics.etaSeconds === 0) {
     countdownText = "WIGILIA!";
   } else {
-    countdownText = `CZAS 0:${String(metrics.etaSeconds).padStart(2, "0")}`;
+    countdownText = `CZAS ${formatEta(metrics.etaSeconds)}`;
   }
   drawBitmapText(ctx, countdownText, 236, 123, COLOR_AMBER_BRIGHT, "right");
 }
@@ -251,10 +252,4 @@ function drawMiniMilkIcon(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.fillRect(x + 2, y, 2, 2); // Szyjka
   ctx.fillStyle = "#38bdf8"; // Etykieta błękitna
   ctx.fillRect(x + 1, y + 4, 4, 2);
-}
-
-function formatEta(sec: number): string {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
 }

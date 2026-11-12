@@ -133,40 +133,58 @@ void ScreenRadar::render(const JourneyData& journey, const TelemetryState& telem
   _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
   _canvas->drawString("MIKORADAR", RADAR_CENTER_X, 2);
 
-  // Right (x: 236, y: 2): DZIEN <activeDay> (Gold on Day 24, Green on Days 1..23)
+  // Right (x: 236, y: 2): DZIEN <activeDay> or POZA SEZONEM
   char dayBuf[16];
-  snprintf(dayBuf, sizeof(dayBuf), "DZIEN %d", telemetry.activeDay);
+  if (telemetry.isOffSeason) {
+    strncpy(dayBuf, "POZA SEZONEM", sizeof(dayBuf));
+    _canvas->setTextColor(0x07ff, COLOR_HUD_BG); // Electric cyan
+  } else {
+    snprintf(dayBuf, sizeof(dayBuf), "DZIEN %d", telemetry.activeDay);
+    _canvas->setTextColor(telemetry.activeDay == 24 ? COLOR_TEXT_GOLD : COLOR_TEXT_GREEN, COLOR_HUD_BG);
+  }
   _canvas->setTextDatum(top_right);
-  _canvas->setTextColor(telemetry.activeDay == 24 ? COLOR_TEXT_GOLD : COLOR_TEXT_GREEN, COLOR_HUD_BG);
   _canvas->drawString(dayBuf, SCREEN_WIDTH - 4, 2);
 
   // 9. Bottom HUD Bar (y: 121..135)
   _canvas->fillRect(0, 121, SCREEN_WIDTH, 14, COLOR_HUD_BG);
   _canvas->drawFastHLine(0, 120, SCREEN_WIDTH, COLOR_GRID);
 
-  // Left (x: 4, y: 124): CEL: <CITY> or POSTOJ: <CITY> or FINAL: KRAKOW
-  char targetBuf[32];
-  if (telemetry.isDay24Finale) {
-    snprintf(targetBuf, sizeof(targetBuf), "FINAL: %s", telemetry.nextCityName);
+  if (telemetry.isOffSeason) {
+    _canvas->setTextDatum(top_center);
     _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
-  } else if (telemetry.isFlightPhase) {
-    snprintf(targetBuf, sizeof(targetBuf), "CEL: %s", telemetry.nextCityName);
-    _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
+    _canvas->drawString("Start 01.12", RADAR_CENTER_X, 124);
   } else {
-    snprintf(targetBuf, sizeof(targetBuf), "POSTOJ: %s", telemetry.nextCityName);
-    _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
-  }
-  _canvas->setTextDatum(top_left);
-  _canvas->drawString(targetBuf, 4, 124);
+    // Left (x: 4, y: 124): CEL: <CITY> or POSTOJ: <CITY> or FINAL: KRAKOW
+    char targetBuf[32];
+    if (telemetry.isDay24Finale) {
+      snprintf(targetBuf, sizeof(targetBuf), "FINAL: %s", telemetry.nextCityName);
+      _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
+    } else if (telemetry.isFlightPhase) {
+      snprintf(targetBuf, sizeof(targetBuf), "CEL: %s", telemetry.nextCityName);
+      _canvas->setTextColor(COLOR_TEXT_GREEN, COLOR_HUD_BG);
+    } else {
+      snprintf(targetBuf, sizeof(targetBuf), "POSTOJ: %s", telemetry.nextCityName);
+      _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
+    }
+    _canvas->setTextDatum(top_left);
+    _canvas->drawString(targetBuf, 4, 124);
 
-  // Right (x: 236, y: 124): CZAS 0:<ETA> or WIGILIA!
-  char etaBuf[16];
-  if (telemetry.isDay24Finale) {
-    strncpy(etaBuf, "WIGILIA!", sizeof(etaBuf));
-  } else {
-    snprintf(etaBuf, sizeof(etaBuf), "CZAS 0:%02d", telemetry.etaSeconds);
+    // Right (x: 236, y: 124): ETAP <ETA> or WIGILIA!
+    char etaBuf[24];
+    if (telemetry.isDay24Finale) {
+      strncpy(etaBuf, "WIGILIA!", sizeof(etaBuf));
+    } else {
+      int h = telemetry.stepEtaSeconds / 3600;
+      int m = (telemetry.stepEtaSeconds % 3600) / 60;
+      int s = telemetry.stepEtaSeconds % 60;
+      if (h > 0) {
+        snprintf(etaBuf, sizeof(etaBuf), "ETAP %d:%02d:%02d", h, m, s);
+      } else {
+        snprintf(etaBuf, sizeof(etaBuf), "ETAP %d:%02d", m, s);
+      }
+    }
+    _canvas->setTextDatum(top_right);
+    _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
+    _canvas->drawString(etaBuf, SCREEN_WIDTH - 4, 124);
   }
-  _canvas->setTextDatum(top_right);
-  _canvas->setTextColor(COLOR_TEXT_GOLD, COLOR_HUD_BG);
-  _canvas->drawString(etaBuf, SCREEN_WIDTH - 4, 124);
 }

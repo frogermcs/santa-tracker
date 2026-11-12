@@ -8,10 +8,14 @@ interface M5StickDeviceProps {
   onButtonALongPress?: () => void;
   onButtonBShortPress?: () => void;
   onButtonBLongPress?: () => void;
+  onButtonPWRShortPress?: () => void;
+  onButtonPWRLongPress?: () => void;
   onButtonAPress?: () => void;
   onButtonBPress?: () => void;
+  onButtonPWRClick?: () => void;
   isButtonAPressed?: boolean;
   isButtonBPressed?: boolean;
+  isButtonPWRPressed?: boolean;
   scanlines?: boolean;
   isTilted?: boolean;
 }
@@ -24,33 +28,46 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
   onButtonALongPress,
   onButtonBShortPress,
   onButtonBLongPress,
+  onButtonPWRShortPress,
+  onButtonPWRLongPress,
   onButtonAPress,
   onButtonBPress,
+  onButtonPWRClick,
   isButtonAPressed = false,
   isButtonBPressed = false,
+  isButtonPWRPressed = false,
   scanlines = true,
   isTilted = false,
 }) => {
   const [isAHolding, setIsAHolding] = useState(false);
   const [isBHolding, setIsBHolding] = useState(false);
+  const [isPWRHolding, setIsPWRHolding] = useState(false);
 
   const timerARef = useRef<NodeJS.Timeout | null>(null);
   const timerBRef = useRef<NodeJS.Timeout | null>(null);
+  const timerPWRRef = useRef<NodeJS.Timeout | null>(null);
 
   const longTriggeredARef = useRef(false);
   const longTriggeredBRef = useRef(false);
+  const longTriggeredPWRRef = useRef(false);
 
   // Clean up timers on unmount
   useEffect(() => {
     return () => {
       if (timerARef.current) clearTimeout(timerARef.current);
       if (timerBRef.current) clearTimeout(timerBRef.current);
+      if (timerPWRRef.current) clearTimeout(timerPWRRef.current);
     };
   }, []);
 
   // Button A Pointer Handlers
   const handlePointerDownA = (e: React.PointerEvent) => {
     e.preventDefault();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
     longTriggeredARef.current = false;
     setIsAHolding(true);
 
@@ -66,6 +83,13 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
 
   const handlePointerUpA = (e: React.PointerEvent) => {
     e.preventDefault();
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
     if (timerARef.current) {
       clearTimeout(timerARef.current);
       timerARef.current = null;
@@ -81,7 +105,14 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
     }
   };
 
-  const handlePointerCancelA = () => {
+  const handlePointerCancelA = (e: React.PointerEvent) => {
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
     if (timerARef.current) {
       clearTimeout(timerARef.current);
       timerARef.current = null;
@@ -93,6 +124,11 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
   // Button B Pointer Handlers
   const handlePointerDownB = (e: React.PointerEvent) => {
     e.preventDefault();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
     longTriggeredBRef.current = false;
     setIsBHolding(true);
 
@@ -108,6 +144,13 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
 
   const handlePointerUpB = (e: React.PointerEvent) => {
     e.preventDefault();
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
     if (timerBRef.current) {
       clearTimeout(timerBRef.current);
       timerBRef.current = null;
@@ -123,7 +166,14 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
     }
   };
 
-  const handlePointerCancelB = () => {
+  const handlePointerCancelB = (e: React.PointerEvent) => {
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
     if (timerBRef.current) {
       clearTimeout(timerBRef.current);
       timerBRef.current = null;
@@ -132,9 +182,68 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
     longTriggeredBRef.current = false;
   };
 
+  // Button PWR Pointer Handlers (Bottom Side)
+  const handlePointerDownPWR = (e: React.PointerEvent) => {
+    e.preventDefault();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    longTriggeredPWRRef.current = false;
+    setIsPWRHolding(true);
+
+    timerPWRRef.current = setTimeout(() => {
+      longTriggeredPWRRef.current = true;
+      if (onButtonPWRLongPress) {
+        onButtonPWRLongPress();
+      }
+    }, LONG_PRESS_THRESHOLD_MS);
+  };
+
+  const handlePointerUpPWR = (e: React.PointerEvent) => {
+    e.preventDefault();
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+    if (timerPWRRef.current) {
+      clearTimeout(timerPWRRef.current);
+      timerPWRRef.current = null;
+    }
+    setIsPWRHolding(false);
+
+    if (!longTriggeredPWRRef.current) {
+      if (onButtonPWRShortPress) {
+        onButtonPWRShortPress();
+      } else if (onButtonPWRClick) {
+        onButtonPWRClick();
+      }
+    }
+  };
+
+  const handlePointerCancelPWR = (e: React.PointerEvent) => {
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+    if (timerPWRRef.current) {
+      clearTimeout(timerPWRRef.current);
+      timerPWRRef.current = null;
+    }
+    setIsPWRHolding(false);
+    longTriggeredPWRRef.current = false;
+  };
+
   return (
     <div
-      className={`relative transition-all duration-300 select-none max-w-full ${
+      className={`relative my-2 sm:my-3 transition-all duration-300 select-none max-w-full ${
         isTilted ? "rotate-[-4deg] scale-[1.02]" : "rotate-0 scale-100"
       }`}
     >
@@ -144,7 +253,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
         onPointerUp={handlePointerUpB}
         onPointerCancel={handlePointerCancelB}
         onPointerLeave={handlePointerCancelB}
-        title="Przycisk B (Górny): Klik = Następne Miasto | Przytrzymaj (>0.6s) = Dźwięk Mute/Unmute"
+        title="Przycisk B (Górny): Klik = Następne Miasto | Przytrzymaj (>0.6s) = Przełącz Tryb (Demo / Realtime)"
         className={`absolute -top-3 sm:-top-3.5 left-16 sm:left-20 w-16 h-3.5 sm:h-4 rounded-t-md z-0 flex items-center justify-center transition-all duration-75 cursor-pointer shadow-md ${
           isButtonBPressed || isBHolding
             ? "translate-y-1 bg-neutral-900 border-t-2 border-orange-500 ring-1 ring-orange-400/50"
@@ -153,6 +262,24 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
       >
         <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold tracking-tight text-amber-200/90 -mt-2 bg-neutral-950/90 px-1 py-0.5 rounded border border-neutral-700 shadow-inner">
           {isBHolding ? "TRZYMAJ..." : "PRZYCISK B"}
+        </span>
+      </button>
+
+      {/* Bottom Side Button (PWR Button - Sound Mute/Unmute & Mode Switch) */}
+      <button
+        onPointerDown={handlePointerDownPWR}
+        onPointerUp={handlePointerUpPWR}
+        onPointerCancel={handlePointerCancelPWR}
+        onPointerLeave={handlePointerCancelPWR}
+        title="Przycisk PWR (Dolny): Klik = Dźwięk | Przytrzymaj (>0.6s) = Przełącz Tryb (Demo / Realtime)"
+        className={`absolute -bottom-3 sm:-bottom-3.5 left-16 sm:left-20 w-20 h-3.5 sm:h-4 rounded-b-md z-0 flex items-center justify-center transition-all duration-75 cursor-pointer shadow-md ${
+          isButtonPWRPressed || isPWRHolding
+            ? "-translate-y-0.5 bg-neutral-900 border-b-2 border-rose-500 ring-1 ring-rose-400/50"
+            : "bg-gradient-to-t from-neutral-700 to-neutral-900 hover:from-neutral-600 border-b border-neutral-500 hover:shadow-rose-500/20"
+        }`}
+      >
+        <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold tracking-tight text-rose-300/90 -mb-2 bg-neutral-950/90 px-1 py-0.5 rounded border border-neutral-700 shadow-inner">
+          {isPWRHolding ? "TRZYMAJ..." : "PRZYCISK PWR"}
         </span>
       </button>
 

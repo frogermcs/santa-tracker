@@ -151,33 +151,39 @@ stateDiagram-v2
 
 ---
 
-## Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (ACTIVE 🎯)
+## Milestone 4: Dual-Mode Journey Engine & RTC / NTP Time Synchronization (COMPLETE ✅)
 
 * **Objective:** Transition the simulation engine to support two distinct operating modes: an interactive fast-paced Demo Mode, and a real-world live Advent Calendar Mode (Dec 1 – Dec 24) driven by the ESP32 hardware RTC (BM8563) and periodic NTP synchronization.
 * **Key Deliverables:**
-  - [ ] **1. Web Living Specification for Dual Clock (`page/lib/simulator/`):**
+  - [x] **1. Web Living Specification for Dual Clock (`page/lib/simulator/`):**
     * Update `iotAppLogic.ts` and `useSimulationClock` to support `MODE_DEMO` vs `MODE_REAL`.
     * In `MODE_REAL`:
       - City schedule driven by real UTC/CET date & time.
       - 2-hour waypoint cadence: **1 hour in-flight transit** + **1 hour landed city dwell**.
-      - Scale the 7 sub-phase scenes proportionally (e.g. Warp 18m, Stratosphere 30m, Descent 12m; Gifts 24m, Cookies 24m, Climb 12m).
-      - Pre-Advent countdown screen displayed if current date < Dec 1st.
+      - Scale the sub-phase scenes proportionally (Warp 18m, Stratosphere 30m, Descent 12m; Gifts 24m, Cookies 24m, Climb 12m).
+      - Off-season chilling mode (Mode 8) displayed when current date is outside Dec 01–24.
       - December 24th Kraków Grand Finale lock after 22:00-23:00 UTC.
-    * Interactive time/date simulator slider on `/` to preview and test any minute of the 24-day Advent journey.
-    * Automated unit test suite (`vitest`) verifying 2-hour cadence, day rollover, and scene math.
-  - [ ] **2. Firmware Hardware RTC & "Burst & Sleep" NTP Client (`firmware/`):**
+    * Linear trajectory progress ($p = u / \text{flight}$) maintaining continuous movement.
+    * Interactive time/date simulation presets (`Dzisiaj / Urlop`, `01 Gru`, `15 Gru`, `24 Gru`) on `/`.
+    * Dedicated Scene Debugger Studio (`/scene-debugging`) expanded with Mode 8.
+    * Automated unit test suite (`vitest`) with 62 unit tests passing (100%).
+  - [x] **2. Firmware Hardware RTC & "Burst & Sleep" NTP Client (`firmware/`):**
     * Initialize onboard **BM8563 I2C RTC** via `M5.Rtc`.
     * "Burst & Sleep" NTP daemon:
       - Wakes Wi-Fi on boot and every 12–24h for a brief 2–4 second burst.
       - Fetches NTP time via `configTzTime()` and writes to BM8563 RTC (`M5.Rtc.setDateTime()`).
       - Immediately powers off Wi-Fi radio (`WiFi.mode(WIFI_OFF)`) to drop power to ~40mA and preserve battery.
-  - [ ] **3. Dual Journey Engine Port (`firmware/src/core/journey_engine.cpp`):**
+  - [x] **3. Dual Journey Engine Port (`firmware/src/core/journey_engine.cpp`):**
     * Engine reads BM8563 hardware RTC in Real Advent Mode.
     * Deterministic mapping: Day of month (1..24) $\rightarrow$ Active Advent Day; Hour ($S \in [0..86400]$) $\rightarrow$ Waypoint ($\lfloor S / 7200 \rfloor$) and Phase ($u = S \pmod{7200}$).
-    * Intelligent Mode Selection: Defaults to Real Mode if Wi-Fi is configured and date is December 1–24; otherwise launches Demo Mode.
-    * Hardware Toggle: Hold Button A during boot to toggle between Demo Mode and Real Advent Mode on-device without a computer.
-  - [ ] **4. Desktop Native Unit Tests (`firmware/test/`):**
-    * 20+ Unity unit tests running under `pio test -e native` verifying RTC time decoding, 2-hour cadence boundaries, and mode switches.
+    * Intelligent Mode Selection: Defaults to Real Mode if RTC/NTP date is December 1–24; otherwise launches Demo Mode.
+    * Hardware Controls:
+      - Hold Button PWR (>0.6s) rotates between Demo Mode and Real Advent Mode with audio chime and toast (Button B hold also supported as alternate).
+      - Short click Button B advances city in Demo Mode (locked in Real-Time Mode).
+      - Short click Button PWR toggles audio mute/unmute.
+      - Short click Button A cycles screens; long hold Button A advances day in Demo Mode (locked in Real-Time Mode).
+  - [x] **4. Desktop Native Unit Tests (`firmware/test/`):**
+    * 29 Unity unit tests running under `pio test -e native` verifying RTC time decoding, 2-hour cadence boundaries, linear transit progression, off-season chilling mode, wall clock synchronization, and mode switches.
 
 ---
 

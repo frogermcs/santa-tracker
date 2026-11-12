@@ -39,6 +39,8 @@ export interface SantaCockpitMetrics {
   stageDetail: string;
   targetCity: string;
   etaSeconds: number;
+  stepEtaSeconds: number;
+  nextStepName: string;
 }
 
 // Rozkład demograficzny prezentów dla 12 regionów Dnia 24 (Suma = dokładnie 2.200.000.000 prezentów)
@@ -60,12 +62,41 @@ const REGIONAL_GIFTS_DAY24 = [
 export function computeSantaMetrics(
   dayNum: number,
   activeIdx: number,
-  u: number, // cykl 0..30s (0..15s przelot, 15..30s pobyt w mieście)
+  u: number, // cykl 0..30s (0..15s przelot, 15..30s pobyt) lub 0..7200s w trybie czasu rzeczywistego
   nowSec: number,
   targetName: string,
-  isDay24Finale: boolean
+  isDay24Finale: boolean,
+  flightDuration = 15.0,
+  totalDuration = 30.0,
+  isOffSeason = false
 ): SantaCockpitMetrics {
-  const isFlight = !isDay24Finale && u < 15.0;
+  if (isOffSeason) {
+    return {
+      machSpeed: 0.0,
+      machDisplay: "M 0.0",
+      altitudeM: 65,
+      altitudeDisplay: "65 M",
+      flightPhase: "DACH",
+      giftsDelivered: 0,
+      giftsDeliveredDisplay: "0",
+      giftRatePerSec: 0,
+      giftRateDisplay: "0/s",
+      payloadPct: 100,
+      cookiesEaten: 0,
+      cookiesEatenDisplay: "0",
+      milkLiters: 0,
+      milkLitersDisplay: "0 L",
+      stageTitle: "SANTA NA URLOPIE",
+      stageDescription: "Święty Mikołaj i renifery odpoczywają na Biegunie Północnym przed startem Adwentu!",
+      stageDetail: "OCZEKIWANIE NA START MISJI",
+      targetCity: "BIEGUN POLNOCNY",
+      etaSeconds: 0,
+      stepEtaSeconds: 0,
+      nextStepName: "START 01.12",
+    };
+  }
+
+  const isFlight = !isDay24Finale && u < flightDuration;
 
   // 1. Dynamika lotu (Prędkość Mach i Pułap w metrach)
   let machSpeed = 0.0;
@@ -77,7 +108,7 @@ export function computeSantaMetrics(
     altitudeM = 219; // Wysokość n.p.m. krakowskiego Rynku
     flightPhase = "FINAL";
   } else if (isFlight) {
-    const flightProgress = u / 15.0; // 0..1 (0..30% Warp, 30..80% Przelot, 80..100% Zniżanie)
+    const flightProgress = flightDuration > 0 ? u / flightDuration : 1.0;
     if (flightProgress < 0.3) {
       flightPhase = "START";
       const p = flightProgress / 0.3;
@@ -99,6 +130,9 @@ export function computeSantaMetrics(
   let giftsDelivered = 0;
   let giftRatePerSec = 0;
   let currentStopGifts = 0;
+  const landedDuration = Math.max(1, totalDuration - flightDuration);
+  const landedU = Math.max(0, u - flightDuration);
+  const landedProgress = Math.min(1.0, landedU / landedDuration);
 
   if (dayNum === 24) {
     // Dzień 24: Globalna misja wigilijna (cel: 2.20 Mld prezentów)
@@ -121,8 +155,7 @@ export function computeSantaMetrics(
       giftRatePerSec = 0;
     } else {
       // Podczas postoju na dachu: zrzut paczek dla bieżącego regionu
-      const progress = Math.min(1.0, (u - 15.0) / 15.0);
-      giftsDelivered = previousStopsGifts + Math.floor(currentStopGifts * progress);
+      giftsDelivered = previousStopsGifts + Math.floor(currentStopGifts * landedProgress);
       // Rzeczywiste tempo: liczba paczek regionu podzielona przez 1 godzinę (3600 sekund)
       giftRatePerSec = Math.round(currentStopGifts / 3600);
     }
@@ -136,14 +169,13 @@ export function computeSantaMetrics(
       giftsDelivered = previousStopsGifts;
       giftRatePerSec = 0;
     } else {
-      const progress = Math.min(1.0, (u - 15.0) / 15.0);
-      giftsDelivered = previousStopsGifts + Math.floor(currentStopGifts * progress);
+      giftsDelivered = previousStopsGifts + Math.floor(currentStopGifts * landedProgress);
       giftRatePerSec = Math.round(currentStopGifts / 3600);
     }
   }
 
   // Pasek postępu dostaw danego dnia (1..10 segmentów)
-  const stopFraction = isFlight ? 0 : Math.min(1.0, (u - 15.0) / 15.0);
+  const stopFraction = isFlight ? 0 : landedProgress;
   const dayProgressPct = isDay24Finale
     ? 100
     : Math.min(100, Math.round(((activeIdx + stopFraction) / 12.0) * 100));
@@ -156,12 +188,48 @@ export function computeSantaMetrics(
   const milkLiters = Math.floor(giftsDelivered * 0.0115);
 
   // 4. Aktualna faza misji (Teksty w języku polskim ze wspólnego źródła wiedzy: stage-definitions)
-  const phaseInfo = getMissionPhaseInfo(u, isDay24Finale);
+  const phaseInfo = getMissionPhaseInfo(u, isDay24Finale, flightDuration, totalDuration);
   const stageTitle = phaseInfo.badge;
   const stageDescription = phaseInfo.description;
   const stageDetail = phaseInfo.timing;
 
-  const etaSeconds = isDay24Finale ? 0 : Math.ceil(isFlight ? 15.0 - u : 30.0 - u);
+  const etaSeconds = isDay24Finale
+    ? 0
+    : Math.ceil(isFlight ? flightDuration - u : totalDuration - u);
+
+  let stepEtaSeconds = 0;
+  let nextStepName = "WIGILIA!";
+
+  if (isDay24Finale) {
+    stepEtaSeconds = 0;
+    nextStepName = "WIGILIA!";
+  } else if (isFlight) {
+    const tWarp = 0.3 * flightDuration;
+    const tStrato = 0.8 * flightDuration;
+    if (u < tWarp) {
+      stepEtaSeconds = Math.ceil(tWarp - u);
+      nextStepName = "PRZELOT";
+    } else if (u < tStrato) {
+      stepEtaSeconds = Math.ceil(tStrato - u);
+      nextStepName = "ZNIZANIE";
+    } else {
+      stepEtaSeconds = Math.ceil(flightDuration - u);
+      nextStepName = "LADOWANIE";
+    }
+  } else {
+    const tGifts = flightDuration + 0.4 * landedDuration;
+    const tCookies = flightDuration + 0.8 * landedDuration;
+    if (u < tGifts) {
+      stepEtaSeconds = Math.ceil(tGifts - u);
+      nextStepName = "CIASTKA";
+    } else if (u < tCookies) {
+      stepEtaSeconds = Math.ceil(tCookies - u);
+      nextStepName = "WZNOSZENIE";
+    } else {
+      stepEtaSeconds = Math.ceil(totalDuration - u);
+      nextStepName = "ODLOT";
+    }
+  }
 
   return {
     machSpeed,
@@ -183,6 +251,8 @@ export function computeSantaMetrics(
     stageDetail,
     targetCity: targetName.toUpperCase(),
     etaSeconds,
+    stepEtaSeconds,
+    nextStepName,
   };
 }
 

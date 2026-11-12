@@ -593,6 +593,150 @@ void ScreenCam::drawBigSantaCookieBreak(float nowSec, unsigned long nowMs) {
   }
 }
 
+void ScreenCam::drawSantaChillingScene(float nowSec, unsigned long nowMs, int daysUntilAdvent) {
+  if (!_canvas) return;
+
+  // 1. Dark Polar Night Background (y = 14..119)
+  _canvas->fillRect(0, 14, SCREEN_WIDTH, 106, COLOR_SKY_MIDNIGHT);
+
+  // 2. Parquet Floor (y = 108..119)
+  _canvas->fillRect(0, 108, SCREEN_WIDTH, 12, 0x4180);
+  _canvas->drawFastHLine(0, 108, SCREEN_WIDTH, 0x2940);
+  for (int px = 0; px < SCREEN_WIDTH; px += 24) {
+    _canvas->drawFastVLine(px, 109, 11, 0x2940);
+  }
+
+  // 3. Wooden Wall Planks on Left (x = 0..122, y = 14..107)
+  _canvas->fillRect(0, 14, 122, 94, 0x5a23);
+  for (int wy = 14; wy < 108; wy += 14) {
+    _canvas->drawFastHLine(0, wy, 122, 0x3980);
+  }
+
+  // 4. Workshop Window to Polar Sky on Right (x = 124..234, y = 16..88)
+  _canvas->fillRect(124, 16, 112, 72, 0x6180);
+  _canvas->fillRect(128, 20, 104, 64, 0x0825);
+  _canvas->fillRect(122, 85, 116, 5, 0x8280);
+  _canvas->fillRect(124, 84, 112, 2, COLOR_SNOW);
+
+  static const int starCoords[9][2] = {
+    {135, 26}, {152, 34}, {178, 24}, {195, 38}, {215, 28},
+    {142, 52}, {168, 62}, {205, 58}, {222, 44}
+  };
+  for (int i = 0; i < 9; i++) {
+    int sx = starCoords[i][0];
+    int sy = starCoords[i][1];
+    bool sBlink = (((int)(nowSec * 3.0f + (float)i)) % 3) != 0;
+    _canvas->drawPixel(sx, sy, sBlink ? TFT_WHITE : COLOR_GOLD);
+  }
+
+  for (int sf = 0; sf < 14; sf++) {
+    int sfx = 130 + (((sf * 23 + (int)(nowSec * 16.0f)) % 98));
+    int sfy = 21 + (((sf * 17 + (int)(nowSec * 22.0f)) % 60));
+    _canvas->drawPixel(sfx, sfy, COLOR_SNOW);
+  }
+
+  _canvas->drawFastVLine(180, 20, 64, 0x51c0);
+  _canvas->drawFastHLine(128, 52, 104, 0x51c0);
+
+  // 6. Cozy Armchair (x = 36..106, y = 52..108)
+  _canvas->fillRoundRect(38, 52, 66, 42, 6, COLOR_PINE_NEEDLE);
+  _canvas->drawRoundRect(38, 52, 66, 42, 6, COLOR_GOLD);
+  _canvas->fillRoundRect(30, 72, 16, 28, 4, COLOR_PINE_NEEDLE);
+  _canvas->fillRoundRect(96, 72, 16, 28, 4, COLOR_PINE_NEEDLE);
+  _canvas->drawRoundRect(30, 72, 16, 28, 4, COLOR_GOLD);
+  _canvas->drawRoundRect(96, 72, 16, 28, 4, COLOR_GOLD);
+  _canvas->fillRect(36, 100, 6, 9, 0x3140);
+  _canvas->fillRect(100, 100, 6, 9, 0x3140);
+
+  // 7. Big Jolly Santa (Relaxed in Chair)
+  int breathY = (int)(sinf(nowSec * 2.2f) * 1.5f);
+  int cx = 71;
+
+  _canvas->fillRect(52, 92, 16, 10, COLOR_SANTA_RED);
+  _canvas->fillRect(74, 92, 16, 10, COLOR_SANTA_RED);
+  _canvas->fillRoundRect(48, 99, 20, 8, 3, 0x5180);
+  _canvas->fillRoundRect(74, 99, 20, 8, 3, 0x5180);
+  _canvas->drawFastHLine(50, 99, 16, TFT_WHITE);
+  _canvas->drawFastHLine(76, 99, 16, TFT_WHITE);
+
+  _canvas->fillCircle(cx, 75 + breathY, 19, COLOR_SANTA_RED);
+  _canvas->fillRect(cx - 19, 78 + breathY, 38, 14, COLOR_SANTA_RED);
+  _canvas->fillRect(cx - 18, 80 + breathY, 36, 6, TFT_BLACK);
+  _canvas->fillRect(cx - 6, 79 + breathY, 12, 8, COLOR_GOLD);
+  _canvas->fillRect(cx - 3, 81 + breathY, 6, 4, TFT_BLACK);
+
+  _canvas->fillCircle(cx, 63 + breathY, 14, TFT_WHITE);
+  _canvas->fillCircle(cx, 55 + breathY, 10, COLOR_SANTA_FACE);
+  _canvas->fillCircle(cx - 4, 53 + breathY, 2, TFT_BLACK);
+  _canvas->fillCircle(cx + 4, 53 + breathY, 2, TFT_BLACK);
+  _canvas->fillCircle(cx, 56 + breathY, 2, COLOR_SANTA_RED);
+  _canvas->fillCircle(cx - 7, 57 + breathY, 2, 0xfbe4);
+  _canvas->fillCircle(cx + 7, 57 + breathY, 2, 0xfbe4);
+
+  _canvas->fillRect(cx - 12, 45 + breathY, 24, 6, TFT_WHITE);
+  _canvas->fillTriangle(cx - 10, 45 + breathY, cx + 10, 45 + breathY, cx + 18, 56 + breathY, COLOR_SANTA_RED);
+  _canvas->fillCircle(cx + 19, 57 + breathY, 4, TFT_WHITE);
+
+  int mugX = 98;
+  int mugY = 70 + breathY;
+  _canvas->fillRoundRect(mugX, mugY, 12, 14, 2, COLOR_SANTA_RED);
+  _canvas->drawFastVLine(mugX + 12, mugY + 3, 7, COLOR_GOLD);
+  _canvas->fillRect(mugX + 2, mugY + 2, 8, 3, 0x4a00);
+  for (int s = 0; s < 3; s++) {
+    int steamOffset = (((int)(nowSec * 14.0f + (float)s * 6.0f)) % 18);
+    int sy = mugY - steamOffset;
+    if (sy >= 48 && sy < mugY) {
+      int sx = mugX + 5 + (int)(sinf(nowSec * 4.0f + (float)s + (float)sy * 0.2f) * 3.0f);
+      _canvas->drawPixel(sx, sy, TFT_WHITE);
+    }
+  }
+
+  // 8. Sleeping Rudolph on a Braided Rug (x = 146..214, y = 96..112)
+  _canvas->fillRoundRect(146, 96, 68, 16, 6, 0x8800);
+  _canvas->drawRoundRect(146, 96, 68, 16, 6, COLOR_GOLD);
+
+  _canvas->fillCircle(170, 98, 9, COLOR_REINDEER_BROWN);
+  _canvas->fillCircle(182, 99, 10, COLOR_REINDEER_BROWN);
+  _canvas->fillCircle(162, 94, 6, COLOR_REINDEER_BROWN);
+  _canvas->drawFastHLine(159, 94, 3, COLOR_REINDEER_DARK);
+  _canvas->drawLine(163, 90, 160, 83, COLOR_ANTLERS);
+  _canvas->drawLine(160, 85, 157, 85, COLOR_ANTLERS);
+  _canvas->drawLine(165, 90, 167, 83, COLOR_ANTLERS);
+  _canvas->drawLine(167, 85, 170, 85, COLOR_ANTLERS);
+  float noseGlow = (sinf(nowSec * 2.5f) + 1.0f) * 0.5f;
+  if (noseGlow > 0.6f) {
+    _canvas->fillCircle(156, 95, 3, COLOR_NOSE_GLOW);
+  }
+  _canvas->fillCircle(156, 95, 2, COLOR_NOSE_RED);
+
+  for (int z = 0; z < 3; z++) {
+    int zOffset = (((int)(nowSec * 10.0f + (float)z * 8.0f)) % 24);
+    int zy = 88 - zOffset;
+    if (zy > 62) {
+      int zx = 154 - (int)((float)zOffset * 0.4f);
+      _canvas->setTextDatum(top_left);
+      _canvas->setTextSize(1);
+      _canvas->setTextColor(COLOR_CYAN_BRIGHT, COLOR_SKY_MIDNIGHT);
+      _canvas->drawString("z", zx, zy);
+    }
+  }
+
+  // 8. Countdown Display Banner (Under window)
+  _canvas->fillRoundRect(134, 60, 92, 22, 4, 0x0821);
+  _canvas->drawRoundRect(134, 60, 92, 22, 4, COLOR_CYAN_BRIGHT);
+  _canvas->setTextDatum(top_center);
+  _canvas->setTextSize(1);
+  _canvas->setTextColor(COLOR_AMBER_BRIGHT, 0x0821);
+  _canvas->drawString("Do startu:", 180, 63);
+  char cdBuf[24];
+  if (daysUntilAdvent == 1) {
+    strncpy(cdBuf, "1 dzien", sizeof(cdBuf));
+  } else {
+    snprintf(cdBuf, sizeof(cdBuf), "%d dni", daysUntilAdvent);
+  }
+  _canvas->drawString(cdBuf, 180, 72);
+}
+
 void ScreenCam::drawParallaxStars(float nowSec) {
   if (!_canvas) return;
   for (int i = 0; i < 24; i++) {
@@ -855,6 +999,9 @@ void ScreenCam::render(
 
   float nowSec = (float)nowMs / 1000.0f;
 
+  float flight = (telemetry.mode == MODE_REAL) ? 3600.0f : 15.0f;
+  float dur = (telemetry.mode == MODE_REAL) ? 7200.0f : 30.0f;
+
   SantaCockpitMetrics metrics;
   computeSantaMetrics(
     telemetry.activeDay,
@@ -863,12 +1010,15 @@ void ScreenCam::render(
     nowSec,
     telemetry.nextCityName,
     telemetry.isDay24Finale,
-    metrics
+    metrics,
+    flight,
+    dur,
+    telemetry.isOffSeason
   );
 
   bool isFlight = (metrics.flightPhase != PHASE_DACH && metrics.flightPhase != PHASE_FINAL);
   bool isFinale = (metrics.flightPhase == PHASE_FINAL);
-  float flightProgress = telemetry.u / 15.0f;
+  float flightProgress = flight > 0.0f ? (telemetry.u / flight) : 1.0f;
 
   // 1. Clear Screen with Deep Night Polar Navy (y = 14..119)
   _canvas->fillScreen(COLOR_BG_DARK);
@@ -878,7 +1028,11 @@ void ScreenCam::render(
   // 2. Viewport Scene Dispatch
   // --------------------------------------------------------------------------
 
-  if (isFinale) {
+  if (telemetry.isOffSeason) {
+    // MODE 8: Off-Season Santa Chilling Out (Vacation at North Pole Workshop)
+    drawSantaChillingScene(nowSec, nowMs, telemetry.daysUntilAdvent);
+
+  } else if (isFinale) {
     // MODE 7: Kraków Grand Finale Hold (Bazylika Mariacka & Fireworks)
     drawParallaxStars(nowSec * 0.2f);
     drawStationarySnowyRooftop(nowSec * 20.0f);
@@ -1081,9 +1235,14 @@ void ScreenCam::render(
   _canvas->drawString("98%", 28, 3);
 
   char dayBuf[16];
-  snprintf(dayBuf, sizeof(dayBuf), "DZIEN %02d", telemetry.activeDay);
+  if (telemetry.isOffSeason) {
+    strncpy(dayBuf, "POZA SEZONEM", sizeof(dayBuf));
+    _canvas->setTextColor(COLOR_CYAN_BRIGHT, COLOR_HEADER_BG);
+  } else {
+    snprintf(dayBuf, sizeof(dayBuf), "DZIEN %02d", telemetry.activeDay);
+    _canvas->setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+  }
   _canvas->setTextDatum(top_right);
-  _canvas->setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
   _canvas->drawString(dayBuf, SCREEN_WIDTH - 4, 3);
 
   // --------------------------------------------------------------------------
@@ -1092,23 +1251,41 @@ void ScreenCam::render(
   _canvas->fillRect(0, 120, SCREEN_WIDTH, 15, COLOR_HEADER_BG);
   _canvas->drawFastHLine(0, 119, SCREEN_WIDTH, COLOR_BORDER);
 
-  _canvas->setTextDatum(top_left);
-  uint16_t prefixColor = isFinale ? COLOR_AMBER_BRIGHT : (isFlight ? COLOR_CYAN_BRIGHT : COLOR_EMERALD_NEON);
-  const char* prefixText = isFinale ? "FINAL: " : (isFlight ? "CEL: " : "POSTOJ: ");
-  _canvas->setTextColor(prefixColor, COLOR_HEADER_BG);
-  _canvas->drawString(prefixText, 4, 123);
-
-  int prefixWidth = strlen(prefixText) * 6;
-  _canvas->setTextColor(TFT_WHITE, COLOR_HEADER_BG);
-  _canvas->drawString(metrics.targetCity, 4 + prefixWidth, 123);
-
-  _canvas->setTextDatum(top_right);
-  _canvas->setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
-  if (isFinale && metrics.etaSeconds == 0) {
-    _canvas->drawString("WIGILIA!", SCREEN_WIDTH - 4, 123);
+  if (telemetry.isOffSeason) {
+    _canvas->setTextDatum(top_center);
+    _canvas->setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+    _canvas->drawString("Start 01.12", SCREEN_WIDTH / 2, 123);
   } else {
-    char etaBuf[16];
-    snprintf(etaBuf, sizeof(etaBuf), "CZAS 0:%02d", metrics.etaSeconds);
-    _canvas->drawString(etaBuf, SCREEN_WIDTH - 4, 123);
+    _canvas->setTextDatum(top_left);
+    uint16_t prefixColor = isFinale
+      ? COLOR_AMBER_BRIGHT
+      : (isFlight ? COLOR_CYAN_BRIGHT : COLOR_EMERALD_NEON);
+    const char* prefixText = isFinale
+      ? "FINAL: "
+      : (isFlight ? "CEL: " : "POSTOJ: ");
+    _canvas->setTextColor(prefixColor, COLOR_HEADER_BG);
+    _canvas->drawString(prefixText, 4, 123);
+
+    int prefixWidth = strlen(prefixText) * 6;
+    _canvas->setTextColor(TFT_WHITE, COLOR_HEADER_BG);
+    _canvas->drawString(metrics.targetCity, 4 + prefixWidth, 123);
+
+    // ETA Countdown on right
+    _canvas->setTextDatum(top_right);
+    _canvas->setTextColor(COLOR_AMBER_BRIGHT, COLOR_HEADER_BG);
+    if (isFinale && metrics.stepEtaSeconds == 0) {
+      _canvas->drawString("WIGILIA!", SCREEN_WIDTH - 4, 123);
+    } else {
+      char etaBuf[24];
+      int h = metrics.stepEtaSeconds / 3600;
+      int m = (metrics.stepEtaSeconds % 3600) / 60;
+      int s = metrics.stepEtaSeconds % 60;
+      if (h > 0) {
+        snprintf(etaBuf, sizeof(etaBuf), "ETAP %d:%02d:%02d", h, m, s);
+      } else {
+        snprintf(etaBuf, sizeof(etaBuf), "ETAP %d:%02d", m, s);
+      }
+      _canvas->drawString(etaBuf, SCREEN_WIDTH - 4, 123);
+    }
   }
 }
