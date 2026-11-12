@@ -19,6 +19,31 @@ void JourneyEngine::setCalendarDate(int year, int month, int day) {
   _calDay = day;
 }
 
+void JourneyEngine::syncWallClock(int year, int month, int day, int hour, int minute, int second) {
+  setCalendarDate(year, month, day);
+  if (_mode == MODE_REAL) {
+    if (month == 12 && day >= 1 && day <= 24) {
+      if (_activeDay != day) {
+        setDay(day);
+      }
+      float secOfDay = (float)(hour * 3600 + minute * 60 + second);
+      if (secOfDay < 0.0f) secOfDay = 0.0f;
+      if (secOfDay > 86400.0f) secOfDay = 86400.0f;
+
+      if (_activeDay == 24) {
+        float krakowArrivalTime = 11.0f * 7200.0f + 3600.0f; // 23:00 arrival lock
+        if (secOfDay >= krakowArrivalTime) {
+          _simTime = krakowArrivalTime;
+        } else {
+          _simTime = secOfDay;
+        }
+      } else {
+        _simTime = secOfDay;
+      }
+    }
+  }
+}
+
 bool JourneyEngine::isOffSeason() const {
   return !(_calMonth == 12 && _calDay >= 1 && _calDay <= 24);
 }

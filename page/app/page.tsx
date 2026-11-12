@@ -147,14 +147,32 @@ export default function RadarPage() {
     if (preset === "live") {
       sim.simulatedRealDate = null;
       sim.lastAction = "CZAS RZECZYWISTY: ZEGAR LIVE";
+      const now = new Date();
+      if (now.getMonth() === 11 && now.getDate() >= 1 && now.getDate() <= 24) {
+        setDay(sim, now.getDate(), true);
+        setSelectedDay(now.getDate());
+        sim.simTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+      }
     } else if (preset === "dec1") {
-      sim.simulatedRealDate = new Date(2026, 11, 1, 14, 30, 0);
+      const d = new Date(2026, 11, 1, 14, 30, 0);
+      sim.simulatedRealDate = d;
+      setDay(sim, 1, true);
+      setSelectedDay(1);
+      sim.simTime = 14 * 3600 + 30 * 60; // 14:30
       sim.lastAction = "CZAS RZECZYWISTY: 01 GRUDNIA 14:30";
     } else if (preset === "dec15") {
-      sim.simulatedRealDate = new Date(2026, 11, 15, 18, 0, 0);
+      const d = new Date(2026, 11, 15, 18, 0, 0);
+      sim.simulatedRealDate = d;
+      setDay(sim, 15, true);
+      setSelectedDay(15);
+      sim.simTime = 18 * 3600; // 18:00
       sim.lastAction = "CZAS RZECZYWISTY: 15 GRUDNIA 18:00";
     } else if (preset === "dec24") {
-      sim.simulatedRealDate = new Date(2026, 11, 24, 22, 15, 0);
+      const d = new Date(2026, 11, 24, 22, 15, 0);
+      sim.simulatedRealDate = d;
+      setDay(sim, 24, true);
+      setSelectedDay(24);
+      sim.simTime = 22 * 3600 + 15 * 60; // 22:15 (Krakow arrival window)
       sim.lastAction = "CZAS RZECZYWISTY: 24 GRUDNIA (KRAKOW)";
     }
     sim.toastType = "connected";

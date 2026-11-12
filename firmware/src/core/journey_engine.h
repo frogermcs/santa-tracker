@@ -45,6 +45,7 @@ public:
 
   // Simulated / live calendar date for Real-Time mode
   void setCalendarDate(int year, int month, int day);
+  void syncWallClock(int year, int month, int day, int hour, int minute, int second);
   bool isOffSeason() const;
   int getDaysUntilAdvent() const;
 

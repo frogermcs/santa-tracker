@@ -176,14 +176,14 @@ stateDiagram-v2
   - [x] **3. Dual Journey Engine Port (`firmware/src/core/journey_engine.cpp`):**
     * Engine reads BM8563 hardware RTC in Real Advent Mode.
     * Deterministic mapping: Day of month (1..24) $\rightarrow$ Active Advent Day; Hour ($S \in [0..86400]$) $\rightarrow$ Waypoint ($\lfloor S / 7200 \rfloor$) and Phase ($u = S \pmod{7200}$).
-    * Intelligent Mode Selection: Defaults to Real Mode if Wi-Fi is configured and date is December 1–24; otherwise launches Demo Mode.
+    * Intelligent Mode Selection: Defaults to Real Mode if RTC/NTP date is December 1–24; otherwise launches Demo Mode.
     * Hardware Controls:
-      - Hold Button B (>0.6s) toggles between Demo Mode and Real Advent Mode with audio chime and toast.
+      - Hold Button PWR (>0.6s) rotates between Demo Mode and Real Advent Mode with audio chime and toast (Button B hold also supported as alternate).
       - Short click Button B advances city in Demo Mode (locked in Real-Time Mode).
-      - Click Button PWR toggles audio mute/unmute.
+      - Short click Button PWR toggles audio mute/unmute.
       - Short click Button A cycles screens; long hold Button A advances day in Demo Mode (locked in Real-Time Mode).
   - [x] **4. Desktop Native Unit Tests (`firmware/test/`):**
-    * 28 Unity unit tests running under `pio test -e native` verifying RTC time decoding, 2-hour cadence boundaries, linear transit progression, off-season chilling mode, and mode switches.
+    * 29 Unity unit tests running under `pio test -e native` verifying RTC time decoding, 2-hour cadence boundaries, linear transit progression, off-season chilling mode, wall clock synchronization, and mode switches.
 
 ---
 

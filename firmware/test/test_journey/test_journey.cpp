@@ -793,6 +793,28 @@ void test_real_mode_off_season_chilling_out(void) {
   TEST_ASSERT_FALSE(tActive.isOffSeason);
 }
 
+void test_real_mode_wall_clock_sync(void) {
+  JourneyEngine engine;
+  engine.setMode(MODE_REAL);
+
+  // Sync to December 15th, 18:30: Stop 10 in-flight transit
+  engine.syncWallClock(2026, 12, 15, 18, 30, 0);
+  TEST_ASSERT_EQUAL_INT(15, engine.getActiveDay());
+  TEST_ASSERT_FALSE(engine.isOffSeason());
+  TelemetryState t = engine.getTelemetry();
+  TEST_ASSERT_EQUAL_INT(9, t.safeIdx);
+  TEST_ASSERT_TRUE(t.isFlightPhase);
+
+  // Sync to December 24th, 23:15: Past Krakow arrival (23:00 arrival lock)
+  engine.syncWallClock(2026, 12, 24, 23, 15, 0);
+  TEST_ASSERT_EQUAL_INT(24, engine.getActiveDay());
+  TEST_ASSERT_TRUE(engine.isGrandFinale());
+  TelemetryState tFinale = engine.getTelemetry();
+  TEST_ASSERT_TRUE(tFinale.isDay24Finale);
+  TEST_ASSERT_FALSE(tFinale.isFlightPhase);
+  TEST_ASSERT_EQUAL_INT(11, tFinale.safeIdx); // Krakow
+}
+
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_default_journey_parsing);
@@ -823,5 +845,6 @@ int main(void) {
   RUN_TEST(test_real_mode_manual_jumping_disabled);
   RUN_TEST(test_real_mode_linear_trajectory_progress);
   RUN_TEST(test_real_mode_off_season_chilling_out);
+  RUN_TEST(test_real_mode_wall_clock_sync);
   return UNITY_END();
 }

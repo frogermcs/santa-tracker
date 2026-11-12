@@ -54,8 +54,15 @@ void setup() {
     if (bootTime > 1700000000) {
       struct tm tmBoot;
       localtime_r(&bootTime, &tmBoot);
-      Serial.printf("[RTC] Battery-backed BM8563 restored: %02d:%02d:%02d CET\n",
+      Serial.printf("[RTC] Battery-backed BM8563 restored: %04d-%02d-%02d %02d:%02d:%02d CET\n",
+                    tmBoot.tm_year + 1900, tmBoot.tm_mon + 1, tmBoot.tm_mday,
                     tmBoot.tm_hour, tmBoot.tm_min, tmBoot.tm_sec);
+      engine.syncWallClock(tmBoot.tm_year + 1900, tmBoot.tm_mon + 1, tmBoot.tm_mday,
+                           tmBoot.tm_hour, tmBoot.tm_min, tmBoot.tm_sec);
+      // Intelligent Mode Selection: Default to Real Mode if active Advent season (Dec 1-24)
+      if (tmBoot.tm_mon + 1 == 12 && tmBoot.tm_mday >= 1 && tmBoot.tm_mday <= 24) {
+        engine.setMode(MODE_REAL);
+      }
     }
   }
 
@@ -114,6 +121,19 @@ void loop() {
   }
   if (improvHandler.checkJustFailed()) {
     playChirp(600, 90);
+  }
+
+  // Periodically synchronize engine calendar date and wall clock time (1 Hz)
+  static unsigned long lastClockSync = 0;
+  if (now - lastClockSync >= 1000) {
+    lastClockSync = now;
+    time_t curTime = time(nullptr);
+    if (curTime > 1700000000) {
+      struct tm tmNow;
+      localtime_r(&curTime, &tmNow);
+      engine.syncWallClock(tmNow.tm_year + 1900, tmNow.tm_mon + 1, tmNow.tm_mday,
+                           tmNow.tm_hour, tmNow.tm_min, tmNow.tm_sec);
+    }
   }
 
   // Advance simulation clock and physics

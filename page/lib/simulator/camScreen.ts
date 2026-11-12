@@ -1198,6 +1198,9 @@ export function renderCamScreen(
   const naturalU = Math.max(0, effectiveSimTime - cityIdx * dur);
   const nowSec = nowMs / 1000.0;
 
+  const flightDuration = state.journeyMode === "demo" ? FLIGHT_DURATION_DEMO : FLIGHT_DURATION_REAL;
+  const totalDuration = state.journeyMode === "demo" ? SEC_PER_CITY_DEMO : SEC_PER_CITY_REAL;
+
   // Resolve forced modes if requested for debugging
   let u = naturalU;
   let isFlight = true;
@@ -1248,8 +1251,6 @@ export function renderCamScreen(
         break;
     }
   } else {
-    const flightDuration = state.journeyMode === "demo" ? FLIGHT_DURATION_DEMO : FLIGHT_DURATION_REAL;
-    const totalDuration = state.journeyMode === "demo" ? SEC_PER_CITY_DEMO : SEC_PER_CITY_REAL;
     const metricsNatural = computeSantaMetrics(
       state.activeDay,
       telemetry.safeIdx,
@@ -1263,9 +1264,6 @@ export function renderCamScreen(
     isFlight = metricsNatural.flightPhase !== "DACH" && metricsNatural.flightPhase !== "FINAL";
     isFinale = metricsNatural.flightPhase === "FINAL";
   }
-
-  const flightDuration = state.journeyMode === "demo" ? FLIGHT_DURATION_DEMO : FLIGHT_DURATION_REAL;
-  const totalDuration = state.journeyMode === "demo" ? SEC_PER_CITY_DEMO : SEC_PER_CITY_REAL;
 
   const metrics = computeSantaMetrics(
     state.activeDay,
@@ -1292,7 +1290,7 @@ export function renderCamScreen(
     // ========================================================================
     // MODE 8: Off-Season Santa Chilling Out (Vacation at North Pole Workshop)
     // ========================================================================
-    drawSantaChillingScene(canvas, nowSec, nowMs, telemetry.daysUntilAdvent || 21);
+    drawSantaChillingScene(canvas, nowSec, nowMs, telemetry.daysUntilAdvent ?? 21);
 
   } else if (isFinale) {
     // ========================================================================
