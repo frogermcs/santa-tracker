@@ -286,6 +286,6 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 * **Milestone 3A (COMPLETE ✅):** Pure Web Installer for IoT (ESP Web Tools flashing on `/install` route, automated binary packaging pipeline, browser capability guard).
 * **Milestone 3B (COMPLETE ✅):** In-Browser Wi-Fi Setup & NTP Provisioning (Improv Wi-Fi Serial & Flash NVS persistence, zero-delay boot, micro dot status indicator, contextual pop-up toasts, Burst & Sleep power management).
 * **Milestone 4 (COMPLETE ✅):** Dual-Mode Journey Engine & RTC / NTP Time Synchronization (Demo 30s vs Real 2h cadence, BM8563 RTC, Burst & Sleep NTP, Off-Season Mode 8).
-* **Milestone 5 (COMPLETE ✅):** Festive IoT Landing Page & `/debugger` Separation (Playful Polish split-flap dispatch landing page at `/` with `Zainstaluj na M5Stick` CTA $\rightarrow$ `/install`; full simulator & telemetry workbench moved to `/debugger`).
+* **Milestone 5 (COMPLETE ✅):** Festive IoT Landing Page & `/debugger` Separation (*Kurier Bieguna Północnego* warm paper landing page at `/` with `Zainstaluj na M5Stick` CTA $\rightarrow$ `/install`, matching `/install` aesthetic with `/debugger` footer link, and full simulator & telemetry workbench moved to `/debugger`).
 
 

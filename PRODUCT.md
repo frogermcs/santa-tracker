@@ -27,7 +27,7 @@ Parents plug an M5StickC-Plus SE into a laptop over USB-C, click Install on `/` 
 ## Capabilities and Constraints
 
 - 100% Polish copy on `/` and `/install` matching the on-device HUD (`MikoRadar`, `Kokpit Misji`, `Santa Cam`, `POZA SEZONEM`, `WESOŁYCH ŚWIĄT!`).
-- `/` must remain 100% focused on the Santa Tracker IoT gadget with a clear "Zainstaluj na M5Stick" CTA navigating to `/install` (plus a discreet link to `/debugger` for makers/developers).
+- `/` must remain 100% focused on the Santa Tracker IoT gadget with a clear "Zainstaluj na M5Stick" CTA navigating to `/install` (with the discreet link to `/debugger` placed in `/install`'s footer).
 - All existing simulator, day/city controls, and telemetry workbench move intact to `/debugger`.
 - Must preserve all existing routes (`/install`, `/map-debugger`, `/scene-debugging`, `/api/journey`) and pass `typecheck`, `lint`, and `vitest` gates with 0 errors.
 

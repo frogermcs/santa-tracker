@@ -10,8 +10,9 @@ const config: Config = {
     extend: {
       fontFamily: {
         pixel: ["'Press Start 2P'", "monospace"],
-        mono: ["'JetBrains Mono'", "monospace"],
-        sans: ["'Inter'", "system-ui", "-apple-system", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
+        sans: ["var(--font-display)", "system-ui", "-apple-system", "sans-serif"],
+        poster: ["var(--font-poster)", "var(--font-display)", "system-ui", "sans-serif"],
       },
       colors: {
         m5: {

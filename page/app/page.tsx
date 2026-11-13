@@ -18,7 +18,9 @@ import {
   setup as setupSimulator,
   update as updateSimulator,
   render as renderSimulator,
+  setDay,
   setActiveScreen as setSimActiveScreen,
+  FLIGHT_DURATION_REAL,
   SimulatorAppState,
   ButtonEventState,
 } from "@/lib/simulator/iotAppLogic";
@@ -38,12 +40,6 @@ export default function LandingPage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasSimRef = useRef<M5CanvasSim | null>(null);
   const simStateRef = useRef<SimulatorAppState | null>(null);
-  if (simStateRef.current === null) {
-    const initialSim = setupSimulator(0);
-    initialSim.activeScreen = 2; // Default to Santa Cam
-    initialSim.journeyMode = "real"; // Default to Real-Time mode
-    simStateRef.current = initialSim;
-  }
   const pendingButtonsRef = useRef<ButtonEventState>({
     wasPressedA: false,
     wasHoldA: false,
@@ -55,6 +51,19 @@ export default function LandingPage() {
   const lastSyncedScreenRef = useRef<0 | 1 | 2>(2);
 
   useEffect(() => {
+    const initialSim = setupSimulator(0);
+    initialSim.activeScreen = 2; // Default to Santa Cam
+    initialSim.journeyMode = "real"; // Default to Real-Time mode
+    const now = new Date();
+    if (now.getMonth() === 11 && now.getDate() >= 1 && now.getDate() <= 24) {
+      setDay(initialSim, now.getDate(), true);
+      initialSim.simTime =
+        now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    } else {
+      initialSim.simTime = FLIGHT_DURATION_REAL;
+    }
+    simStateRef.current = initialSim;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     canvas.width = 240;
@@ -141,7 +150,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#fbf3e4] text-[#0d3b26] flex flex-col relative overflow-x-hidden selection:bg-[#c81e1e] selection:text-[#fbf3e4]">
+    <div className="min-h-screen overscroll-y-none bg-[#fbf3e4] text-[#0d3b26] flex flex-col relative overflow-x-hidden selection:bg-[#c81e1e] selection:text-[#fbf3e4]">
       <FestivePaperBackdrop />
       {/* Top Masthead */}
       <header className="max-w-6xl w-full mx-auto px-5 sm:px-10 pt-5 pb-4 border-b border-[#dfd0b4] flex items-center justify-center relative z-20">
@@ -233,6 +242,7 @@ export default function LandingPage() {
                   <button
                     key={tab.id}
                     type="button"
+                    aria-pressed={isActive}
                     onClick={() => handleSelectScreen(tab.id)}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold cursor-pointer focus-visible:outline-2 focus-visible:outline-[#c81e1e] ${
                       isActive

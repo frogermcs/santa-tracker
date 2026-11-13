@@ -30,8 +30,8 @@
 ---
 
 ## Landing Page Surface (`/`): Kurier Bieguna Północnego
-- **Mode**: Persuade — warm, slightly goofy Polish North Pole holiday tabloid & poster driving visitors to `/install` (`Zainstaluj na M5Stick`), while `/debugger` hosts the full dark-mode hardware workbench.
-- **Ground & Seams**: Warm gingerbread-cream paper (`#fbf3e4`) with `#dfd0b4` masthead/footer rules and `#f2e4cb` tactile control trays.
-- **Ink & Accents**: Santa-hat crimson (`#c81e1e`) for oversized condensed headlines, deep holly-pine (`#0d3b26`) for body copy and rubber-stamp badges (`288 MIAST`, `FINAŁ: KRAKÓW`), and M5Stick translucent orange (`#ea580c`) for the primary Install CTA.
-- **Typography**: `Barlow Condensed` (`--font-poster`) for bold Polish poster headlines paired with `Bricolage Grotesque` (`--font-display`) for warm body copy and `JetBrains Mono` (`--font-mono`, `tabular-nums`) for screen tabs and stamps.
-- **Signature Interaction**: Live interactive `M5StickDevice` cycling `MikoRadar`, `Kokpit Misji`, and `Santa Cam` via the physical `M5` button or the cream-paper screen pills.
+- **Mode**: Persuade — warm, festive Polish North Pole holiday poster (*Kurier Bieguna Północnego*) driving visitors to `/install` (`Zainstaluj na M5Stick`), while `/debugger` hosts the full dark-mode hardware workbench (linked from `/install`'s footer).
+- **Ground & Seams**: Warm gingerbread-cream paper (`#fbf3e4`) with `#dfd0b4` masthead/footer rules, `#f2e4cb` tactile control trays, and `FestivePaperBackdrop` (top ribbon + low-contrast Christmas icons).
+- **Ink & Accents**: Santa-hat crimson (`#c81e1e`) for oversized condensed headlines, deep holly-pine (`#0d3b26`) for body copy, and M5Stick translucent orange (`#ea580c`) for the primary Install CTA.
+- **Typography**: `Barlow Condensed` (`--font-poster`) for bold Polish poster headlines paired with `Bricolage Grotesque` (`--font-display`) for warm body copy and `JetBrains Mono` (`--font-mono`, `tabular-nums`) for screen tabs and hardware hints.
+- **Signature Interaction**: Live interactive `M5StickDevice` defaulting to `Santa Cam` in Real-Time Mode (long-press `B` for Demo Mode), cycling `MikoRadar`, `Kokpit Misji`, and `Santa Cam` via the physical `M5` button or cream-paper screen pills.
