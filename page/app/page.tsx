@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
 import { FestivePaperBackdrop } from "@/components/FestivePaperBackdrop";
+import { FestiveGarlandGreeting } from "@/components/FestiveGarlandGreeting";
 import { M5CanvasSim } from "@/lib/simulator/M5CanvasSim";
 import {
   setup as setupSimulator,
@@ -268,9 +269,9 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* Minimal Newspaper Footer */}
-      <footer className="max-w-6xl w-full mx-auto px-5 sm:px-10 py-4 border-t border-[#dfd0b4] flex items-center justify-center text-xs font-mono text-[#5c3d28] relative z-10">
-        <span>KURIER BIEGUNA PÓŁNOCNEGO · NAKŁAD ŚWIĄTECZNY</span>
+      {/* Festive Christmas Garland Footer */}
+      <footer className="max-w-6xl w-full mx-auto px-5 sm:px-10 py-4 border-t border-[#dfd0b4] flex items-center justify-center relative z-10">
+        <FestiveGarlandGreeting />
       </footer>
     </div>
   );

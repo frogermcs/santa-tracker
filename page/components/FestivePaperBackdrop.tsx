@@ -5,7 +5,7 @@ import { Snowflake, TreePine, Star, Gift } from "lucide-react";
 
 /**
  * Subtle, non-interactive Christmas background accents tailored for the
- * warm gingerbread-cream ("Kurier Bieguna Północnego") paper aesthetic.
+ * warm gingerbread-cream holiday poster paper aesthetic.
  */
 export const FestivePaperBackdrop: React.FC = () => {
   return (
