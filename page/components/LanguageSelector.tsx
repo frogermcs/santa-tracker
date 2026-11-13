@@ -24,6 +24,7 @@ export const LanguageSelector: React.FC = () => {
           <button
             key={code}
             type="button"
+            lang={code}
             aria-pressed={isActive}
             onClick={() => setLang(code)}
             className={`px-2.5 py-1 rounded-lg font-mono text-xs font-bold transition cursor-pointer focus-visible:outline-2 focus-visible:outline-[#c81e1e] ${

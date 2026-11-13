@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import {
@@ -54,11 +55,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const value: LanguageContextValue = {
-    lang,
-    setLang,
-    t: TRANSLATIONS[lang],
-  };
+  const value = useMemo<LanguageContextValue>(
+    () => ({
+      lang,
+      setLang,
+      t: TRANSLATIONS[lang],
+    }),
+    [lang, setLang]
+  );
 
   return (
     <LanguageContext.Provider value={value}>
