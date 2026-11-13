@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 import { checkWebSerialSupport } from "../lib/installer/browser-support";
+import { DEFAULT_LANGUAGE, TRANSLATIONS } from "../lib/i18n/translations";
 
 describe("Web Installer: Firmware Manifest & Binary Artifacts", () => {
   const publicFirmwareDir = path.resolve(__dirname, "../public/firmware");
@@ -126,5 +127,58 @@ describe("Web Installer: Browser Support Detection", () => {
     expect(result.isDesktop).toBe(false);
     expect(result.browserName).toBe("Apple iPadOS (Safari)");
     expect(result.recommendation).toContain("iOS/iPadOS");
+  });
+
+  it("returns English recommendations when lang='en'", () => {
+    const chromeUA =
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36";
+    const supported = checkWebSerialSupport(chromeUA, true, 0, "en");
+    expect(supported.isSupported).toBe(true);
+    expect(supported.recommendation).toContain("fully supports Web Serial");
+
+    const safariUA =
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15";
+    const safari = checkWebSerialSupport(safariUA, false, 0, "en");
+    expect(safari.isSupported).toBe(false);
+    expect(safari.recommendation).toContain("Apple Safari does not support Web Serial");
+
+    const firefoxUA =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0";
+    const firefox = checkWebSerialSupport(firefoxUA, false, 0, "en");
+    expect(firefox.isSupported).toBe(false);
+    expect(firefox.recommendation).toContain("Mozilla Firefox does not support Web Serial");
+
+    const iphoneUA =
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
+    const ios = checkWebSerialSupport(iphoneUA, false, 0, "en");
+    expect(ios.isSupported).toBe(false);
+    expect(ios.recommendation).toContain("iOS/iPadOS does not support browser USB connections");
+  });
+});
+
+describe("Public Web Localization (PL / EN)", () => {
+  it("defaults to Polish ('pl')", () => {
+    expect(DEFAULT_LANGUAGE).toBe("pl");
+  });
+
+  it("has matching translation keys and non-empty strings for PL and EN", () => {
+    expect(Object.keys(TRANSLATIONS.en).sort()).toEqual(
+      Object.keys(TRANSLATIONS.pl).sort()
+    );
+    expect(Object.keys(TRANSLATIONS.en.landing).sort()).toEqual(
+      Object.keys(TRANSLATIONS.pl.landing).sort()
+    );
+    expect(Object.keys(TRANSLATIONS.en.device).sort()).toEqual(
+      Object.keys(TRANSLATIONS.pl.device).sort()
+    );
+    expect(Object.keys(TRANSLATIONS.en.install).sort()).toEqual(
+      Object.keys(TRANSLATIONS.pl.install).sort()
+    );
+
+    expect(TRANSLATIONS.pl.garlandGreeting).toBe("Wesołych Świąt!");
+    expect(TRANSLATIONS.en.garlandGreeting).toBe("Merry Christmas!");
+    expect(TRANSLATIONS.en.install.webSerialReady("Google Chrome")).toBe(
+      "Web Serial API ready (Google Chrome)"
+    );
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { Language, TRANSLATIONS } from "@/lib/i18n/translations";
 
 interface M5StickDeviceProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -18,6 +19,7 @@ interface M5StickDeviceProps {
   isButtonPWRPressed?: boolean;
   scanlines?: boolean;
   isTilted?: boolean;
+  lang?: Language;
 }
 
 const LONG_PRESS_THRESHOLD_MS = 600;
@@ -38,7 +40,9 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
   isButtonPWRPressed = false,
   scanlines = true,
   isTilted = false,
+  lang = "pl",
 }) => {
+  const deviceT = TRANSLATIONS[lang].device;
   const [isAHolding, setIsAHolding] = useState(false);
   const [isBHolding, setIsBHolding] = useState(false);
   const [isPWRHolding, setIsPWRHolding] = useState(false);
@@ -253,7 +257,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
         onPointerUp={handlePointerUpB}
         onPointerCancel={handlePointerCancelB}
         onPointerLeave={handlePointerCancelB}
-        title="Przycisk B (Górny): Klik = Następne Miasto | Przytrzymaj (>0.6s) = Przełącz Tryb (Demo / Realtime)"
+        title={deviceT.buttonBTitle}
         className={`absolute -top-3 sm:-top-3.5 left-16 sm:left-20 w-16 h-3.5 sm:h-4 rounded-t-md z-0 flex items-center justify-center transition-all duration-75 cursor-pointer shadow-md ${
           isButtonBPressed || isBHolding
             ? "translate-y-1 bg-neutral-900 border-t-2 border-orange-500 ring-1 ring-orange-400/50"
@@ -261,7 +265,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
         }`}
       >
         <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold tracking-tight text-amber-200/90 -mt-2 bg-neutral-950/90 px-1 py-0.5 rounded border border-neutral-700 shadow-inner">
-          {isBHolding ? "TRZYMAJ..." : "PRZYCISK B"}
+          {isBHolding ? deviceT.holdLabel : deviceT.buttonBLabel}
         </span>
       </button>
 
@@ -271,7 +275,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
         onPointerUp={handlePointerUpPWR}
         onPointerCancel={handlePointerCancelPWR}
         onPointerLeave={handlePointerCancelPWR}
-        title="Przycisk PWR (Dolny): Klik = Dźwięk | Przytrzymaj (>0.6s) = Przełącz Tryb (Demo / Realtime)"
+        title={deviceT.buttonPWRTitle}
         className={`absolute -bottom-3 sm:-bottom-3.5 left-16 sm:left-20 w-20 h-3.5 sm:h-4 rounded-b-md z-0 flex items-center justify-center transition-all duration-75 cursor-pointer shadow-md ${
           isButtonPWRPressed || isPWRHolding
             ? "-translate-y-0.5 bg-neutral-900 border-b-2 border-rose-500 ring-1 ring-rose-400/50"
@@ -279,7 +283,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
         }`}
       >
         <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold tracking-tight text-rose-300/90 -mb-2 bg-neutral-950/90 px-1 py-0.5 rounded border border-neutral-700 shadow-inner">
-          {isPWRHolding ? "TRZYMAJ..." : "PRZYCISK PWR"}
+          {isPWRHolding ? deviceT.holdLabel : deviceT.buttonPWRLabel}
         </span>
       </button>
 
@@ -395,7 +399,7 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
             onPointerUp={handlePointerUpA}
             onPointerCancel={handlePointerCancelA}
             onPointerLeave={handlePointerCancelA}
-            title="Przycisk A (M5): Klik = Zmień Ekran | Przytrzymaj (>0.6s) = Zmień Dzień Adwentu"
+            title={deviceT.buttonATitle}
             className={`w-12 sm:w-14 h-24 sm:h-28 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-75 border ${
               isButtonAPressed || isAHolding
                 ? "translate-y-1 scale-98 bg-gradient-to-b from-amber-200 to-amber-300 shadow-inner border-amber-500 ring-2 ring-amber-400"
@@ -406,11 +410,11 @@ export const M5StickDevice: React.FC<M5StickDeviceProps> = ({
               M5
             </span>
             <span className="text-[7.5px] sm:text-[8.5px] font-bold text-neutral-600 uppercase tracking-widest font-mono">
-              {isAHolding ? "TRZYMAJ..." : "EKRAN"}
+              {isAHolding ? deviceT.holdLabel : deviceT.screenLabel}
             </span>
           </button>
           <span className="text-[8px] sm:text-[9px] font-bold text-amber-950/80 mt-1.5 tracking-wide font-mono">
-            PRZYCISK A
+            {deviceT.buttonALabel}
           </span>
         </div>
       </div>

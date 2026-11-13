@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Wifi, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { checkWebSerialSupport } from "@/lib/installer/browser-support";
+import { useLanguage } from "@/components/LanguageContext";
 
 interface ImprovWifiButtonProps {
   className?: string;
@@ -11,11 +12,14 @@ interface ImprovWifiButtonProps {
 
 export function ImprovWifiButton({
   className = "",
-  label = "Skonfiguruj Wi-Fi",
+  label,
 }: ImprovWifiButtonProps) {
+  const { lang, t } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [supportInfo, setSupportInfo] = useState({ isSupported: false, recommendation: "" });
+
+  const resolvedLabel = label ?? t.install.configureWifiLabel;
 
   const loadTools = useCallback(() => {
     setHasError(false);
@@ -33,18 +37,21 @@ export function ImprovWifiButton({
 
   useEffect(() => {
     loadTools();
-    setSupportInfo(checkWebSerialSupport());
   }, [loadTools]);
+
+  useEffect(() => {
+    setSupportInfo(checkWebSerialSupport(undefined, undefined, undefined, lang));
+  }, [lang]);
 
   if (hasError) {
     return (
       <button
         onClick={loadTools}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#fde8e8] hover:bg-[#fbd5d5] text-[#991b1b] text-xs font-mono font-bold border border-[#c81e1e] transition cursor-pointer"
-        title="Ponów ładowanie modułu Wi-Fi"
+        title={t.install.wifiRetryTitle}
       >
         <RefreshCw className="w-3.5 h-3.5" />
-        <span>Błąd Wi-Fi (Ponów)</span>
+        <span>{t.install.wifiErrorRetry}</span>
       </button>
     );
   }
@@ -53,7 +60,7 @@ export function ImprovWifiButton({
     return (
       <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f2e4cb] text-[#4a3525] font-mono text-xs border border-[#d5c19e]">
         <Loader2 className="w-3.5 h-3.5 animate-spin text-[#c81e1e]" />
-        <span>Inicjalizacja Wi-Fi...</span>
+        <span>{t.install.wifiInit}</span>
       </div>
     );
   }
@@ -67,7 +74,7 @@ export function ImprovWifiButton({
           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#f2e4cb] hover:bg-[#e7d4b3] border-2 border-[#0d3b26] text-[#0d3b26] font-mono text-xs font-bold transition cursor-pointer"
         >
           <Wifi className="w-3.5 h-3.5 text-[#0d3b26] shrink-0" />
-          <span>{label}</span>
+          <span>{resolvedLabel}</span>
         </button>
 
         {!supportInfo.isSupported && (
@@ -76,7 +83,7 @@ export function ImprovWifiButton({
             className="flex items-center gap-2 p-2.5 rounded-lg bg-[#fde8e8] border border-[#c81e1e] text-[#7f1d1d] text-xs font-mono text-left max-w-xs mt-2"
           >
             <AlertCircle className="w-4 h-4 text-[#c81e1e] shrink-0" />
-            <span>Wymaga Chrome lub Edge.</span>
+            <span>{t.install.requiresChromeOrEdge}</span>
           </div>
         )}
       </improv-wifi-serial-launch-button>
