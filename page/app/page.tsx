@@ -10,6 +10,9 @@ import {
   Camera,
   Sparkles,
   Star,
+  Snowflake,
+  TreePine,
+  Gift,
 } from "lucide-react";
 import { M5StickDevice } from "@/components/M5StickDevice";
 import { FestivePaperBackdrop } from "@/components/FestivePaperBackdrop";
@@ -268,9 +271,25 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* Minimal Newspaper Footer */}
-      <footer className="max-w-6xl w-full mx-auto px-5 sm:px-10 py-4 border-t border-[#dfd0b4] flex items-center justify-center text-xs font-mono text-[#5c3d28] relative z-10">
-        <span>KURIER BIEGUNA PÓŁNOCNEGO · NAKŁAD ŚWIĄTECZNY</span>
+      {/* Festive Christmas Garland Footer */}
+      <footer className="max-w-6xl w-full mx-auto px-5 sm:px-10 py-4 border-t border-[#dfd0b4] flex items-center justify-center relative z-10">
+        <div className="inline-flex items-center gap-2.5 sm:gap-3">
+          <span aria-hidden="true" className="inline-flex items-center gap-1.5 sm:gap-2">
+            <Snowflake className="w-4 h-4 text-[#0d3b26]/70" />
+            <TreePine className="w-4 h-4 text-[#0d3b26]" />
+            <Gift className="w-4 h-4 text-[#c81e1e]" />
+            <Star className="w-3.5 h-3.5 text-[#d97706] fill-[#d97706]" />
+          </span>
+          <span className="font-poster text-base sm:text-lg font-extrabold uppercase tracking-wider text-[#c81e1e]">
+            Wesołych Świąt!
+          </span>
+          <span aria-hidden="true" className="inline-flex items-center gap-1.5 sm:gap-2">
+            <Star className="w-3.5 h-3.5 text-[#d97706] fill-[#d97706]" />
+            <Gift className="w-4 h-4 text-[#c81e1e]" />
+            <TreePine className="w-4 h-4 text-[#0d3b26]" />
+            <Snowflake className="w-4 h-4 text-[#0d3b26]/70" />
+          </span>
+        </div>
       </footer>
     </div>
   );

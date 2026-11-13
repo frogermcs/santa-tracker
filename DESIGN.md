@@ -29,8 +29,8 @@
 
 ---
 
-## Landing Page Surface (`/`): Kurier Bieguna Północnego
-- **Mode**: Persuade — warm, festive Polish North Pole holiday poster (*Kurier Bieguna Północnego*) driving visitors to `/install` (`Zainstaluj na M5Stick`), while `/debugger` hosts the full dark-mode hardware workbench (linked from `/install`'s footer).
+## Landing Page Surface (`/`): Warm Holiday Poster
+- **Mode**: Persuade — warm, festive Polish North Pole holiday poster driving visitors to `/install` (`Zainstaluj na M5Stick`), paired with a Christmas garland & `Wesołych Świąt!` footer on `/` and `/install` (while `/debugger` hosts the full dark-mode hardware workbench linked from `/install`'s footer).
 - **Ground & Seams**: Warm gingerbread-cream paper (`#fbf3e4`) with `#dfd0b4` masthead/footer rules, `#f2e4cb` tactile control trays, and `FestivePaperBackdrop` (top ribbon + low-contrast Christmas icons).
 - **Ink & Accents**: Santa-hat crimson (`#c81e1e`) for oversized condensed headlines, deep holly-pine (`#0d3b26`) for body copy, and M5Stick translucent orange (`#ea580c`) for the primary Install CTA.
 - **Typography**: `Barlow Condensed` (`--font-poster`) for bold Polish poster headlines paired with `Bricolage Grotesque` (`--font-display`) for warm body copy and `JetBrains Mono` (`--font-mono`, `tabular-nums`) for screen tabs and hardware hints.
