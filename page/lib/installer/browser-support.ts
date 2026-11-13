@@ -14,7 +14,8 @@ export interface BrowserSupportInfo {
 export function checkWebSerialSupport(
   userAgent?: string,
   hasSerialOverride?: boolean,
-  maxTouchPointsOverride?: number
+  maxTouchPointsOverride?: number,
+  lang: "pl" | "en" = "pl"
 ): BrowserSupportInfo {
   const ua = userAgent || (typeof navigator !== "undefined" ? navigator.userAgent : "");
   const hasSerial =
@@ -36,7 +37,7 @@ export function checkWebSerialSupport(
   const isMobile = isIOS || isAndroid;
   const isDesktop = !isMobile;
 
-  let browserName = "Inna przeglądarka";
+  let browserName = lang === "en" ? "Other browser" : "Inna przeglądarka";
   if (/Edg\//.test(ua)) browserName = "Microsoft Edge";
   else if (/OPR\//.test(ua)) browserName = "Opera";
   else if (/Chrome\//.test(ua)) browserName = "Google Chrome";
@@ -48,7 +49,10 @@ export function checkWebSerialSupport(
       isSupported: true,
       isDesktop,
       browserName,
-      recommendation: "Twoja przeglądarka w pełni obsługuje instalację przez Web Serial!",
+      recommendation:
+        lang === "en"
+          ? "Your browser fully supports Web Serial installation!"
+          : "Twoja przeglądarka w pełni obsługuje instalację przez Web Serial!",
     };
   }
 
@@ -59,7 +63,9 @@ export function checkWebSerialSupport(
       isDesktop: false,
       browserName: isIPadOS ? "Apple iPadOS (Safari)" : browserName,
       recommendation:
-        "System iOS/iPadOS nie obsługuje połączeń USB przez przeglądarkę. Uruchom tę stronę na komputerze (Mac, Windows, Linux) w przeglądarce Google Chrome lub Microsoft Edge.",
+        lang === "en"
+          ? "iOS/iPadOS does not support browser USB connections. Open this page on a computer (Mac, Windows, Linux) using Google Chrome or Microsoft Edge."
+          : "System iOS/iPadOS nie obsługuje połączeń USB przez przeglądarkę. Uruchom tę stronę na komputerze (Mac, Windows, Linux) w przeglądarce Google Chrome lub Microsoft Edge.",
     };
   }
 
@@ -69,7 +75,9 @@ export function checkWebSerialSupport(
       isDesktop: true,
       browserName,
       recommendation:
-        "Apple Safari nie obsługuje standardu Web Serial. Otwórz tę stronę w przeglądarce Google Chrome, Microsoft Edge, Brave lub Opera na swoim komputerze.",
+        lang === "en"
+          ? "Apple Safari does not support Web Serial. Open this page in Google Chrome, Microsoft Edge, Brave, or Opera on your computer."
+          : "Apple Safari nie obsługuje standardu Web Serial. Otwórz tę stronę w przeglądarce Google Chrome, Microsoft Edge, Brave lub Opera na swoim komputerze.",
     };
   }
 
@@ -79,7 +87,9 @@ export function checkWebSerialSupport(
       isDesktop: true,
       browserName,
       recommendation:
-        "Mozilla Firefox nie obsługuje standardu Web Serial. Użyj przeglądarki Google Chrome, Microsoft Edge lub Brave.",
+        lang === "en"
+          ? "Mozilla Firefox does not support Web Serial. Please use Google Chrome, Microsoft Edge, or Brave."
+          : "Mozilla Firefox nie obsługuje standardu Web Serial. Użyj przeglądarki Google Chrome, Microsoft Edge lub Brave.",
     };
   }
 
@@ -88,6 +98,8 @@ export function checkWebSerialSupport(
     isDesktop,
     browserName,
     recommendation:
-      "Aby wgrać Santa-OS na M5StickC-Plus, otwórz tę stronę na komputerze w przeglądarce Google Chrome, Microsoft Edge lub Brave.",
+      lang === "en"
+        ? "To flash Santa-OS onto your M5StickC-Plus, open this page on a computer using Google Chrome, Microsoft Edge, or Brave."
+        : "Aby wgrać Santa-OS na M5StickC-Plus, otwórz tę stronę na komputerze w przeglądarce Google Chrome, Microsoft Edge lub Brave.",
   };
 }

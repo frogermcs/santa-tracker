@@ -287,5 +287,6 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 * **Milestone 3B (COMPLETE ✅):** In-Browser Wi-Fi Setup & NTP Provisioning (Improv Wi-Fi Serial & Flash NVS persistence, zero-delay boot, micro dot status indicator, contextual pop-up toasts, Burst & Sleep power management).
 * **Milestone 4 (COMPLETE ✅):** Dual-Mode Journey Engine & RTC / NTP Time Synchronization (Demo 30s vs Real 2h cadence, BM8563 RTC, Burst & Sleep NTP, Off-Season Mode 8).
 * **Milestone 5 (COMPLETE ✅):** Festive IoT Landing Page & `/debugger` Separation (warm holiday poster landing page at `/` with `Zainstaluj na M5Stick` CTA $\rightarrow$ `/install`, festive Christmas garland & `Wesołych Świąt!` footer across `/` and `/install` with `/debugger` link, and full simulator & telemetry workbench moved to `/debugger`).
+* **Public Web Localization (`/` & `/install`):** Top-bar `PL` / `EN` language selector (defaulting to `PL`, persisted in `localStorage`) translates all public landing, installer, and hardware-shell UI copy, while the 240×135 hardware simulator canvas remains in Polish to preserve strict 1:1 firmware parity.
 
 

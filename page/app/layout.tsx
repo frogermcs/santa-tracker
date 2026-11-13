@@ -5,6 +5,7 @@ import {
   JetBrains_Mono,
 } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/components/LanguageContext";
 
 const barlowCondensed = Barlow_Condensed({
   subsets: ["latin", "latin-ext"],
@@ -56,7 +57,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans min-h-screen bg-[#0e1116] text-white flex flex-col justify-between selection:bg-amber-500 selection:text-neutral-950">
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Usb, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { checkWebSerialSupport } from "@/lib/installer/browser-support";
+import { useLanguage } from "@/components/LanguageContext";
 
 interface ESPWebInstallButtonProps {
   manifestUrl?: string;
@@ -15,11 +16,14 @@ export function ESPWebInstallButton({
   manifestUrl = "/firmware/manifest.json",
   className = "",
   size = "default",
-  label = "Zainstaluj SANTA-OS",
+  label,
 }: ESPWebInstallButtonProps) {
+  const { lang, t } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [supportInfo, setSupportInfo] = useState({ isSupported: false, recommendation: "" });
+
+  const resolvedLabel = label ?? t.install.installButtonDefaultLabel;
 
   const loadTools = useCallback(() => {
     setHasError(false);
@@ -37,22 +41,25 @@ export function ESPWebInstallButton({
 
   useEffect(() => {
     loadTools();
-    setSupportInfo(checkWebSerialSupport());
   }, [loadTools]);
+
+  useEffect(() => {
+    setSupportInfo(checkWebSerialSupport(undefined, undefined, undefined, lang));
+  }, [lang]);
 
   if (hasError) {
     return (
       <div className="flex items-center justify-between gap-3 p-3 px-4 rounded-xl bg-[#fde8e8] border-2 border-[#c81e1e] text-[#7f1d1d] text-xs font-mono">
         <div className="flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-[#c81e1e] shrink-0" />
-          <span>Błąd ładowania modułu Web Serial.</span>
+          <span>{t.install.webSerialLoadError}</span>
         </div>
         <button
           onClick={loadTools}
           className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#c81e1e] hover:bg-[#991b1b] text-[#fffaf0] text-xs font-bold transition cursor-pointer"
         >
           <RefreshCw className="w-3 h-3" />
-          <span>Ponów</span>
+          <span>{t.install.retry}</span>
         </button>
       </div>
     );
@@ -68,7 +75,7 @@ export function ESPWebInstallButton({
         }
       >
         <Loader2 className="w-5 h-5 animate-spin text-[#c81e1e]" />
-        <span>Inicjalizacja modułu Web Serial...</span>
+        <span>{t.install.webSerialInit}</span>
       </div>
     );
   }
@@ -82,7 +89,7 @@ export function ESPWebInstallButton({
     <div className={className}>
       <esp-web-install-button manifest={manifestUrl}>
         <button slot="activate" className={buttonClasses}>
-          <span>{label}</span>
+          <span>{resolvedLabel}</span>
           <span
             className={
               size === "hero"
@@ -101,7 +108,7 @@ export function ESPWebInstallButton({
           >
             <AlertCircle className="w-4 h-4 text-[#c81e1e] shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold block text-[#7f1d1d]">Przeglądarka nieobsługiwana:</span>
+              <span className="font-bold block text-[#7f1d1d]">{t.install.unsupportedBrowserHeading}</span>
               <span>{supportInfo.recommendation}</span>
             </div>
           </div>
