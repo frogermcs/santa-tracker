@@ -193,7 +193,7 @@ stateDiagram-v2
 * **Key Deliverables:**
   - [x] **1. Dedicated Landing Page (`page/app/page.tsx`):**
     * Designed from the ground up with `/impeccable` in the warm gingerbread-cream holiday poster aesthetic (`#fbf3e4`) with `FestivePaperBackdrop` Christmas motifs and a `FestiveGarlandGreeting` (`Wesołych Świąt!`) footer.
-    * 100% Polish copy focused on tracking Santa's Advent journey, paired with an interactive 1:1 `M5StickDevice` preview defaulting to **Santa Cam** in **Real-Time Mode** (long-press `B` to toggle Demo Mode; click `M5` or screen tabs to cycle `MikoRadar`, `Kokpit Misji`, `Santa Cam`).
+    * Polish default (`PL`) with a top-bar `PL` / `EN` language selector across `/` and `/install` (persisted in `localStorage`), paired with an interactive 1:1 `M5StickDevice` preview defaulting to **Santa Cam** in **Real-Time Mode** (long-press `B` to toggle Demo Mode; click `M5` or screen tabs to cycle `MikoRadar` / `SantaRadar`, `Kokpit Misji` / `Mission Cockpit`, `Santa Cam`, while the 240×135 simulator canvas remains in Polish for 1:1 firmware parity).
     * Single primary CTA (`Zainstaluj na M5Stick` $\rightarrow$ `/install`), with the `/debugger` link placed discreetly in `/install`'s footer.
   - [x] **2. Hardware Workbench Relocation (`page/app/debugger/page.tsx`):**
     * Moved the full 1:1 hardware simulator, 24-day Advent ribbon, simulation date presets, telemetry panels, and links to `/map-debugger` and `/scene-debugging` to `/debugger`.
