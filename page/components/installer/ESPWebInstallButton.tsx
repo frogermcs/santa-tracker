@@ -42,14 +42,14 @@ export function ESPWebInstallButton({
 
   if (hasError) {
     return (
-      <div className="flex items-center justify-between gap-3 p-3 px-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs font-mono">
+      <div className="flex items-center justify-between gap-3 p-3 px-4 rounded-xl bg-[#fde8e8] border-2 border-[#c81e1e] text-[#7f1d1d] text-xs font-mono">
         <div className="flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          <AlertCircle className="w-4 h-4 text-[#c81e1e] shrink-0" />
           <span>Błąd ładowania modułu Web Serial.</span>
         </div>
         <button
           onClick={loadTools}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-rose-900/60 hover:bg-rose-800 text-white text-xs font-bold transition border border-rose-400/30 cursor-pointer"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#c81e1e] hover:bg-[#991b1b] text-[#fffaf0] text-xs font-bold transition cursor-pointer"
         >
           <RefreshCw className="w-3 h-3" />
           <span>Ponów</span>
@@ -63,11 +63,11 @@ export function ESPWebInstallButton({
       <div
         className={
           size === "hero"
-            ? "inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl bg-[#091326] text-slate-300 font-mono text-sm sm:text-base border border-white/10"
-            : "flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#091326] text-slate-400 font-mono text-xs border border-white/10"
+            ? "inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-xl bg-[#f2e4cb] text-[#0d3b26] font-mono font-bold text-sm sm:text-base border-2 border-[#d5c19e]"
+            : "flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#f2e4cb] text-[#0d3b26] font-mono text-xs border-2 border-[#d5c19e]"
         }
       >
-        <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+        <Loader2 className="w-5 h-5 animate-spin text-[#c81e1e]" />
         <span>Inicjalizacja modułu Web Serial...</span>
       </div>
     );
@@ -75,26 +75,34 @@ export function ESPWebInstallButton({
 
   const buttonClasses =
     size === "hero"
-      ? "inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white font-mono font-bold text-base sm:text-lg border border-emerald-400/50 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.99] cursor-pointer"
-      : "w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white font-mono font-bold text-sm border border-emerald-400/50 shadow-sm transition cursor-pointer";
+      ? "inline-flex items-center justify-center gap-4 pl-6 pr-3 py-3 rounded-xl bg-[#ea580c] hover:bg-[#dc4c05] active:translate-y-0.5 text-[#fffaf0] font-extrabold text-xl sm:text-2xl tracking-tight shadow-[0_4px_12px_rgba(153,27,27,0.35)] transition cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0d3b26]"
+      : "w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-[#ea580c] hover:bg-[#dc4c05] text-[#fffaf0] font-bold text-sm shadow-sm transition cursor-pointer";
 
   return (
     <div className={className}>
       <esp-web-install-button manifest={manifestUrl}>
         <button slot="activate" className={buttonClasses}>
-          <Usb className={size === "hero" ? "w-5 h-5 sm:w-6 sm:h-6 text-emerald-200" : "w-4 h-4 text-emerald-200"} />
           <span>{label}</span>
+          <span
+            className={
+              size === "hero"
+                ? "w-11 h-11 rounded-lg bg-[#991b1b] flex items-center justify-center shrink-0"
+                : "w-7 h-7 rounded-md bg-[#991b1b] flex items-center justify-center shrink-0"
+            }
+          >
+            <Usb className={size === "hero" ? "w-6 h-6 text-[#fffaf0]" : "w-4 h-4 text-[#fffaf0]"} />
+          </span>
         </button>
 
         {!supportInfo.isSupported && (
           <div
             slot="unsupported"
-            className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs font-mono text-left max-w-md mx-auto"
+            className="flex items-start gap-2.5 p-3.5 rounded-xl bg-[#fde8e8] border-2 border-[#c81e1e] text-[#7f1d1d] text-xs font-mono text-left max-w-md mx-auto mt-3"
           >
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 text-[#c81e1e] shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold block text-rose-100">Przeglądarka nieobsługiwana:</span>
-              <span className="text-rose-200/90">{supportInfo.recommendation}</span>
+              <span className="font-bold block text-[#7f1d1d]">Przeglądarka nieobsługiwana:</span>
+              <span>{supportInfo.recommendation}</span>
             </div>
           </div>
         )}

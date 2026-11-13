@@ -187,10 +187,14 @@ stateDiagram-v2
 
 ---
 
-## Milestone 5: Hardware Polish & Festive Packaging (FUTURE 🎄)
+## Milestone 5: Festive IoT Landing Page & `/debugger` Separation (COMPLETE ✅)
 
-* **Objective:** Package the gadget into an heirloom Christmas Eve maker toy.
+* **Objective:** Present a focused, playful, Christmas-themed Santa Tracker IoT landing page at `/` with a single clear "Install" CTA (`/install`), while moving the full hardware workbench, simulator controls, and telemetry panels to `/debugger`.
 * **Key Deliverables:**
-  - [ ] **3D-Printed Sleigh/Chimney Dock:** Snap-on display dock with USB-C power pass-through.
-  - [ ] **Audio Jingle Engine:** Polyphonic 8-bit Christmas chimes on city arrival using `M5.Speaker`.
-  - [ ] **Kid's Flight Manual:** Retro printable mission log card to track cities daily from Dec 1 to Dec 24.
+  - [x] **1. Dedicated Landing Page (`page/app/page.tsx`):**
+    * Designed from the ground up with `/impeccable` in the **Kurier Bieguna Północnego** warm gingerbread-cream paper aesthetic (`#fbf3e4`) with `FestivePaperBackdrop` Christmas motifs.
+    * 100% Polish copy focused on tracking Santa's Advent journey, paired with an interactive 1:1 `M5StickDevice` preview defaulting to **Santa Cam** in **Real-Time Mode** (long-press `B` to toggle Demo Mode; click `M5` or screen tabs to cycle `MikoRadar`, `Kokpit Misji`, `Santa Cam`).
+    * Single primary CTA (`Zainstaluj na M5Stick` $\rightarrow$ `/install`), with the `/debugger` link placed discreetly in `/install`'s footer.
+  - [x] **2. Hardware Workbench Relocation (`page/app/debugger/page.tsx`):**
+    * Moved the full 1:1 hardware simulator, 24-day Advent ribbon, simulation date presets, telemetry panels, and links to `/map-debugger` and `/scene-debugging` to `/debugger`.
+    * Updated navigation links across `/map-debugger`, `/scene-debugging`, and `/install` for clean round-trip wayfinding.

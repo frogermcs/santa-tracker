@@ -409,11 +409,11 @@ export default function MapDebuggerPage() {
       <header className="shrink-0 border-b border-neutral-800 bg-[#0b1021]/95 backdrop-blur-md px-4 py-2 flex items-center justify-between z-30">
         <div className="flex items-center gap-3">
           <Link
-            href="/"
+            href="/debugger"
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-800 transition text-xs font-mono font-bold cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Wróć do Radaru</span>
+            <span>Wróć do Debugera</span>
           </Link>
 
           <Link

@@ -21,7 +21,7 @@ The companion web application (`page/`) serves as the definitive functional, vis
 * **Web-First Delivery Sequence**: The web app must always be 100% development-complete, tested, and approved **prior** to porting features to the IoT firmware.
 * **1:1 Screen Parity**: Every single screen, mode, and state present on the IoT device must have an exact 1:1 corresponding screen on the web companion app (running the exact 240×135 ST7789v2 canvas emulation).
 * **Algorithm & Coordinate Parity**: Coordinate projections, interpolation easing curves (`ease()`), and transit/landed timings are perfected and verified on the web before being mirrored into C++.
-* **1:1 LovyanGFX / M5Canvas Web Twin (`/`)**: Root application page directly executes `M5CanvasSim` and zero-allocation C++ logic (`iotAppLogic.ts`) inside the native 1x physical ST7789v2 enclosure. Implements exact LovyanGFX method signatures, RGB565 color math, text datums, and integer coordinate truncation (`Math.floor`) with instant HMR and 100% C++ portability.
+* **1:1 LovyanGFX / M5Canvas Web Twin (`/debugger`)**: Hardware debugger page directly executes `M5CanvasSim` and zero-allocation C++ logic (`iotAppLogic.ts`) inside the native 1x physical ST7789v2 enclosure, while `/` serves as the dedicated Santa Tracker IoT landing page. Implements exact LovyanGFX method signatures, RGB565 color math, text datums, and integer coordinate truncation (`Math.floor`) with instant HMR and 100% C++ portability.
 
 ---
 
@@ -286,6 +286,6 @@ To maintain strict 1:1 parity between physical M5StickC-Plus SE hardware and the
 * **Milestone 3A (COMPLETE ✅):** Pure Web Installer for IoT (ESP Web Tools flashing on `/install` route, automated binary packaging pipeline, browser capability guard).
 * **Milestone 3B (COMPLETE ✅):** In-Browser Wi-Fi Setup & NTP Provisioning (Improv Wi-Fi Serial & Flash NVS persistence, zero-delay boot, micro dot status indicator, contextual pop-up toasts, Burst & Sleep power management).
 * **Milestone 4 (COMPLETE ✅):** Dual-Mode Journey Engine & RTC / NTP Time Synchronization (Demo 30s vs Real 2h cadence, BM8563 RTC, Burst & Sleep NTP, Off-Season Mode 8).
-* **Milestone 5 (FUTURE 🎄):** Hardware Polish & Festive Packaging (Audio jingles, 3D-printed dock, kid's flight log).
+* **Milestone 5 (COMPLETE ✅):** Festive IoT Landing Page & `/debugger` Separation (*Kurier Bieguna Północnego* warm paper landing page at `/` with `Zainstaluj na M5Stick` CTA $\rightarrow$ `/install`, matching `/install` aesthetic with `/debugger` footer link, and full simulator & telemetry workbench moved to `/debugger`).
 
 
