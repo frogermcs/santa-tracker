@@ -12,14 +12,11 @@ import {
   ExternalLink,
   CheckCircle2,
   AlertTriangle,
-  Snowflake,
-  TreePine,
-  Gift,
-  Star,
 } from "lucide-react";
 import { ESPWebInstallButton } from "@/components/installer/ESPWebInstallButton";
 import { ImprovWifiButton } from "@/components/installer/ImprovWifiButton";
 import { FestivePaperBackdrop } from "@/components/FestivePaperBackdrop";
+import { FestiveGarlandGreeting } from "@/components/FestiveGarlandGreeting";
 import { checkWebSerialSupport, BrowserSupportInfo } from "@/lib/installer/browser-support";
 
 export default function InstallPage() {
@@ -219,26 +216,10 @@ export default function InstallPage() {
 
       {/* Festive Christmas Garland Footer */}
       <footer className="max-w-6xl w-full mx-auto px-5 sm:px-10 py-4 border-t border-[#dfd0b4] flex flex-wrap items-center justify-between gap-3 relative z-10">
-        <div className="inline-flex items-center gap-2.5">
-          <span aria-hidden="true" className="inline-flex items-center gap-1.5">
-            <Snowflake className="w-4 h-4 text-[#0d3b26]/70" />
-            <TreePine className="w-4 h-4 text-[#0d3b26]" />
-            <Gift className="w-4 h-4 text-[#c81e1e]" />
-            <Star className="w-3.5 h-3.5 text-[#d97706] fill-[#d97706]" />
-          </span>
-          <span className="font-poster text-base font-extrabold uppercase tracking-wider text-[#c81e1e]">
-            Wesołych Świąt!
-          </span>
-          <span aria-hidden="true" className="inline-flex items-center gap-1.5">
-            <Star className="w-3.5 h-3.5 text-[#d97706] fill-[#d97706]" />
-            <Gift className="w-4 h-4 text-[#c81e1e]" />
-            <TreePine className="w-4 h-4 text-[#0d3b26]" />
-            <Snowflake className="w-4 h-4 text-[#0d3b26]/70" />
-          </span>
-        </div>
+        <FestiveGarlandGreeting />
         <Link
           href="/debugger"
-          className="text-xs font-bold text-[#0d3b26] hover:text-[#c81e1e] underline underline-offset-4 transition"
+          className="text-xs font-bold text-[#0d3b26] hover:text-[#c81e1e] underline underline-offset-4 transition focus-visible:outline-2 focus-visible:outline-[#c81e1e]"
         >
           Debuger i Symulator
         </Link>
