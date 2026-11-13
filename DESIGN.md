@@ -26,3 +26,12 @@
 - **Hardware Centerpiece**: The M5StickC-Plus SE device is elevated as a physical artifact on a tactical workbench, featuring synchronous ambient backlight glow reacting to the radar sweep.
 - **Advent Timeline**: Seamless horizontal ribbon for days Dec 01 to Dec 24, giving immediate visual status for each day's leg.
 - **Warp Engine**: Direct tactile presets for 1x, 2x, 5x, 10x (Test Mode), 20x, and 60x.
+
+---
+
+## Landing Page Surface (`/`): Kurier Bieguna Północnego
+- **Mode**: Persuade — warm, slightly goofy Polish North Pole holiday tabloid & poster driving visitors to `/install` (`Zainstaluj na M5Stick`), while `/debugger` hosts the full dark-mode hardware workbench.
+- **Ground & Seams**: Warm gingerbread-cream paper (`#fbf3e4`) with `#dfd0b4` masthead/footer rules and `#f2e4cb` tactile control trays.
+- **Ink & Accents**: Santa-hat crimson (`#c81e1e`) for oversized condensed headlines, deep holly-pine (`#0d3b26`) for body copy and rubber-stamp badges (`288 MIAST`, `FINAŁ: KRAKÓW`), and M5Stick translucent orange (`#ea580c`) for the primary Install CTA.
+- **Typography**: `Barlow Condensed` (`--font-poster`) for bold Polish poster headlines paired with `Bricolage Grotesque` (`--font-display`) for warm body copy and `JetBrains Mono` (`--font-mono`, `tabular-nums`) for screen tabs and stamps.
+- **Signature Interaction**: Live interactive `M5StickDevice` cycling `MikoRadar`, `Kokpit Misji`, and `Santa Cam` via the physical `M5` button or the cream-paper screen pills.

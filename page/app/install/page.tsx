@@ -7,7 +7,7 @@ import {
   ArrowLeft,
   Compass,
   Gauge,
-  Sparkles,
+  Camera,
   HelpCircle,
   ExternalLink,
   CheckCircle2,
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { ESPWebInstallButton } from "@/components/installer/ESPWebInstallButton";
 import { ImprovWifiButton } from "@/components/installer/ImprovWifiButton";
-import { SnowEffect } from "@/components/SnowEffect";
+import { FestivePaperBackdrop } from "@/components/FestivePaperBackdrop";
 import { checkWebSerialSupport, BrowserSupportInfo } from "@/lib/installer/browser-support";
 
 export default function InstallPage() {
@@ -27,83 +27,69 @@ export default function InstallPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#060a16] text-slate-100 flex flex-col relative overflow-x-hidden">
-      {/* Arctic Midnight Sky with Aurora & Starlight Depth */}
-      <div
-        aria-hidden="true"
-        className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(14,165,233,0.12),transparent_70%),radial-gradient(circle_at_50%_35%,#091326_0%,#060a16_55%,#03050d_100%)]"
-      />
-
-      {/* Gentle Falling Snow Particle Layer */}
-      <SnowEffect />
-
-      {/* Navigation Top Header */}
-      <header className="border-b border-white/10 bg-[#070e1c]/75 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-rose-950/40 border border-rose-500/30 flex items-center justify-center p-1 shadow-sm shrink-0">
-            <Image src="/santa-icon.svg" alt="Santa" width={24} height={24} className="w-6 h-6" priority />
-          </div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-sm font-bold font-mono tracking-tight text-white">
-              SANTA-OS
-            </h1>
-          </div>
-        </div>
-
+    <div className="min-h-screen bg-[#fbf3e4] text-[#0d3b26] flex flex-col relative overflow-x-hidden selection:bg-[#c81e1e] selection:text-[#fbf3e4]">
+      <FestivePaperBackdrop />
+      {/* Masthead */}
+      <header className="max-w-6xl w-full mx-auto px-5 sm:px-10 pt-5 pb-4 border-b border-[#dfd0b4] flex items-center justify-between gap-4 relative z-20">
         <Link
           href="/"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 transition font-bold font-mono text-xs cursor-pointer"
+          className="inline-flex items-center gap-1.5 font-sans text-sm font-bold text-[#0d3b26] hover:text-[#c81e1e] transition focus-visible:outline-2 focus-visible:outline-[#c81e1e]"
         >
-          <ArrowLeft className="w-3.5 h-3.5 text-amber-400" />
-          <span>Powrót do Radaru</span>
+          <ArrowLeft className="w-4 h-4" />
+          <span>Strona główna</span>
         </Link>
-      </header>
 
-      {/* Hero Component */}
-      <main className="flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 py-12 sm:py-20 max-w-3xl mx-auto space-y-8 relative z-10 w-full">
-        {/* Santa-OS Badge */}
-        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-rose-950/40 border border-rose-500/30 flex items-center justify-center p-3 shadow-lg">
-          <Image
-            src="/santa-icon.svg"
-            alt="Santa-OS"
-            width={72}
-            height={72}
-            className="w-14 h-14 sm:w-16 sm:h-16"
-            priority
-          />
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-lg bg-[#f3e5cb] border-2 border-[#3b2316] flex items-center justify-center p-1 shrink-0">
+            <Image
+              src="/santa-icon.svg"
+              alt="Santa OS"
+              width={24}
+              height={24}
+              className="w-6 h-6"
+              priority
+            />
+          </div>
+          <span className="font-poster text-2xl font-extrabold tracking-tight text-[#3b2316]">
+            Santa OS
+          </span>
         </div>
 
-        {/* Hero Title & Description */}
+        <div className="w-24 hidden sm:block" aria-hidden="true" />
+      </header>
+
+      {/* Main Install Stage */}
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-5 sm:px-8 py-10 sm:py-16 max-w-3xl mx-auto space-y-8 relative z-10 w-full">
+        {/* Title & Subcopy */}
         <div className="space-y-3">
-          <h2 className="text-3xl sm:text-5xl font-black font-mono tracking-tight text-white text-balance">
-            Zainstaluj SANTA-OS
-          </h2>
-          <p className="text-base sm:text-lg text-slate-300 max-w-lg mx-auto font-sans leading-relaxed text-pretty">
-            Podłącz M5Stick kablem USB do komputera i uruchom radar Świętego Mikołaja bezpośrednio z przeglądarki.
+          <h1 className="font-poster text-5xl sm:text-6xl font-extrabold uppercase tracking-[-0.02em] leading-[0.95] text-[#c81e1e] text-balance">
+            ZAINSTALUJ SANTA-OS
+          </h1>
+          <p className="text-lg sm:text-xl font-bold text-[#0d3b26] max-w-xl mx-auto leading-snug text-pretty">
+            Podłącz M5StickC-Plus SE kablem USB do komputera i wgraj system
+            bezpośrednio z przeglądarki.
           </p>
         </div>
 
-        {/* Big Install Button & In-Browser Wi-Fi Action */}
+        {/* Primary Flasher & Wi-Fi Setup */}
         <div className="space-y-4 w-full flex flex-col items-center">
           <ESPWebInstallButton size="hero" label="Zainstaluj na M5Stick" />
 
-          {/* Returning User / Direct Wi-Fi Provisioning Sub-action */}
-          <div className="flex items-center justify-center gap-2 text-xs">
-            <span className="text-slate-400 font-sans">Masz już SANTA-OS?</span>
+          <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs pt-1">
+            <span className="font-bold text-[#4a3525]">Masz już SANTA-OS?</span>
             <ImprovWifiButton label="Skonfiguruj Wi-Fi" />
           </div>
 
-          {/* Browser / Protocol Status */}
           {support && (
-            <div className="flex items-center justify-center gap-2 text-xs font-mono">
+            <div className="flex items-center justify-center gap-2 text-xs font-mono font-bold pt-1">
               {support.isSupported ? (
-                <div className="flex items-center gap-1.5 text-emerald-400">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <div className="flex items-center gap-1.5 text-[#0d3b26]">
+                  <CheckCircle2 className="w-4 h-4 text-[#15803d] shrink-0" />
                   <span>Web Serial API gotowy ({support.browserName})</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 text-rose-300">
-                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                <div className="flex items-center gap-1.5 text-[#c81e1e]">
+                  <AlertTriangle className="w-4 h-4 text-[#c81e1e] shrink-0" />
                   <span>{support.recommendation}</span>
                 </div>
               )}
@@ -111,53 +97,59 @@ export default function InstallPage() {
           )}
         </div>
 
-        {/* Fancy Santa-OS Highlights */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full pt-4">
-          <div className="p-4 rounded-2xl bg-[#0c162b]/80 border border-white/10 text-left space-y-1">
-            <div className="flex items-center gap-2 text-emerald-400 font-mono font-bold text-xs">
-              <Compass className="w-4 h-4 shrink-0" />
+        {/* 3 Screens Summary Strip */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 w-full border-t border-b border-[#dfd0b4] divide-y sm:divide-y-0 sm:divide-x divide-[#dfd0b4] text-left">
+          <div className="py-4 sm:px-5 space-y-1">
+            <div className="flex items-center gap-2 text-[#0d3b26] font-mono font-bold text-xs uppercase">
+              <Compass className="w-4 h-4 text-[#15803d] shrink-0" />
               <span>MikoRadar</span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed text-pretty">
-              Śledź trasę Mikołaja na żywo.
+            <p className="text-sm text-[#4a3525] leading-snug">
+              Śledź trasę sań Mikołaja na żywo przez 24 dni Adwentu.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#0c162b]/80 border border-white/10 text-left space-y-1">
-            <div className="flex items-center gap-2 text-amber-400 font-mono font-bold text-xs">
-              <Gauge className="w-4 h-4 shrink-0" />
+          <div className="py-4 sm:px-5 space-y-1">
+            <div className="flex items-center gap-2 text-[#0d3b26] font-mono font-bold text-xs uppercase">
+              <Gauge className="w-4 h-4 text-[#ea580c] shrink-0" />
               <span>Kokpit Misji</span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed text-pretty">
-              Sprawdź telemetrię misji Mikołaja.
+            <p className="text-sm text-[#4a3525] leading-snug">
+              Prędkość Mach, wysokość i licznik zjedzonych ciastek.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#0c162b]/80 border border-white/10 text-left space-y-1">
-            <div className="flex items-center gap-2 text-rose-400 font-mono font-bold text-xs">
-              <Sparkles className="w-4 h-4 shrink-0" />
+          <div className="py-4 sm:px-5 space-y-1">
+            <div className="flex items-center gap-2 text-[#0d3b26] font-mono font-bold text-xs uppercase">
+              <Camera className="w-4 h-4 text-[#c81e1e] shrink-0" />
               <span>Santa Cam</span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed text-pretty">
-              Zobacz Mikołaja w akcji.
+            <p className="text-sm text-[#4a3525] leading-snug">
+              Pikselowa kamera z lotu, kominów i przerwy przy kominku.
             </p>
           </div>
         </div>
 
-        {/* Minimal Expandable Troubleshooting */}
-        <div className="w-full pt-4">
+        {/* Expandable USB Troubleshooting */}
+        <div className="w-full pt-1">
           <button
+            type="button"
             onClick={() => setShowTroubleshooting((prev) => !prev)}
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-slate-200 transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#4a3525] hover:text-[#c81e1e] transition cursor-pointer focus-visible:outline-2 focus-visible:outline-[#c81e1e]"
           >
-            <HelpCircle className="w-3.5 h-3.5 text-sky-400" />
-            <span>{showTroubleshooting ? "Ukryj pomoc i sterowniki USB ▲" : "Potrzebujesz pomocy ze sterownikami USB? ▼"}</span>
+            <HelpCircle className="w-3.5 h-3.5 text-[#c81e1e]" />
+            <span>
+              {showTroubleshooting
+                ? "Ukryj pomoc i sterowniki USB ▲"
+                : "Potrzebujesz pomocy ze sterownikami USB? ▼"}
+            </span>
           </button>
 
           {showTroubleshooting && (
-            <div className="mt-4 p-5 rounded-2xl bg-[#0c162b]/90 border border-white/10 text-left space-y-3 font-mono text-xs">
-              <p className="text-slate-300 leading-relaxed text-pretty">
-                M5Stick wykorzystuje konwerter USB-UART (CP2104 lub CH9102). Jeśli port nie pojawia się w oknie wyboru:
+            <div className="mt-4 p-5 rounded-xl bg-[#f2e4cb] border-2 border-[#d5c19e] text-left space-y-3 font-mono text-xs text-[#3b2316]">
+              <p className="leading-relaxed text-pretty">
+                M5Stick wykorzystuje konwerter USB-UART (CP2104 lub CH9102). Jeśli
+                port nie pojawia się w oknie wyboru:
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -165,36 +157,55 @@ export default function InstallPage() {
                   href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-3 rounded-lg border border-white/15 hover:border-white/30 hover:bg-white/[0.03] flex items-center justify-between text-sky-300 transition"
+                  className="p-3 rounded-lg bg-[#fbf3e4] border border-[#d5c19e] hover:border-[#0d3b26] flex items-center justify-between text-[#0d3b26] transition"
                 >
                   <div>
-                    <span className="font-bold block text-white text-xs">CP2104 (Silicon Labs)</span>
-                    <span className="text-xs text-slate-400">Dla M5StickC-Plus</span>
+                    <span className="font-bold block text-xs">
+                      CP2104 (Silicon Labs)
+                    </span>
+                    <span className="text-xs text-[#5c3d28]">
+                      Dla M5StickC-Plus
+                    </span>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-sky-400 shrink-0 ml-2" />
+                  <ExternalLink className="w-4 h-4 text-[#c81e1e] shrink-0 ml-2" />
                 </a>
 
                 <a
                   href="https://www.wch-ic.com/downloads/CH343SER_ZIP.html"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-3 rounded-lg border border-white/15 hover:border-white/30 hover:bg-white/[0.03] flex items-center justify-between text-emerald-300 transition"
+                  className="p-3 rounded-lg bg-[#fbf3e4] border border-[#d5c19e] hover:border-[#0d3b26] flex items-center justify-between text-[#0d3b26] transition"
                 >
                   <div>
-                    <span className="font-bold block text-white text-xs">CH9102 (WCH)</span>
-                    <span className="text-xs text-slate-400">Dla M5StickC-Plus SE</span>
+                    <span className="font-bold block text-xs">
+                      CH9102 (WCH)
+                    </span>
+                    <span className="text-xs text-[#5c3d28]">
+                      Dla M5StickC-Plus SE
+                    </span>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />
+                  <ExternalLink className="w-4 h-4 text-[#0d3b26] shrink-0 ml-2" />
                 </a>
               </div>
 
-              <div className="pt-2 border-t border-white/10 text-xs text-slate-300 space-y-1">
-                <span className="font-bold text-amber-300 block">Wskazówki:</span>
-                <ul className="space-y-1 list-disc list-inside text-slate-300 text-pretty">
-                  <li>Użyj kabla USB-C z liniami danych (nie tylko do ładowania).</li>
-                  <li>Wi-Fi: M5Stick wymaga sieci 2.4 GHz (pasmo 5 GHz nie jest obsługiwane przez ESP32).</li>
-                  <li>W razie braku reakcji przytrzymaj przedni przycisk M5 (GPIO0) podczas wpinania kabla.</li>
-                  <li>W Linuksie dodaj uprawnienia: <code>sudo usermod -a -G dialout $USER</code>.</li>
+              <div className="pt-2 border-t border-[#d5c19e] text-xs space-y-1">
+                <span className="font-bold text-[#c81e1e] block">Wskazówki:</span>
+                <ul className="space-y-1 list-disc list-inside text-[#3b2316] text-pretty">
+                  <li>
+                    Użyj kabla USB-C z liniami danych (nie tylko do ładowania).
+                  </li>
+                  <li>
+                    Wi-Fi: M5Stick wymaga sieci 2.4 GHz (pasmo 5 GHz nie jest
+                    obsługiwane przez ESP32).
+                  </li>
+                  <li>
+                    W razie braku reakcji przytrzymaj przedni przycisk M5
+                    (GPIO0) podczas wpinania kabla.
+                  </li>
+                  <li>
+                    W Linuksie dodaj uprawnienia:{" "}
+                    <code>sudo usermod -a -G dialout $USER</code>.
+                  </li>
                 </ul>
               </div>
             </div>
@@ -202,9 +213,15 @@ export default function InstallPage() {
         </div>
       </main>
 
-      {/* Minimal Footer */}
-      <footer className="border-t border-white/10 py-5 text-center text-xs font-mono text-slate-400 relative z-10">
-        SANTA-OS • Autonomiczny radar Świętego Mikołaja na M5StickC-Plus
+      {/* Newspaper Footer */}
+      <footer className="max-w-6xl w-full mx-auto px-5 sm:px-10 py-4 border-t border-[#dfd0b4] flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-[#5c3d28] relative z-10">
+        <span>KURIER BIEGUNA PÓŁNOCNEGO · INSTALATOR USB</span>
+        <Link
+          href="/debugger"
+          className="font-bold text-[#0d3b26] hover:text-[#c81e1e] underline underline-offset-4 transition"
+        >
+          Debuger i Symulator
+        </Link>
       </footer>
     </div>
   );

@@ -40,7 +40,7 @@ export function ImprovWifiButton({
     return (
       <button
         onClick={loadTools}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-mono border border-rose-500/30 transition cursor-pointer"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#fde8e8] hover:bg-[#fbd5d5] text-[#991b1b] text-xs font-mono font-bold border border-[#c81e1e] transition cursor-pointer"
         title="Ponów ładowanie modułu Wi-Fi"
       >
         <RefreshCw className="w-3.5 h-3.5" />
@@ -51,8 +51,8 @@ export function ImprovWifiButton({
 
   if (!mounted) {
     return (
-      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#091326] text-slate-400 font-mono text-xs border border-white/10">
-        <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400" />
+      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f2e4cb] text-[#4a3525] font-mono text-xs border border-[#d5c19e]">
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#c81e1e]" />
         <span>Inicjalizacja Wi-Fi...</span>
       </div>
     );
@@ -64,18 +64,18 @@ export function ImprovWifiButton({
         <button
           slot="activate"
           type="button"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 active:bg-sky-500/30 border border-sky-500/40 hover:border-sky-400/60 text-sky-200 hover:text-white font-mono text-xs font-semibold shadow-sm transition-all cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#f2e4cb] hover:bg-[#e7d4b3] border-2 border-[#0d3b26] text-[#0d3b26] font-mono text-xs font-bold transition cursor-pointer"
         >
-          <Wifi className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+          <Wifi className="w-3.5 h-3.5 text-[#0d3b26] shrink-0" />
           <span>{label}</span>
         </button>
 
         {!supportInfo.isSupported && (
           <div
             slot="unsupported"
-            className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs font-mono text-left max-w-xs"
+            className="flex items-center gap-2 p-2.5 rounded-lg bg-[#fde8e8] border border-[#c81e1e] text-[#7f1d1d] text-xs font-mono text-left max-w-xs mt-2"
           >
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-[#c81e1e] shrink-0" />
             <span>Wymaga Chrome lub Edge.</span>
           </div>
         )}

@@ -289,12 +289,12 @@ export default function SceneDebuggingPage() {
       <header className="border-b border-white/10 bg-[#070e1c]/80 backdrop-blur-md px-4 sm:px-8 py-3 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <Link
-            href="/"
+            href="/debugger"
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-white/10 text-slate-300 hover:text-white transition text-xs font-mono font-bold cursor-pointer"
-            title="Powrót do głównego symulatora"
+            title="Powrót do głównego debugera"
           >
             <ArrowLeft className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">Symulator</span>
+            <span className="hidden sm:inline">Debuger</span>
           </Link>
 
           <div className="h-4 w-px bg-white/10 hidden sm:block" />
