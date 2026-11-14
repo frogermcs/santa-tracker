@@ -20,6 +20,10 @@ jobs:
           cache-dependency-path: page/package-lock.json
       - name: Install Dependencies
         run: cd page && npm ci
+      - name: Lint
+        run: cd page && npm run lint
+      - name: Run Tests & Typecheck
+        run: cd page && npm test
       - name: Build Next.js
         run: cd page && npm run build
 
