@@ -5,6 +5,7 @@ import {
   JetBrains_Mono,
 } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import { LanguageProvider } from "@/components/LanguageContext";
 
 const barlowCondensed = Barlow_Condensed({
@@ -58,6 +59,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans min-h-screen bg-[#0e1116] text-white flex flex-col justify-between selection:bg-amber-500 selection:text-neutral-950">
         <LanguageProvider>{children}</LanguageProvider>
+        <Analytics />
       </body>
     </html>
   );
