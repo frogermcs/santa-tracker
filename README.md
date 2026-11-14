@@ -1,50 +1,48 @@
 # SANTA-OS: M5StickC-Plus SE Santa Tracker
 
-A pocket-sized retro aviation Santa Tracker gadget for the **M5StickC-Plus SE** (ESP32-PICO-D4, 1.14" 240×135 IPS display, translucent orange enclosure) with a companion Next.js web emulator.
+A pocket-sized retro aviation Santa Tracker for the **M5StickC-Plus SE** (ESP32-PICO-D4, 240×135 ST7789v2 IPS display) with a companion Next.js web emulator and in-browser USB flasher.
 
----
+## Documentation
 
-## 📚 Project Documentation
+* **[Product Requirements (PRD)](docs/PRD.md):** Screen specs, simulation math, and UI states.
+* **[Architecture](docs/ARCHITECTURE.md):** Dual-target design, `/api/journey` contract, and Wi-Fi "Burst & Sleep" lifecycle.
+* **[Design System](docs/DESIGN.md):** Color tokens, typography, and surface specs.
+* **[Roadmap](docs/ROADMAP.md):** Milestone history and deliverables.
 
-* **[Product Requirements Document (PRD)](docs/PRD.md):** Target audience, hardware constraints, core features, and user interaction matrix.
-* **[Technical Architecture](docs/ARCHITECTURE.md):** Dual-target design, single-source-of-truth JSON endpoint, Wi-Fi "Burst & Sleep" lifecycle, and native test strategy.
-* **[Development Roadmap](docs/ROADMAP.md):** Phased milestones from MVP through live Christmas Eve clock synchronization and multi-screen support.
-
----
-
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 .
 ├── firmware/       # ESP32 C++17 firmware (PlatformIO + M5Unified + ArduinoJson)
-│   ├── include/    # Config, types, advent schedule (288 stops in PROGMEM), and land dots
-│   ├── src/        # Core engine, radar, cockpit, cam renderers, and Improv Wi-Fi handler
-│   └── test/       # Native desktop unit test suite (25 tests passing in 0.5s!)
-├── page/           # Next.js 15 web platform & emulator (App Router, Tailwind)
-│   ├── app/        # / (Mission Control Hub), /install (Web Flasher & Wi-Fi Setup), /map-debugger, /scene-debugging
-│   └── public/     # Static assets, firmware binaries, and master journey.json
-├── docs/           # PRD, Architecture, and Roadmap specifications
-├── scripts/        # CSV ingest & C++ PROGMEM schedule export scripts
-└── .github/        # GitHub Actions CI workflow (Web + Firmware build & tests)
+│   ├── include/    # Config, types, 288-stop PROGMEM schedule, and coastline dots
+│   ├── src/        # Core engine, radar/cockpit/cam renderers, Improv Wi-Fi handler
+│   └── test/       # Native desktop Unity test suite (29 tests)
+├── page/           # Next.js 15 web app & 1:1 hardware emulator (App Router, Tailwind)
+│   ├── app/        # /, /install, /debugger, /map-debugger, /scene-debugging, /api/journey
+│   └── public/     # Static assets, prebuilt firmware binaries, and journey.json
+├── docs/           # PRD, Architecture, Design System, and Roadmap
+├── scripts/        # CSV schedule ingest & firmware binary packaging scripts
+└── .github/        # GitHub Actions CI workflow (Web + Firmware)
 ```
 
----
+## Quick Start
 
-## 🚀 Quick Start
-
-### 1. Web Presentation & Simulator (`page/`)
+### 1. Web App & Emulator (`page/`)
 ```bash
 cd page
 npm install
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) for the Mission Control hub & hardware emulator, [http://localhost:3000/map-debugger](http://localhost:3000/map-debugger) for the geographic coordinates debugger, or [http://localhost:3000/scene-debugging](http://localhost:3000/scene-debugging) for the Santa Cam 7-scene matrix.
+* **Landing Page:** [http://localhost:3000](http://localhost:3000)
+* **In-Browser Flasher & Wi-Fi Setup:** [http://localhost:3000/install](http://localhost:3000/install) (Chrome / Edge via Web Serial + Improv Wi-Fi)
+* **Hardware Emulator & Workbench:** [http://localhost:3000/debugger](http://localhost:3000/debugger)
+* **Debug Views:** `/map-debugger` (coordinates) and `/scene-debugging` (Santa Cam 7-scene matrix)
 
 ### 2. Firmware Testing & Flashing (`firmware/`)
 ```bash
 cd firmware
 
-# Run fast desktop unit tests (25 tests in 0.5s, no hardware needed!)
+# Run native desktop unit tests (29 tests, no hardware required)
 pio test -e native
 
 # Compile ESP32 firmware
@@ -54,32 +52,22 @@ pio run -e m5stick-c
 pio run -e m5stick-c --target upload
 ```
 
-### 3. In-Browser 1-Click Flashing & Wi-Fi Provisioning
-Open [http://localhost:3000/install](http://localhost:3000/install) in Google Chrome or Microsoft Edge to flash firmware directly over Web Serial and configure home Wi-Fi via Improv Serial with zero command-line tools installed.
-
----
-
-## 🎮 Hardware Controls (M5StickC-Plus SE)
+## Hardware Controls (M5StickC-Plus SE)
 
 | Input | Action |
 | :--- | :--- |
-| **Button A (Front M5)** | **Toggle Screen**: 3-screen carousel (`MikoRadar` → `Kokpit Misji` → `Santa Cam` → `MikoRadar`) |
-| **Button A (Hold >0.6s)** | **Next Advent Day**: Cycles through 24 Advent Days (`D01` → `D02` → ... → `D24` → `D01`) |
-| **Button B (Top Side)** | **Next City**: Advances to next city waypoint on active day (1 → 12 → 1) |
-| **Button B (Hold >0.6s)** | **Sound Mute/Unmute**: Toggles buzzer sound chirps and chimes |
+| **Button A (Front M5)** | **Cycle Screen:** `MikoRadar` → `Kokpit Misji` → `Santa Cam` |
+| **Button A (Hold >0.6s)** | **Next Advent Day:** Cycles `D01` → `D24` (Demo Mode) |
+| **Button B (Top Side)** | **Next City:** Advances stop `1` → `12` on active day (Demo Mode) |
+| **Button B / PWR (Hold >0.6s)** | **Toggle Mode:** Switches between Real-Time Advent Mode and Demo Mode |
+| **Button PWR (Side Click)** | **Mute / Unmute:** Toggles piezo buzzer sound |
 
----
+## Self-Hosting & Customization
 
-## ⏱️ Simulation Cadence & Scene Timings
+* **API Endpoint:** To point the firmware at your own deployment, update `JOURNEY_API_URL` in [firmware/include/config.h](firmware/include/config.h) and `home_page` in [scripts/package-firmware.mjs](scripts/package-firmware.mjs) / [page/public/firmware/manifest.json](page/public/firmware/manifest.json).
+* **Customizing Cities:** Edit the schedule CSV and run `npm --prefix page run ingest` to regenerate `page/lib/advent-schedule.ts`, `page/public/journey.json`, and `firmware/include/advent_schedule.h`.
+* **Rebuilding Web Flasher Binaries:** Run `npm --prefix page run package:firmware` after firmware changes to refresh `page/public/firmware/`.
 
-The simulation runs a deterministic **30.0-second cycle per city** (`SEC_PER_CITY = 30.0s`), split into **15.0s in-transit flight** and **15.0s rooftop dwell**:
+## License
 
-* **In-Transit Flight (15.0s)**:
-  * **Hyper-Warp Mode** (`TRYB HYPER-WARP`, $0.0\text{s} - 4.5\text{s}$, 30%): Supersonic acceleration, speed streaks, twin jet flames.
-  * **Stratospheric Flight** (`PRZELOT STRATOSFERYCZNY`, $4.5\text{s} - 12.0\text{s}$, 50%): Curved Earth globe, glowing atmosphere, 48 stars, shooting star.
-  * **Gliding Descent** (`ZNIZANIE`, $12.0\text{s} - 15.0\text{s}$, 20%): Approaching snowy pine trees decorated with Christmas fairy lights.
-* **Rooftop Landed Dwell (15.0s)**:
-  * **Gift Drop** (`ZRZUT PREZENTOW`, $15.0\text{s} - 21.0\text{s}$, 40%): Parachuting presents dropped directly into chimneys.
-  * **Cookie & Milk Break** (`PRZERWA NA CIASTKA I MLEKO`, $21.0\text{s} - 27.0\text{s}$, 40%): Big Santa by the fireplace, dancing flames, cookies & milk.
-  * **Takeoff Climb** (`WZNOSZENIE`, $27.0\text{s} - 30.0\text{s}$, 20%): Takeoff climb, ground & trees shrink in reverse perspective.
-* **Grand Finale (Dec 24 Kraków)**: Permanent arrival lock celebrating at Bazylika Mariacka spires with fireworks (`WESOŁYCH ŚWIĄT!`).
+[MIT](LICENSE) © 2026 Mirek Stanek
