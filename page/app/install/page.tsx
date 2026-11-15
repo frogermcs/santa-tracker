@@ -31,7 +31,7 @@ export default function InstallPage() {
   }, [lang]);
 
   return (
-    <div className="min-h-screen overscroll-y-none bg-[#fbf3e4] text-[#0d3b26] flex flex-col relative overflow-x-hidden selection:bg-[#c81e1e] selection:text-[#fbf3e4]">
+    <div className="min-h-screen bg-[#fbf3e4] text-[#0d3b26] flex flex-col relative overflow-x-clip selection:bg-[#c81e1e] selection:text-[#fbf3e4]">
       <FestivePaperBackdrop />
       {/* Masthead */}
       <header className="max-w-6xl w-full mx-auto px-5 sm:px-10 pt-5 pb-4 border-b border-[#dfd0b4] grid grid-cols-3 items-center gap-4 relative z-20">
