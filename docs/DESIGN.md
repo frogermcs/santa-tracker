@@ -30,7 +30,7 @@
 ---
 
 ## Landing Page Surface (`/`): Warm Holiday Poster
-- **Mode**: Persuade — warm, festive North Pole holiday poster (`PL` default with a top-bar `PL` / `EN` language selector) driving visitors to `/install` (`Zainstaluj na M5Stick` / `Install on M5Stick`), paired with a Christmas garland & `Wesołych Świąt!` / `Merry Christmas!` footer on `/` and `/install` (while `/debugger` hosts the full dark-mode hardware workbench linked from `/install`'s footer).
+- **Mode**: Persuade — warm, festive North Pole holiday poster (`PL` default with a top-bar GitHub repository link and `PL` / `EN` language selector) driving visitors to `/install` (`Zainstaluj na M5Stick` / `Install on M5Stick`), paired with a Christmas garland & `Wesołych Świąt!` / `Merry Christmas!` footer on `/` and `/install` (while `/debugger` hosts the full dark-mode hardware workbench linked from `/install`'s footer).
 - **Ground & Seams**: Warm gingerbread-cream paper (`#fbf3e4`) with `#dfd0b4` masthead/footer rules, `#f2e4cb` tactile control trays, and `FestivePaperBackdrop` (top ribbon + low-contrast Christmas icons).
 - **Ink & Accents**: Santa-hat crimson (`#c81e1e`) for oversized condensed headlines, deep holly-pine (`#0d3b26`) for body copy, and M5Stick translucent orange (`#ea580c`) for the primary Install CTA.
 - **Typography**: `Barlow Condensed` (`--font-poster`) for bold poster headlines paired with `Bricolage Grotesque` (`--font-display`) for warm body copy and `JetBrains Mono` (`--font-mono`, `tabular-nums`) for screen tabs, language selector, and hardware hints.

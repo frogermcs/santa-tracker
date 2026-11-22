@@ -20,6 +20,8 @@ export interface TranslationSchema {
     deviceHintPrefix: string;
     deviceHintMid: string;
     deviceHintSuffix: string;
+    githubLinkLabel: string;
+    githubLinkAria: string;
   };
   device: {
     holdLabel: string;
@@ -87,6 +89,8 @@ export const TRANSLATIONS: Record<Language, TranslationSchema> = {
       deviceHintPrefix: "Kliknij",
       deviceHintMid: ", aby przełączyć ekran · przytrzymaj boczny przycisk",
       deviceHintSuffix: ", aby włączyć tryb demo.",
+      githubLinkLabel: "GitHub",
+      githubLinkAria: "Kod źródłowy na GitHubie (otwiera w nowej karcie)",
     },
     device: {
       holdLabel: "TRZYMAJ...",
@@ -164,6 +168,8 @@ export const TRANSLATIONS: Record<Language, TranslationSchema> = {
       deviceHintPrefix: "Click",
       deviceHintMid: " to switch screen · hold side button",
       deviceHintSuffix: " to toggle demo mode.",
+      githubLinkLabel: "GitHub",
+      githubLinkAria: "Source code on GitHub (opens in a new tab)",
     },
     device: {
       holdLabel: "HOLD...",

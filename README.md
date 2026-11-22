@@ -2,6 +2,8 @@
 
 A pocket-sized retro aviation Santa Tracker for the **M5StickC-Plus SE** (ESP32-PICO-D4, 240×135 ST7789v2 IPS display) with a companion Next.js web emulator and in-browser USB flasher.
 
+**Live Demo & Web Flasher:** [santa-tracker-five.vercel.app](https://santa-tracker-five.vercel.app)
+
 ## Documentation
 
 * **[Product Requirements (PRD)](docs/PRD.md):** Screen specs, simulation math, and UI states.
